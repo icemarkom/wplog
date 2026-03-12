@@ -50,7 +50,7 @@ const App = {
         document.getElementById("nav-share").addEventListener("click", () => {
             if (this.game) {
                 this.showScreen("share");
-                QR.init(this.game);
+                Share.init(this.game);
             }
         });
 

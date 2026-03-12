@@ -205,26 +205,22 @@
   <!-- ==================== SHARE SCREEN ==================== -->
   <section id="screen-share" class="screen">
     <div class="screen-content">
-      <h2 class="share-title">Share Game</h2>
-      <div id="qr-code" class="qr-container"></div>
+      <h2 class="share-title">Share Game Sheet</h2>
+      <p class="share-description">Print or save as PDF to share via email, messages, or other apps.</p>
       <div class="share-buttons">
-        <button id="qr-generate-btn" class="btn btn-primary">Generate QR</button>
-        <button id="qr-copy-btn" class="btn btn-outline">Copy Data</button>
-        <button id="qr-download-btn" class="btn btn-outline">Download HTML</button>
+        <button id="print-sheet-btn" class="btn btn-primary btn-large">Print Game Sheet</button>
       </div>
     </div>
   </section>
 
   <!-- Scripts (order matters — dependencies first) -->
-  <script src="lib/pako.min.js"></script>
-  <script src="lib/qrcode.min.js"></script>
   <script src="js/config.js"></script>
   <script src="js/storage.js"></script>
   <script src="js/game.js"></script>
   <script src="js/setup.js"></script>
   <script src="js/events.js"></script>
   <script src="js/sheet.js"></script>
-  <script src="js/qr.js"></script>
+  <script src="js/share.js"></script>
   <script src="js/app.js"></script>
 </body>
 </html>

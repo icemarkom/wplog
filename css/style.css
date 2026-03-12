@@ -1127,34 +1127,28 @@ select.form-input {
   font-size: 22px;
   font-weight: 700;
   text-align: center;
-  margin-bottom: 20px;
+  margin-bottom: 12px;
 }
 
-.qr-container {
-  display: flex;
-  justify-content: center;
-  padding: 24px;
-  background: white;
-  border-radius: var(--radius-lg);
-  margin-bottom: 20px;
-  min-height: 100px;
-}
-
-.qr-container img {
-  display: block;
-}
-
-.qr-error {
-  color: var(--danger);
-  font-size: 14px;
+.share-description {
   text-align: center;
-  padding: 20px;
+  color: var(--text-muted);
+  font-size: 14px;
+  margin-bottom: 24px;
 }
 
 .share-buttons {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 12px;
+}
+
+.share-status {
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 14px;
+  margin-top: 16px;
+  min-height: 20px;
 }
 
 /* ============================
