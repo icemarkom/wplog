@@ -1152,6 +1152,26 @@ select.form-input {
 }
 
 /* ============================
+   Footer
+   ============================ */
+.app-footer {
+  text-align: center;
+  font-size: 11px;
+  color: var(--text-muted);
+  padding: 16px 12px calc(var(--nav-height) + 16px);
+  opacity: 0.6;
+}
+
+.app-footer a {
+  color: var(--accent-blue);
+  text-decoration: none;
+}
+
+.app-footer a:hover {
+  text-decoration: underline;
+}
+
+/* ============================
    Responsive
    ============================ */
 @media (min-width: 600px) {

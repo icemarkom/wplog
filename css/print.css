@@ -10,7 +10,8 @@
     #toast-container,
     .overlay,
     #screen-sheet .btn,
-    .nav-btn {
+    .nav-btn,
+    .app-footer {
         display: none !important;
     }
 
