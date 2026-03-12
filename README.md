@@ -23,4 +23,4 @@ Then open `http://localhost:8080` in your browser.
 
 ## License
 
-MIT
+Apache 2.0
