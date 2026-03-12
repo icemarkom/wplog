@@ -23,7 +23,7 @@ const RULES = {
       { name: "Penalty", code: "P", color: "amber", align: "right" },
       { name: "Timeout", code: "TO", color: "blue", noPlayer: true, align: "center" },
       { name: "Penalty-Exclusion", code: "P-E", color: "amber", align: "right" },
-      { name: "E-Game", code: "E-Game", color: "red", align: "right", autoFoulOut: 1 },
+      { name: "Game Exclusion", code: "E-Game", color: "red", align: "right", autoFoulOut: 1 },
       { name: "Timeout 30", code: "TO30", color: "blue", align: "center", noPlayer: true },
       { name: "Yellow Card", code: "YC", color: "yellow", align: "center" },
       { name: "Red Card", code: "RC", color: "red", align: "center" },
