@@ -1,22 +1,20 @@
 // wplog — Service Worker (Offline Caching)
 
-const CACHE_NAME = "wplog-v1";
+const CACHE_NAME = "wplog-v2";
 const ASSETS = [
-    "/",
-    "/index.html",
-    "/css/style.css",
-    "/css/print.css",
-    "/js/config.js",
-    "/js/storage.js",
-    "/js/game.js",
-    "/js/setup.js",
-    "/js/events.js",
-    "/js/sheet.js",
-    "/js/qr.js",
-    "/js/app.js",
-    "/lib/pako.min.js",
-    "/lib/qrcode.min.js",
-    "/manifest.json",
+    "./",
+    "./index.html",
+    "./css/style.css",
+    "./css/print.css",
+    "./js/config.js",
+    "./js/storage.js",
+    "./js/game.js",
+    "./js/setup.js",
+    "./js/events.js",
+    "./js/sheet.js",
+    "./js/share.js",
+    "./js/app.js",
+    "./manifest.json",
 ];
 
 // Install — cache all assets

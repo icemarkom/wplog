@@ -2,7 +2,7 @@
   "name": "wplog",
   "short_name": "wplog",
   "description": "Water Polo Game Log",
-  "start_url": "/",
+  "start_url": "./",
   "display": "standalone",
   "background_color": "#0a0e1a",
   "theme_color": "#0a0e1a",
