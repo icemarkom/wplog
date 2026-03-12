@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <meta name="description" content="Water polo game log — log events poolside, produce official game sheets">
+  <meta name="theme-color" content="#0a0e1a">
+  <title>wplog — Water Polo Game Log</title>
+  <link rel="manifest" href="manifest.json">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/print.css" media="print">
+</head>
+<body>
+  <!-- Toast Container -->
+  <div id="toast-container"></div>
+
+  <!-- Foul-Out Overlay -->
+  <div id="foulout-overlay" class="overlay">
+    <div class="overlay-content foulout-card">
+      <div id="foulout-title" class="foulout-title"></div>
+      <div id="foulout-message" class="foulout-message"></div>
+      <button id="foulout-dismiss" class="btn btn-primary">Dismiss</button>
+    </div>
+  </div>
+
+  <!-- Navigation -->
+  <nav class="nav-bar">
+    <button id="nav-setup" class="nav-btn active">Setup</button>
+    <button id="nav-live" class="nav-btn" disabled>Live</button>
+    <button id="nav-sheet" class="nav-btn" disabled>Sheet</button>
+    <button id="nav-share" class="nav-btn" disabled>Share</button>
+  </nav>
+
+  <!-- ==================== SETUP SCREEN ==================== -->
+  <section id="screen-setup" class="screen active">
+    <div class="screen-content">
+      <h1 class="app-title">wplog</h1>
+      <p class="app-subtitle">Water Polo Game Log</p>
+
+      <div class="form-group">
+        <label for="setup-rules">Rules</label>
+        <select id="setup-rules" class="form-input"></select>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label for="setup-date">Date</label>
+          <input id="setup-date" type="date" class="form-input">
+        </div>
+        <div class="form-group">
+          <label for="setup-time">Start Time</label>
+          <input id="setup-time" type="time" class="form-input">
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="setup-location">Location</label>
+        <input id="setup-location" type="text" class="form-input" placeholder="Optional">
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label for="setup-white-name">White Team</label>
+          <input id="setup-white-name" type="text" class="form-input" placeholder="White">
+        </div>
+        <div class="form-group">
+          <label for="setup-dark-name">Dark Team</label>
+          <input id="setup-dark-name" type="text" class="form-input" placeholder="Dark">
+        </div>
+      </div>
+
+      <div class="form-row toggle-row">
+        <label class="toggle-label">
+          <input id="setup-overtime" type="checkbox">
+          <span>Overtime</span>
+        </label>
+        <label class="toggle-label">
+          <input id="setup-shootout" type="checkbox">
+          <span>Shootout</span>
+        </label>
+      </div>
+
+      <button id="setup-start-btn" class="btn btn-primary btn-large">Start Game</button>
+    </div>
+  </section>
+
+  <!-- ==================== LIVE LOG SCREEN ==================== -->
+  <section id="screen-live" class="screen">
+    <div class="screen-content">
+      <!-- Score Bar -->
+      <div class="score-bar">
+        <div class="score-team score-team-white">
+          <span class="score-label">WHITE</span>
+          <span id="score-white" class="score-value">0</span>
+        </div>
+        <div class="score-period">
+          <span id="current-period" class="period-badge">Q1</span>
+        </div>
+        <div class="score-team score-team-dark">
+          <span class="score-label">DARK</span>
+          <span id="score-dark" class="score-value">0</span>
+        </div>
+      </div>
+
+      <!-- Period Tabs -->
+      <div id="period-tabs" class="period-tabs"></div>
+
+      <!-- Time Input -->
+      <div class="input-section">
+        <label class="input-label">Time</label>
+        <input id="time-input" type="text" class="form-input time-input" placeholder="07:00" maxlength="5">
+      </div>
+
+      <!-- Team Toggle -->
+      <div class="team-toggle">
+        <button id="team-white-btn" class="team-btn team-btn-white">WHITE</button>
+        <button id="team-dark-btn" class="team-btn team-btn-dark">DARK</button>
+      </div>
+
+      <!-- Cap Numpad -->
+      <div class="input-section">
+        <label class="input-label">Cap #</label>
+        <input id="cap-display" type="text" class="form-input cap-display" readonly placeholder="—">
+      </div>
+      <div id="cap-numpad" class="numpad">
+        <button class="numpad-btn" data-value="1">1</button>
+        <button class="numpad-btn" data-value="2">2</button>
+        <button class="numpad-btn" data-value="3">3</button>
+        <button class="numpad-btn" data-value="4">4</button>
+        <button class="numpad-btn" data-value="5">5</button>
+        <button class="numpad-btn" data-value="6">6</button>
+        <button class="numpad-btn" data-value="7">7</button>
+        <button class="numpad-btn" data-value="8">8</button>
+        <button class="numpad-btn" data-value="9">9</button>
+        <button class="numpad-btn numpad-letter" data-value="A">A</button>
+        <button class="numpad-btn" data-value="0">0</button>
+        <button class="numpad-btn numpad-letter" data-value="B">B</button>
+        <button class="numpad-btn numpad-letter" data-value="C">C</button>
+        <button class="numpad-btn numpad-clear" data-value="clear">⌫</button>
+      </div>
+
+      <!-- Event Buttons -->
+      <div id="event-buttons" class="event-buttons"></div>
+
+      <!-- Period End -->
+      <button id="period-end-btn" class="btn btn-outline btn-period-end">End Period</button>
+
+      <!-- Recent Log -->
+      <div class="log-section">
+        <h3 class="log-title">Recent Events</h3>
+        <div id="recent-log" class="recent-log"></div>
+      </div>
+
+      <!-- New Game -->
+      <button id="new-game-btn" class="btn btn-danger btn-small">New Game</button>
+    </div>
+  </section>
+
+  <!-- ==================== GAME SHEET SCREEN ==================== -->
+  <section id="screen-sheet" class="screen">
+    <div class="screen-content">
+      <div id="sheet-content" class="sheet-content"></div>
+      <button class="btn btn-primary" onclick="window.print()">Print Game Sheet</button>
+    </div>
+  </section>
+
+  <!-- ==================== SHARE SCREEN ==================== -->
+  <section id="screen-share" class="screen">
+    <div class="screen-content">
+      <h2 class="share-title">Share Game</h2>
+      <div id="qr-code" class="qr-container"></div>
+      <div class="share-buttons">
+        <button id="qr-generate-btn" class="btn btn-primary">Generate QR</button>
+        <button id="qr-copy-btn" class="btn btn-outline">Copy Data</button>
+        <button id="qr-download-btn" class="btn btn-outline">Download HTML</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- Scripts (order matters — dependencies first) -->
+  <script src="lib/pako.min.js"></script>
+  <script src="lib/qrcode.min.js"></script>
+  <script src="js/config.js"></script>
+  <script src="js/storage.js"></script>
+  <script src="js/game.js"></script>
+  <script src="js/setup.js"></script>
+  <script src="js/events.js"></script>
+  <script src="js/sheet.js"></script>
+  <script src="js/qr.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
