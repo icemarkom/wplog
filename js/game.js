@@ -9,8 +9,10 @@ const Game = {
             date: new Date().toISOString().slice(0, 10),
             startTime: "",
             location: "",
+            gameId: "",
             overtime: rules.overtime,
             shootout: rules.shootout,
+            timeoutsAllowed: { full: rules.timeouts.full, to30: rules.timeouts.to30 },
             white: { name: "White" },
             dark: { name: "Dark" },
             currentPeriod: 1,
@@ -84,6 +86,23 @@ const Game = {
         return { white: last.scoreW, dark: last.scoreD };
     },
 
+    // Get timeouts used per team
+    getTimeoutsUsed(game, team) {
+        const full = game.log.filter((e) => e.event === "TO" && e.team === team).length;
+        const to30 = game.log.filter((e) => e.event === "TO30" && e.team === team).length;
+        return { full, to30 };
+    },
+
+    // Get timeouts remaining per team
+    getTimeoutsLeft(game, team) {
+        const used = this.getTimeoutsUsed(game, team);
+        const allowed = game.timeoutsAllowed || { full: 0, to30: 0 };
+        return {
+            full: Math.max(0, allowed.full - used.full),
+            to30: Math.max(0, allowed.to30 - used.to30),
+        };
+    },
+
     // Get personal fouls for a specific player (team + cap)
     getPlayerFouls(game, team, cap) {
         return game.log.filter(
@@ -133,29 +152,48 @@ const Game = {
     },
 
     // Get the next period value
+    // Returns: period value (advance), null (game over), or "TIED" (can't end, still tied)
     getNextPeriod(game) {
         const current = game.currentPeriod;
         const rules = RULES[game.rules];
 
-        // Regulation periods
+        // Regulation periods (not last)
         if (typeof current === "number" && current < rules.periods) {
             return current + 1;
         }
 
-        // End of regulation → overtime or shootout
+        // End of regulation
         if (typeof current === "number" && current === rules.periods) {
+            const score = this.getScore(game);
+            if (score.white !== score.dark) return null; // not tied → game over
             if (game.overtime) return "OT1";
             if (game.shootout) return "SO";
-            return null; // game over
+            return null; // tied but no OT/SO → game over (allowed)
         }
 
-        // Overtime → next OT or shootout
+        // Overtime (OT and SO are mutually exclusive)
         if (typeof current === "string" && current.startsWith("OT")) {
+            const score = this.getScore(game);
             const otNum = parseInt(current.slice(2));
-            return "OT" + (otNum + 1); // unlimited OT
+
+            // OT1 → OT2 always (mandatory pair)
+            if (otNum === 1) return "OT2";
+
+            if (score.white !== score.dark) return null; // not tied → game over
+
+            // OT2+ tied → next OT (sudden victory, unlimited)
+            const nextOt = otNum + 1;
+            return "OT" + nextOt;
         }
 
-        return null; // SO or unknown → game over
+        // Shootout
+        if (current === "SO") {
+            const score = this.getScore(game);
+            if (score.white !== score.dark) return null; // not tied → game over
+            return "TIED"; // tied in SO → can't end game
+        }
+
+        return null;
     },
 
     // Advance to next period

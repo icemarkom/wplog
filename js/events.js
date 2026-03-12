@@ -1,7 +1,15 @@
 // wplog — Live Log Screen (Event Logging)
+// Event-first workflow: tap event button → modal opens → enter details → OK
+// Shared numpad targets either Time or Cap field.
 
 const Events = {
     game: null,
+    selectedTeam: null,
+    _pendingEvent: null,
+    _boundModal: false,
+    _numpadTarget: "time",  // "time" or "cap"
+    _timeRaw: "",           // raw digits for time
+    _capRaw: "",            // raw value for cap
 
     init(game) {
         this.game = game;
@@ -9,183 +17,243 @@ const Events = {
         this._buildPeriodTabs();
         this._updateScoreBar();
         this._updateLog();
-        this._bindEvents();
-        this._selectTeam("W");
-        this._updateCapInput();
+
+        if (!this._boundModal) {
+            this._bindModalEvents();
+            this._boundModal = true;
+        }
     },
 
-    _bindEvents() {
+    // ── Time Parsing ────────────────────────────────────────
+    // "453" → { display: "4:53", stored: "04:53" }
+    // "7" → { display: "7:00", stored: "07:00" }
+    // "30" → { display: "0:30", stored: "00:30" }
+
+    _parseTime(digits) {
+        if (digits.length === 0) return null;
+
+        let minutes, seconds;
+        if (digits.length === 1) {
+            minutes = parseInt(digits); seconds = 0;
+        } else if (digits.length === 2) {
+            minutes = 0; seconds = parseInt(digits);
+        } else if (digits.length === 3) {
+            minutes = parseInt(digits[0]); seconds = parseInt(digits.slice(1));
+        } else {
+            const last4 = digits.slice(-4);
+            minutes = parseInt(last4.slice(0, 2)); seconds = parseInt(last4.slice(2));
+        }
+
+        if (seconds > 59 || minutes > 99) return null;
+
+        return {
+            display: minutes + ":" + String(seconds).padStart(2, "0"),
+            stored: String(minutes).padStart(2, "0") + ":" + String(seconds).padStart(2, "0"),
+        };
+    },
+
+    _formatTimeDisplay(digits) {
+        if (digits.length === 0) return "—";
+        const parsed = this._parseTime(digits);
+        return parsed ? parsed.display : digits;
+    },
+
+    // ── Modal Controls ──────────────────────────────────────
+
+    _bindModalEvents() {
+        // Cancel
+        document.getElementById("event-modal-cancel").addEventListener("click", () => this._closeModal());
+
+        // Backdrop
+        document.getElementById("event-modal").addEventListener("click", (e) => {
+            if (e.target === e.currentTarget) this._closeModal();
+        });
+
         // Team toggle
         document.getElementById("team-white-btn").addEventListener("click", () => this._selectTeam("W"));
         document.getElementById("team-dark-btn").addEventListener("click", () => this._selectTeam("D"));
 
-        // Cap numpad
-        document.querySelectorAll("#cap-numpad .numpad-btn").forEach((btn) => {
-            btn.addEventListener("click", () => {
-                const val = btn.dataset.value;
-                if (val === "clear") {
-                    document.getElementById("cap-display").value = "";
-                } else {
-                    const display = document.getElementById("cap-display");
-                    const current = display.value;
-                    // A, B, C can only follow "1"
-                    if (["A", "B", "C"].includes(val)) {
-                        if (current === "1") {
-                            display.value = "1" + val;
-                        }
-                    } else {
-                        if (current.length < 2 && !current.match(/[ABC]/)) {
-                            display.value = current + val;
-                        }
-                    }
-                }
-            });
+        // Field selection — tap to switch numpad target
+        document.getElementById("field-time").addEventListener("click", () => this._setNumpadTarget("time"));
+        document.getElementById("field-cap").addEventListener("click", () => this._setNumpadTarget("cap"));
+
+        // Shared numpad
+        document.querySelectorAll("#shared-numpad .numpad-btn").forEach((btn) => {
+            btn.addEventListener("click", () => this._handleNumpad(btn.dataset.value));
         });
 
-        // Period end button
-        document.getElementById("period-end-btn").addEventListener("click", () => {
-            this._logPeriodEnd();
-        });
+        // OK
+        document.getElementById("event-modal-confirm").addEventListener("click", () => this._confirmEvent());
+
+        // Event dropdown change
+        document.getElementById("modal-event-select").addEventListener("change", () => this._updateModalSections());
+    },
+
+    _handleNumpad(val) {
+        if (this._numpadTarget === "time") {
+            if (val === "clear") {
+                this._timeRaw = this._timeRaw.slice(0, -1);
+            } else if (["A", "B", "C"].includes(val)) {
+                return; // letters not valid for time
+            } else if (this._timeRaw.length < 4) {
+                this._timeRaw += val;
+            }
+            document.getElementById("time-display").textContent = this._formatTimeDisplay(this._timeRaw);
+
+            // Auto-advance to cap after 3 digits (most common: e.g. "453")
+            if (this._timeRaw.length >= 3 && !this._isNoPlayer()) {
+                this._setNumpadTarget("cap");
+            }
+        } else {
+            // Cap input
+            if (val === "clear") {
+                this._capRaw = this._capRaw.slice(0, -1);
+            } else if (["A", "B", "C"].includes(val)) {
+                const code = document.getElementById("modal-event-select").value;
+                const isCard = (code === "YC" || code === "RC");
+                if (isCard) {
+                    // Cards: allow "C" (coach), "A" then "C" → "AC" (asst coach)
+                    if (val === "C" && this._capRaw === "") {
+                        this._capRaw = "C";
+                    } else if (val === "C" && this._capRaw === "A") {
+                        this._capRaw = "AC";
+                    } else if (val === "A" && this._capRaw === "") {
+                        this._capRaw = "A";
+                    }
+                } else {
+                    // Normal: A/B/C only after "1" (goalie numbers)
+                    if (this._capRaw === "1") {
+                        this._capRaw = "1" + val;
+                    }
+                }
+            } else {
+                if (this._capRaw.length < 2 && !this._capRaw.match(/[ABC]/)) {
+                    this._capRaw += val;
+                }
+            }
+            document.getElementById("cap-display").textContent = this._capRaw || "—";
+        }
+        this._updateOkButton();
+    },
+
+    _isNoPlayer() {
+        const code = document.getElementById("modal-event-select").value;
+        const rules = RULES[this.game.rules];
+        const eventDef = rules.events.find((e) => e.code === code);
+        return eventDef && eventDef.noPlayer;
+    },
+
+    _updateOkButton() {
+        const btn = document.getElementById("event-modal-confirm");
+        const hasTime = this._timeRaw.length > 0 && this._parseTime(this._timeRaw) !== null;
+        const noPlayer = this._isNoPlayer();
+        const hasCap = noPlayer || this._capRaw.length > 0;
+        const hasTeam = this.selectedTeam !== null;
+        btn.disabled = !(hasTime && hasCap && hasTeam);
+    },
+
+    _setNumpadTarget(target) {
+        this._numpadTarget = target;
+        document.getElementById("field-time").classList.toggle("active", target === "time");
+        document.getElementById("field-cap").classList.toggle("active", target === "cap");
+    },
+
+    _populateEventDropdown(selectedCode) {
+        const select = document.getElementById("modal-event-select");
+        select.innerHTML = "";
+        const rules = RULES[this.game.rules];
+
+        for (const evt of rules.events) {
+            const opt = document.createElement("option");
+            opt.value = evt.code;
+            opt.textContent = evt.name;
+            if (evt.code === selectedCode) opt.selected = true;
+            select.appendChild(opt);
+        }
+    },
+
+    _updateModalSections() {
+        const code = document.getElementById("modal-event-select").value;
+        const rules = RULES[this.game.rules];
+        const eventDef = rules.events.find((e) => e.code === code);
+
+        const capField = document.getElementById("field-cap");
+
+        if (eventDef && eventDef.noPlayer) {
+            capField.style.display = "none";
+            if (this._numpadTarget === "cap") this._setNumpadTarget("time");
+        } else {
+            capField.style.display = "";
+        }
+        this._updateOkButton();
+    },
+
+    _openModal(eventDef) {
+        this._pendingEvent = eventDef;
+
+        // Populate dropdown
+        this._populateEventDropdown(eventDef.code);
+
+        // Reset inputs
+        this._timeRaw = "";
+        this._capRaw = "";
+        document.getElementById("time-display").textContent = "—";
+        document.getElementById("cap-display").textContent = "—";
+
+        // Show/hide sections
+        this._updateModalSections();
+
+        // Default target = time, no team pre-selected
+        this._setNumpadTarget("time");
+        this.selectedTeam = null;
+        document.getElementById("team-white-btn").classList.remove("active");
+        document.getElementById("team-dark-btn").classList.remove("active");
+
+        // Update OK state
+        this._updateOkButton();
+
+        // Show modal
+        document.getElementById("event-modal").classList.add("visible");
+    },
+
+    _closeModal() {
+        document.getElementById("event-modal").classList.remove("visible");
+        this._pendingEvent = null;
     },
 
     _selectTeam(team) {
         this.selectedTeam = team;
-        const whiteBtn = document.getElementById("team-white-btn");
-        const darkBtn = document.getElementById("team-dark-btn");
-        whiteBtn.classList.toggle("active", team === "W");
-        darkBtn.classList.toggle("active", team === "D");
+        document.getElementById("team-white-btn").classList.toggle("active", team === "W");
+        document.getElementById("team-dark-btn").classList.toggle("active", team === "D");
+        this._updateOkButton();
     },
 
-    _buildEventButtons() {
-        const container = document.getElementById("event-buttons");
-        container.innerHTML = "";
+    _confirmEvent() {
         const rules = RULES[this.game.rules];
+        const code = document.getElementById("modal-event-select").value;
+        const eventDef = rules.events.find((e) => e.code === code);
+        if (!eventDef) return;
 
-        for (const evt of rules.events) {
-            const btn = document.createElement("button");
-            btn.className = "event-btn event-" + this._getEventClass(evt.code);
-            btn.textContent = evt.name;
-            btn.dataset.code = evt.code;
-            btn.dataset.noPlayer = evt.noPlayer ? "true" : "false";
-            btn.addEventListener("click", () => this._logEvent(evt));
-            container.appendChild(btn);
+        // Parse time
+        const parsed = this._parseTime(this._timeRaw);
+        if (!parsed) {
+            this._showToast("Enter a valid time", "warning");
+            this._setNumpadTarget("time");
+            return;
         }
-    },
+        const time = parsed.stored;
 
-    _getEventClass(code) {
-        const map = {
-            "G": "goal",
-            "E": "exclusion",
-            "E-Game": "exclusion",
-            "P": "penalty",
-            "P-E": "penalty",
-            "TO": "timeout",
-            "TO30": "timeout",
-            "YC": "yellow",
-            "RC": "red",
-            "MC": "red",
-            "BR": "red",
-        };
-        return map[code] || "default";
-    },
-
-    _buildPeriodTabs() {
-        const container = document.getElementById("period-tabs");
-        container.innerHTML = "";
-        const periods = Game.getAllPeriods(this.game);
-
-        for (const period of periods) {
-            const tab = document.createElement("button");
-            tab.className = "period-tab";
-            tab.textContent = Game.getPeriodLabel(period);
-            tab.dataset.period = typeof period === "number" ? period : period;
-            if (
-                period === this.game.currentPeriod ||
-                String(period) === String(this.game.currentPeriod)
-            ) {
-                tab.classList.add("active");
-            }
-            tab.addEventListener("click", () => {
-                this.game.currentPeriod = period;
-                this._buildPeriodTabs();
-                this._updateLog();
-            });
-            container.appendChild(tab);
-        }
-    },
-
-    _updateScoreBar() {
-        const score = Game.getScore(this.game);
-        document.getElementById("score-white").textContent = score.white;
-        document.getElementById("score-dark").textContent = score.dark;
-        document.getElementById("current-period").textContent = Game.getPeriodLabel(
-            this.game.currentPeriod
-        );
-    },
-
-    _updateCapInput() {
-        document.getElementById("cap-display").value = "";
-    },
-
-    _updateLog() {
-        const container = document.getElementById("recent-log");
-        container.innerHTML = "";
-
-        // Show last 15 events (most recent first)
-        const entries = [...this.game.log].reverse().slice(0, 15);
-
-        for (const entry of entries) {
-            const row = document.createElement("div");
-            row.className = "log-entry";
-            if (entry.event === "---") {
-                row.classList.add("log-period-end");
-                row.innerHTML = `
-          <span class="log-period">${Game.getPeriodLabel(entry.period)}</span>
-          <span class="log-separator">——— End of Period ———</span>
-        `;
-            } else {
-                const rules = RULES[this.game.rules];
-                const eventDef = rules.events.find((e) => e.code === entry.event);
-                const eventName = eventDef ? eventDef.name : entry.event;
-                row.innerHTML = `
-          <span class="log-time">${entry.time}</span>
-          <span class="log-period">${Game.getPeriodLabel(entry.period)}</span>
-          <span class="log-team ${entry.team === 'W' ? 'team-white' : 'team-dark'}">${entry.team}</span>
-          <span class="log-cap">#${entry.cap}</span>
-          <span class="log-event event-${this._getEventClass(entry.event)}">${eventName}</span>
-          <span class="log-score">${entry.scoreW}–${entry.scoreD}</span>
-          <button class="log-delete-btn" data-id="${entry.id}" title="Delete">✕</button>
-        `;
-            }
-            container.appendChild(row);
-        }
-
-        // Bind delete buttons
-        container.querySelectorAll(".log-delete-btn").forEach((btn) => {
-            btn.addEventListener("click", (e) => {
-                e.stopPropagation();
-                const id = parseInt(btn.dataset.id);
-                if (confirm("Delete this event?")) {
-                    Game.deleteEvent(this.game, id);
-                    this._updateScoreBar();
-                    this._updateLog();
-                }
-            });
-        });
-    },
-
-    _logEvent(eventDef) {
-        const time = document.getElementById("time-input").value || "00:00";
-        const cap = document.getElementById("cap-display").value;
+        const cap = this._capRaw;
         const period = this.game.currentPeriod;
 
         // Validate cap for player events
         if (!eventDef.noPlayer && !cap) {
-            this._showToast("Enter a cap number first", "warning");
+            this._showToast("Enter a cap number", "warning");
+            this._setNumpadTarget("cap");
             return;
         }
 
-        // Validate time
+        // Validate time order
         const timeCheck = Game.validateTime(this.game, period, time);
         if (!timeCheck.valid) {
             if (!confirm(timeCheck.warning)) return;
@@ -200,11 +268,14 @@ const Events = {
         Game.addEvent(this.game, {
             period,
             time,
-            team: eventDef.noPlayer ? "" : this.selectedTeam,
+            team: this.selectedTeam,
             cap: eventDef.noPlayer ? "" : cap,
             event: eventDef.code,
             note: "",
         });
+
+        // Close modal
+        this._closeModal();
 
         // Show foul-out notification
         if (foulOut) {
@@ -222,13 +293,165 @@ const Events = {
             }
         }
 
+        // Check timeout over-limit
+        if (eventDef.code === "TO" || eventDef.code === "TO30") {
+            const used = Game.getTimeoutsUsed(this.game, this.selectedTeam);
+            const allowed = this.game.timeoutsAllowed || { full: 0, to30: 0 };
+            const teamLabel = this.selectedTeam === "W" ? "White" : "Dark";
+            if (eventDef.code === "TO" && used.full > allowed.full) {
+                this._showToast(`⚠️ ${teamLabel} exceeded full timeout limit (${allowed.full})`, "warning");
+            } else if (eventDef.code === "TO30" && used.to30 > allowed.to30) {
+                this._showToast(`⚠️ ${teamLabel} exceeded 30s timeout limit (${allowed.to30})`, "warning");
+            }
+        }
+
         this._updateScoreBar();
         this._updateLog();
-        this._updateCapInput();
+        this._updateEndButton();
     },
+
+    // ── Main View Builders ──────────────────────────────────
+
+    _buildEventButtons() {
+        const container = document.getElementById("event-buttons");
+        container.innerHTML = "";
+        const rules = RULES[this.game.rules];
+
+        for (const evt of rules.events) {
+            const btn = document.createElement("button");
+            btn.className = "event-btn event-" + (evt.color || "default");
+            btn.textContent = evt.name;
+            btn.dataset.code = evt.code;
+            btn.addEventListener("click", () => this._openModal(evt));
+            container.appendChild(btn);
+        }
+
+        // End Period / End Game
+        const endBtn = document.createElement("button");
+        endBtn.className = "event-btn event-end-period";
+        endBtn.id = "end-period-btn";
+        endBtn.addEventListener("click", () => this._logPeriodEnd());
+        container.appendChild(endBtn);
+        this._updateEndButton();
+    },
+
+    _updateEndButton() {
+        const btn = document.getElementById("end-period-btn");
+        if (!btn) return;
+        const next = Game.getNextPeriod(this.game);
+        if (next === "TIED") {
+            btn.textContent = "Score Tied";
+            btn.disabled = true;
+        } else if (next === null) {
+            btn.textContent = "End Game";
+            btn.disabled = false;
+        } else {
+            btn.textContent = "End Period";
+            btn.disabled = false;
+        }
+    },
+
+    _getEventClass(code) {
+        const rules = RULES[this.game.rules];
+        const eventDef = rules.events.find((e) => e.code === code);
+        return eventDef && eventDef.color ? eventDef.color : "default";
+    },
+
+    _buildPeriodTabs() {
+        // Period tabs removed — period advances via End Period button,
+        // and reverts by deleting the End of Period event.
+        const container = document.getElementById("period-tabs");
+        container.innerHTML = "";
+    },
+
+    _updateScoreBar() {
+        const score = Game.getScore(this.game);
+        document.getElementById("score-white").textContent = score.white;
+        document.getElementById("score-dark").textContent = score.dark;
+        document.getElementById("current-period").textContent = Game.getPeriodLabel(
+            this.game.currentPeriod
+        );
+        this._updateTOL("W", "tol-white");
+        this._updateTOL("D", "tol-dark");
+    },
+
+    _updateTOL(team, elementId) {
+        const el = document.getElementById(elementId);
+        const left = Game.getTimeoutsLeft(this.game, team);
+        const allowed = this.game.timeoutsAllowed || { full: 0, to30: 0 };
+        let text;
+        if (allowed.to30 > 0) {
+            text = `TOL ${left.full}/${left.to30}`;
+        } else {
+            text = `TOL ${left.full}`;
+        }
+        el.textContent = text;
+        el.classList.toggle("tol-warning", left.full === 0 && left.to30 === 0);
+    },
+
+    _updateLog() {
+        const container = document.getElementById("recent-log");
+        container.innerHTML = "";
+
+        const entries = [...this.game.log].reverse().slice(0, 15);
+
+        for (const entry of entries) {
+            const row = document.createElement("div");
+            row.className = "log-entry";
+            if (entry.event === "---") {
+                row.classList.add("log-period-end");
+                row.innerHTML = `
+          <span class="log-period">${Game.getPeriodLabel(entry.period)}</span>
+          <span class="log-separator">——— End of Period ———</span>
+          <button class="log-delete-btn" data-id="${entry.id}" title="Delete">✕</button>
+        `;
+            } else {
+                const rules = RULES[this.game.rules];
+                const eventDef = rules.events.find((e) => e.code === entry.event);
+                const eventName = eventDef ? eventDef.name : entry.event;
+                row.innerHTML = `
+          <span class="log-time">${entry.time}</span>
+          <span class="log-team ${entry.team === 'W' ? 'team-white' : 'team-dark'}">${entry.team}</span>
+          <span class="log-cap">#${entry.cap}</span>
+          <span class="log-event event-${this._getEventClass(entry.event)}">${eventName}</span>
+          <span class="log-score">${entry.scoreW}–${entry.scoreD}</span>
+          <button class="log-delete-btn" data-id="${entry.id}" title="Delete">✕</button>
+        `;
+            }
+            container.appendChild(row);
+        }
+
+        container.querySelectorAll(".log-delete-btn").forEach((btn) => {
+            btn.addEventListener("click", (e) => {
+                e.stopPropagation();
+                const id = parseInt(btn.dataset.id);
+                const entry = this.game.log.find((ev) => ev.id === id);
+                const isPeriodEnd = entry && entry.event === "---";
+                if (confirm(isPeriodEnd ? "Delete End of Period and revert?" : "Delete this event?")) {
+                    if (isPeriodEnd) {
+                        // Revert to the period that was ended
+                        this.game.currentPeriod = entry.period;
+                    }
+                    Game.deleteEvent(this.game, id);
+                    this._updateScoreBar();
+                    this._updateLog();
+                    this._updateEndButton();
+                }
+            });
+        });
+    },
+
+    // ── Period End ───────────────────────────────────────────
 
     _logPeriodEnd() {
         const period = this.game.currentPeriod;
+        const next = Game.getNextPeriod(this.game);
+        const isEndGame = (next === null);
+
+        // For End Game, log the actual wall clock time
+        const note = isEndGame
+            ? "End of Game"
+            : "End of " + Game.getPeriodLabel(period);
 
         Game.addEvent(this.game, {
             period,
@@ -236,27 +459,28 @@ const Events = {
             team: "",
             cap: "",
             event: "---",
-            note: "End of " + Game.getPeriodLabel(period),
+            note,
         });
 
-        const next = Game.advancePeriod(this.game);
-        if (next !== null) {
-            // Set default time for new period
-            if (next === "SO") {
-                document.getElementById("time-input").value = "00:00";
-                document.getElementById("time-input").disabled = true;
-            } else {
-                document.getElementById("time-input").disabled = false;
-            }
+        if (isEndGame) {
+            // Store end time on game object
+            const now = new Date();
+            this.game.endTime = now.toTimeString().slice(0, 5);
+            Storage.save(this.game);
+            this._updateLog();
+            this._updateEndButton();
+            this._showToast("Game over", "info");
+        } else {
+            Game.advancePeriod(this.game);
             this._buildPeriodTabs();
             this._updateScoreBar();
             this._updateLog();
-            this._showToast("Period " + Game.getPeriodLabel(next) + " started", "info");
-        } else {
-            this._showToast("Game over", "info");
-            this._updateLog();
+            this._updateEndButton();
+            this._showToast("Period " + Game.getPeriodLabel(this.game.currentPeriod) + " started", "info");
         }
     },
+
+    // ── Notifications ───────────────────────────────────────
 
     _showFoulOutPopup(title, message) {
         const overlay = document.getElementById("foulout-overlay");
@@ -268,7 +492,6 @@ const Events = {
             overlay.classList.remove("visible");
         };
 
-        // Auto-dismiss after 5 seconds
         setTimeout(() => overlay.classList.remove("visible"), 5000);
     },
 

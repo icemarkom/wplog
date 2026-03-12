@@ -12,11 +12,22 @@ const Sheet = {
         const container = document.getElementById("sheet-content");
         container.innerHTML = "";
 
-        container.appendChild(this._renderHeader());
-        container.appendChild(this._renderProgressOfGame());
-        container.appendChild(this._renderPeriodScores());
-        container.appendChild(this._renderFoulSummary());
-        container.appendChild(this._renderTimeoutSummary());
+        // Page 1: Header + Progress of Game
+        const page1 = document.createElement("div");
+        page1.className = "sheet-page";
+        page1.appendChild(this._renderHeader());
+        page1.appendChild(this._renderProgressOfGame());
+        container.appendChild(page1);
+
+        // Page 2: Header (repeated) + Period Scores + Fouls + Timeouts
+        const page2 = document.createElement("div");
+        page2.className = "sheet-page sheet-page-break";
+        page2.appendChild(this._renderHeader());
+        page2.appendChild(this._renderPeriodScores());
+        page2.appendChild(this._renderFoulSummary());
+        page2.appendChild(this._renderTimeoutSummary());
+        page2.appendChild(this._renderCardSummary());
+        container.appendChild(page2);
     },
 
     _renderHeader() {
@@ -25,24 +36,23 @@ const Sheet = {
         const header = document.createElement("div");
         header.className = "sheet-header";
 
-        const whiteName = game.white.name === "White" ? "White" : `White (${game.white.name})`;
-        const darkName = game.dark.name === "Dark" ? "Dark" : `Dark (${game.dark.name})`;
+        const whiteName = game.white.name === "White" ? "" : game.white.name;
+        const darkName = game.dark.name === "Dark" ? "" : game.dark.name;
         const score = Game.getScore(game);
 
         header.innerHTML = `
       <div class="sheet-title">Game Sheet</div>
       <div class="sheet-meta">
         <div class="sheet-meta-row">
-          <span class="sheet-label">Rules:</span>
-          <span class="sheet-value">${rules.name}</span>
-          <span class="sheet-label">Date:</span>
-          <span class="sheet-value">${game.date}</span>
-          <span class="sheet-label">Time:</span>
-          <span class="sheet-value">${game.startTime || "—"}</span>
+          <span class="sheet-meta-pair"><span class="sheet-label">Game #:</span> <span class="sheet-value">${game.gameId || "—"}</span></span>
         </div>
         <div class="sheet-meta-row">
-          <span class="sheet-label">Location:</span>
-          <span class="sheet-value">${game.location || "—"}</span>
+          <span class="sheet-meta-pair"><span class="sheet-label">Location:</span> <span class="sheet-value">${game.location || "—"}</span></span>
+        </div>
+        <div class="sheet-meta-row sheet-meta-times">
+          <span class="sheet-meta-pair"><span class="sheet-label">Date:</span> <span class="sheet-value">${game.date}</span></span>
+          <span class="sheet-meta-pair"><span class="sheet-label">Scheduled Time:</span> <span class="sheet-value">${game.startTime || "--:--"}</span></span>
+          <span class="sheet-meta-pair"><span class="sheet-label">End Time:</span> <span class="sheet-value">${game.endTime || "--:--"}</span></span>
         </div>
       </div>
       <div class="sheet-teams">
@@ -77,10 +87,9 @@ const Sheet = {
         thead.innerHTML = `
       <tr>
         <th>Time</th>
-        <th>Per.</th>
         <th>Cap#</th>
         <th>Team</th>
-        <th>Event</th>
+        <th>Remarks</th>
         <th>Score</th>
       </tr>
     `;
@@ -95,16 +104,15 @@ const Sheet = {
 
             if (entry.event === "---") {
                 tr.className = "sheet-period-end";
-                tr.innerHTML = `<td colspan="6">——— End of ${Game.getPeriodLabel(entry.period)} ———</td>`;
+                tr.innerHTML = `<td colspan="5">——— End of ${Game.getPeriodLabel(entry.period)} ———</td>`;
             } else {
                 const eventDef = rules.events.find((e) => e.code === entry.event);
-                const eventName = eventDef ? eventDef.name : entry.event;
+                const align = eventDef && eventDef.align ? eventDef.align : "center";
                 tr.innerHTML = `
           <td>${entry.time}</td>
-          <td>${Game.getPeriodLabel(entry.period)}</td>
           <td>${entry.cap || "—"}</td>
           <td>${entry.team || "—"}</td>
-          <td>${eventName}</td>
+          <td style="text-align:${align}">${entry.event}</td>
           <td>${entry.scoreW}–${entry.scoreD}</td>
         `;
             }
@@ -285,6 +293,49 @@ const Sheet = {
             const eventDef = rules.events.find((e) => e.code === entry.event);
             tr.innerHTML = `
         <td>${entry.team === "W" ? "White" : (entry.team === "D" ? "Dark" : "—")}</td>
+        <td>${Game.getPeriodLabel(entry.period)}</td>
+        <td>${entry.time}</td>
+        <td>${eventDef ? eventDef.name : entry.event}</td>
+      `;
+            tbody.appendChild(tr);
+        }
+
+        table.appendChild(tbody);
+        section.appendChild(table);
+        return section;
+    },
+
+    _renderCardSummary() {
+        const section = document.createElement("div");
+        section.className = "sheet-section";
+        section.innerHTML = `<div class="sheet-section-title">Cards</div>`;
+
+        const cards = this.game.log.filter((e) => e.event === "YC" || e.event === "RC");
+
+        if (cards.length === 0) {
+            const empty = document.createElement("p");
+            empty.className = "sheet-empty";
+            empty.textContent = "No cards issued.";
+            section.appendChild(empty);
+            return section;
+        }
+
+        const table = document.createElement("table");
+        table.className = "sheet-table";
+        table.innerHTML = `
+      <thead>
+        <tr><th>Team</th><th>Cap#</th><th>Period</th><th>Time</th><th>Type</th></tr>
+      </thead>
+    `;
+
+        const tbody = document.createElement("tbody");
+        for (const entry of cards) {
+            const tr = document.createElement("tr");
+            const rules = RULES[this.game.rules];
+            const eventDef = rules.events.find((e) => e.code === entry.event);
+            tr.innerHTML = `
+        <td>${entry.team === "W" ? "White" : (entry.team === "D" ? "Dark" : "—")}</td>
+        <td>${entry.cap || "—"}</td>
         <td>${Game.getPeriodLabel(entry.period)}</td>
         <td>${entry.time}</td>
         <td>${eventDef ? eventDef.name : entry.event}</td>

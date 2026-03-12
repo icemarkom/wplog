@@ -7,7 +7,7 @@ const App = {
     init() {
         // Try to restore saved game
         const saved = Storage.load();
-        if (saved && saved.log && saved.log.length > 0) {
+        if (saved && saved.rules) {
             this.game = saved;
             this.showScreen("live");
             Events.init(this.game);
@@ -22,13 +22,14 @@ const App = {
 
         // Nav buttons
         document.getElementById("nav-setup").addEventListener("click", () => {
-            if (confirm("Return to setup? Current game will be preserved.")) {
-                this.showScreen("setup");
-                Setup.init((game) => {
-                    this.game = game;
-                    this.showScreen("live");
-                    Events.init(this.game);
-                });
+            this.showScreen("setup");
+            Setup.init((game) => {
+                this.game = game;
+                this.showScreen("live");
+                Events.init(this.game);
+            });
+            if (this.game) {
+                Setup.updateForActiveGame(this.game);
             }
         });
 

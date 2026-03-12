@@ -9,7 +9,7 @@
   <link rel="manifest" href="manifest.json">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Source+Code+Pro:wght@400;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/style.css">
   <link rel="stylesheet" href="css/print.css" media="print">
 </head>
@@ -61,6 +61,11 @@
         <input id="setup-location" type="text" class="form-input" placeholder="Optional">
       </div>
 
+      <div class="form-group">
+        <label for="setup-game-id">Game #</label>
+        <input id="setup-game-id" type="text" class="form-input" placeholder="Optional">
+      </div>
+
       <div class="form-row">
         <div class="form-group">
           <label for="setup-white-name">White Team</label>
@@ -83,6 +88,17 @@
         </label>
       </div>
 
+      <div class="form-row">
+        <div class="form-group">
+          <label for="setup-to-full">Full TOs (per team)</label>
+          <input id="setup-to-full" type="number" class="form-input" min="0" max="9" value="3">
+        </div>
+        <div class="form-group">
+          <label for="setup-to-30">30s TOs (per team)</label>
+          <input id="setup-to-30" type="number" class="form-input" min="0" max="9" value="1">
+        </div>
+      </div>
+
       <button id="setup-start-btn" class="btn btn-primary btn-large">Start Game</button>
     </div>
   </section>
@@ -95,6 +111,7 @@
         <div class="score-team score-team-white">
           <span class="score-label">WHITE</span>
           <span id="score-white" class="score-value">0</span>
+          <span id="tol-white" class="tol-display"></span>
         </div>
         <div class="score-period">
           <span id="current-period" class="period-badge">Q1</span>
@@ -102,30 +119,57 @@
         <div class="score-team score-team-dark">
           <span class="score-label">DARK</span>
           <span id="score-dark" class="score-value">0</span>
+          <span id="tol-dark" class="tol-display"></span>
         </div>
       </div>
 
       <!-- Period Tabs -->
       <div id="period-tabs" class="period-tabs"></div>
 
-      <!-- Time Input -->
+      <!-- Event Buttons -->
+      <div id="event-buttons" class="event-buttons"></div>
+
+      <!-- Recent Log -->
+      <div class="log-section">
+        <h3 class="log-title">Recent Events</h3>
+        <div id="recent-log" class="recent-log"></div>
+      </div>
+
+      <!-- New Game -->
+      <button id="new-game-btn" class="btn btn-danger btn-small">New Game</button>
+    </div>
+  </section>
+
+  <!-- ==================== EVENT MODAL ==================== -->
+  <div id="event-modal" class="event-modal">
+    <div class="event-modal-content">
+
+      <!-- Event Selector -->
       <div class="input-section">
+        <label class="input-label">Event</label>
+        <select id="modal-event-select" class="form-input"></select>
+      </div>
+
+      <!-- Time (tap to target numpad) -->
+      <div class="modal-field active" id="field-time" data-target="time">
         <label class="input-label">Time</label>
-        <input id="time-input" type="text" class="form-input time-input" placeholder="07:00" maxlength="5">
+        <div id="time-display" class="field-display">—</div>
+      </div>
+
+      <!-- Cap (tap to target numpad) -->
+      <div class="modal-field" id="field-cap" data-target="cap">
+        <label class="input-label">Cap #</label>
+        <div id="cap-display" class="field-display">—</div>
       </div>
 
       <!-- Team Toggle -->
-      <div class="team-toggle">
+      <div id="modal-team-section" class="team-toggle">
         <button id="team-white-btn" class="team-btn team-btn-white">WHITE</button>
         <button id="team-dark-btn" class="team-btn team-btn-dark">DARK</button>
       </div>
 
-      <!-- Cap Numpad -->
-      <div class="input-section">
-        <label class="input-label">Cap #</label>
-        <input id="cap-display" type="text" class="form-input cap-display" readonly placeholder="—">
-      </div>
-      <div id="cap-numpad" class="numpad">
+      <!-- Shared Numpad -->
+      <div id="shared-numpad" class="numpad">
         <button class="numpad-btn" data-value="1">1</button>
         <button class="numpad-btn" data-value="2">2</button>
         <button class="numpad-btn" data-value="3">3</button>
@@ -142,22 +186,13 @@
         <button class="numpad-btn numpad-clear" data-value="clear">⌫</button>
       </div>
 
-      <!-- Event Buttons -->
-      <div id="event-buttons" class="event-buttons"></div>
-
-      <!-- Period End -->
-      <button id="period-end-btn" class="btn btn-outline btn-period-end">End Period</button>
-
-      <!-- Recent Log -->
-      <div class="log-section">
-        <h3 class="log-title">Recent Events</h3>
-        <div id="recent-log" class="recent-log"></div>
+      <!-- OK / Cancel -->
+      <div class="modal-actions">
+        <button id="event-modal-cancel" class="btn btn-outline modal-action-btn">Cancel</button>
+        <button id="event-modal-confirm" class="btn btn-primary modal-action-btn" disabled>OK</button>
       </div>
-
-      <!-- New Game -->
-      <button id="new-game-btn" class="btn btn-danger btn-small">New Game</button>
     </div>
-  </section>
+  </div>
 
   <!-- ==================== GAME SHEET SCREEN ==================== -->
   <section id="screen-sheet" class="screen">

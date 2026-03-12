@@ -102,9 +102,17 @@
         color: #555;
     }
 
+    .sheet-page-break {
+        page-break-before: always;
+    }
+
+    .sheet-page-break .sheet-header {
+        display: block;
+    }
+
     /* Page setup */
     @page {
-        margin: 1cm;
-        size: A4 portrait;
+        margin: 0.5in;
+        size: letter portrait;
     }
 }

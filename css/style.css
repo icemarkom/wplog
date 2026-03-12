@@ -23,18 +23,26 @@
   --dark-team: #f59e0b;
   --dark-team-bg: rgba(245, 158, 11, 0.12);
 
-  --event-goal: #10b981;
-  --event-goal-bg: rgba(16, 185, 129, 0.15);
+  /* Event colors — domain-meaningful:
+     Green  = scoring (Goal)
+     Amber  = exclusions (E, E-Game, P-E)
+     Orange = penalty shot (P)
+     Blue   = timeout (TO, TO30)
+     Yellow = yellow card (YC)
+     Red    = ejections (RC, MC, BR)
+  */
+  --event-goal: #22c55e;
+  --event-goal-bg: rgba(34, 197, 94, 0.15);
   --event-exclusion: #f59e0b;
   --event-exclusion-bg: rgba(245, 158, 11, 0.15);
-  --event-penalty: #ef4444;
-  --event-penalty-bg: rgba(239, 68, 68, 0.15);
-  --event-timeout: #3b82f6;
-  --event-timeout-bg: rgba(59, 130, 246, 0.15);
-  --event-yellow: #eab308;
-  --event-yellow-bg: rgba(234, 179, 8, 0.15);
-  --event-red: #dc2626;
-  --event-red-bg: rgba(220, 38, 38, 0.15);
+  --event-penalty: #fb923c;
+  --event-penalty-bg: rgba(251, 146, 60, 0.15);
+  --event-timeout: #60a5fa;
+  --event-timeout-bg: rgba(96, 165, 250, 0.15);
+  --event-yellow: #facc15;
+  --event-yellow-bg: rgba(250, 204, 21, 0.15);
+  --event-red: #ef4444;
+  --event-red-bg: rgba(239, 68, 68, 0.15);
 
   --danger: #ef4444;
   --danger-bg: rgba(239, 68, 68, 0.1);
@@ -273,6 +281,16 @@ select.form-input {
   transform: translateY(0);
 }
 
+.btn-danger {
+  background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%) !important;
+  color: white !important;
+  box-shadow: var(--shadow-sm), 0 0 12px rgba(220, 38, 38, 0.4) !important;
+}
+
+.btn-danger:hover {
+  box-shadow: var(--shadow-md), 0 0 16px rgba(220, 38, 38, 0.6) !important;
+}
+
 .btn-outline {
   background: transparent;
   color: var(--text-primary);
@@ -347,12 +365,25 @@ select.form-input {
 .score-value {
   font-size: 40px;
   font-weight: 800;
+  font-family: 'Source Code Pro', monospace;
   line-height: 1;
   letter-spacing: -0.02em;
 }
 
 .score-team-white .score-value { color: var(--white-team); }
 .score-team-dark .score-value { color: var(--dark-team); }
+
+.tol-display {
+  font-size: 11px;
+  font-family: 'Source Code Pro', monospace;
+  font-weight: 600;
+  color: var(--text-muted);
+  letter-spacing: 0.02em;
+}
+
+.tol-warning {
+  color: var(--red);
+}
 
 .score-period {
   display: flex;
@@ -523,49 +554,56 @@ select.form-input {
    ============================ */
 .event-buttons {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
+  grid-template-columns: repeat(3, 1fr);
+  grid-auto-rows: 56px;
   gap: 8px;
   margin-bottom: 12px;
 }
 
 .event-btn {
-  padding: 14px 8px;
+  padding: 14px 4px;
   border: 1px solid;
   border-radius: var(--radius-md);
   font-family: var(--font);
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.02em;
   cursor: pointer;
   transition: all var(--transition);
   touch-action: manipulation;
-  min-height: 48px;
+  height: 56px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  line-height: 1.15;
+  overflow: hidden;
 }
 
 .event-btn:active {
   transform: scale(0.96);
 }
 
-.event-goal {
+.event-green {
   background: var(--event-goal-bg);
   border-color: var(--event-goal);
   color: var(--event-goal);
 }
 
-.event-exclusion {
+.event-amber {
   background: var(--event-exclusion-bg);
   border-color: var(--event-exclusion);
   color: var(--event-exclusion);
 }
 
-.event-penalty {
+.event-orange {
   background: var(--event-penalty-bg);
   border-color: var(--event-penalty);
   color: var(--event-penalty);
 }
 
-.event-timeout {
+.event-blue {
   background: var(--event-timeout-bg);
   border-color: var(--event-timeout);
   color: var(--event-timeout);
@@ -620,6 +658,7 @@ select.form-input {
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
   font-size: 13px;
+  font-family: 'Source Code Pro', monospace;
   font-variant-numeric: tabular-nums;
 }
 
@@ -668,10 +707,10 @@ select.form-input {
   flex: 1;
 }
 
-.log-event.event-goal { background: var(--event-goal-bg); color: var(--event-goal); }
-.log-event.event-exclusion { background: var(--event-exclusion-bg); color: var(--event-exclusion); }
-.log-event.event-penalty { background: var(--event-penalty-bg); color: var(--event-penalty); }
-.log-event.event-timeout { background: var(--event-timeout-bg); color: var(--event-timeout); }
+.log-event.event-green { background: var(--event-goal-bg); color: var(--event-goal); }
+.log-event.event-amber { background: var(--event-exclusion-bg); color: var(--event-exclusion); }
+.log-event.event-orange { background: var(--event-penalty-bg); color: var(--event-penalty); }
+.log-event.event-blue { background: var(--event-timeout-bg); color: var(--event-timeout); }
 .log-event.event-yellow { background: var(--event-yellow-bg); color: var(--event-yellow); }
 .log-event.event-red { background: var(--event-red-bg); color: var(--event-red); }
 
@@ -757,6 +796,101 @@ select.form-input {
 }
 
 /* ============================
+   Event Modal
+   ============================ */
+.event-modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  z-index: 150;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 200ms ease;
+  backdrop-filter: blur(4px);
+}
+
+.event-modal.visible {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.event-modal-content {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+  padding: 24px 20px 32px;
+  width: 100%;
+  max-width: 480px;
+  max-height: 85vh;
+  overflow-y: auto;
+  transform: translateY(100%);
+  transition: transform 250ms ease;
+  box-shadow: var(--shadow-lg);
+}
+
+.event-modal.visible .event-modal-content {
+  transform: translateY(0);
+}
+
+/* Time + Cap field displays */
+.modal-field {
+  padding: 10px 12px;
+  border: 2px solid var(--border);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: border-color var(--transition), box-shadow var(--transition);
+  margin-bottom: 8px;
+}
+
+.modal-field.active {
+  border-color: var(--accent-blue);
+  box-shadow: 0 0 12px var(--accent-blue-glow);
+}
+
+.modal-field .input-label {
+  margin-bottom: 2px;
+}
+
+.field-display {
+  font-size: 28px;
+  font-weight: 700;
+  text-align: center;
+  letter-spacing: 0.05em;
+  color: var(--text-primary);
+  min-height: 36px;
+  line-height: 36px;
+  font-variant-numeric: tabular-nums;
+}
+
+.modal-actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.modal-action-btn {
+  flex: 1;
+  padding: 14px;
+  font-size: 15px;
+  border-radius: var(--radius-md);
+}
+
+.modal-action-btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+/* End Period grid button */
+.event-end-period {
+  background: var(--bg-card);
+  border-color: var(--border);
+  color: var(--text-secondary);
+}
+
+/* ============================
    Toast Notifications
    ============================ */
 #toast-container {
@@ -816,6 +950,10 @@ select.form-input {
   margin-bottom: 24px;
 }
 
+.sheet-page-break .sheet-header {
+  display: none;
+}
+
 .sheet-title {
   font-size: 22px;
   font-weight: 800;
@@ -833,13 +971,20 @@ select.form-input {
 }
 
 .sheet-meta-row {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 4px 12px;
   margin-bottom: 4px;
 }
 
 .sheet-meta-row:last-child { margin-bottom: 0; }
+
+.sheet-meta-pair {
+  white-space: nowrap;
+}
+
+.sheet-meta-times {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+}
 
 .sheet-label {
   font-size: 12px;
@@ -849,6 +994,7 @@ select.form-input {
 
 .sheet-value {
   font-size: 13px;
+  font-family: 'Source Code Pro', monospace;
   color: var(--text-primary);
 }
 
@@ -884,6 +1030,7 @@ select.form-input {
 .sheet-final-score {
   font-size: 32px;
   font-weight: 800;
+  font-family: 'Source Code Pro', monospace;
   color: var(--text-primary);
   letter-spacing: -0.02em;
 }
@@ -914,7 +1061,7 @@ select.form-input {
 .sheet-table td {
   border: 1px solid var(--border);
   padding: 6px 10px;
-  text-align: left;
+  text-align: center;
 }
 
 .sheet-table th {
@@ -928,6 +1075,7 @@ select.form-input {
 
 .sheet-table td {
   background: var(--bg-card);
+  font-family: 'Source Code Pro', monospace;
 }
 
 .sheet-period-end td {
