@@ -1,0 +1,118 @@
+/* wplog — Print Styles */
+
+@media print {
+
+    /* Hide everything except sheet content */
+    .nav-bar,
+    #screen-setup,
+    #screen-live,
+    #screen-share,
+    #toast-container,
+    .overlay,
+    #screen-sheet .btn,
+    .nav-btn {
+        display: none !important;
+    }
+
+    /* Reset to print-friendly */
+    body {
+        background: white;
+        color: #111;
+        font-size: 11pt;
+    }
+
+    #screen-sheet {
+        display: block !important;
+        padding: 0;
+    }
+
+    .screen-content {
+        max-width: none;
+        padding: 0;
+        margin: 0;
+    }
+
+    /* Sheet styling */
+    .sheet-title {
+        color: #111;
+        font-size: 18pt;
+        -webkit-text-fill-color: #111;
+        background: none;
+    }
+
+    .sheet-meta {
+        background: none;
+        border: 1px solid #333;
+    }
+
+    .sheet-label {
+        color: #555;
+    }
+
+    .sheet-value {
+        color: #111;
+    }
+
+    .sheet-team-white .sheet-team-name,
+    .sheet-team-dark .sheet-team-name {
+        color: #111;
+    }
+
+    .sheet-final-score {
+        color: #111;
+    }
+
+    .sheet-section-title {
+        color: #111;
+        border-bottom-color: #333;
+    }
+
+    .sheet-table th,
+    .sheet-table td {
+        border-color: #333;
+    }
+
+    .sheet-table th {
+        background: #eee;
+        color: #333;
+    }
+
+    .sheet-table td {
+        background: white;
+    }
+
+    .sheet-period-end td {
+        background: #f5f5f5;
+        color: #666;
+    }
+
+    .sheet-fouled-out td {
+        background: #ffe0e0 !important;
+    }
+
+    .sheet-total {
+        background: #eee !important;
+    }
+
+    .sheet-empty {
+        color: #666;
+    }
+
+    .sheet-foul-details {
+        color: #555;
+    }
+
+    .sheet-page-break {
+        page-break-before: always;
+    }
+
+    .sheet-page-break .sheet-header {
+        display: block;
+    }
+
+    /* Page setup */
+    @page {
+        margin: 0.5in;
+        size: letter portrait;
+    }
+}

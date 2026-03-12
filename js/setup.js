@@ -1,0 +1,173 @@
+// wplog — Setup Screen Logic
+
+const Setup = {
+    init(onStart) {
+        this.onStart = onStart;
+        this._bindEvents();
+        this._populateRules();
+        this._setDefaultDate();
+        this._resetForm();
+    },
+
+    _resetForm() {
+        // Re-enable everything (in case previously disabled)
+        document.getElementById("setup-start-btn").disabled = false;
+        document.getElementById("setup-start-btn").textContent = "Start Game";
+        document.getElementById("setup-rules").disabled = false;
+        document.getElementById("setup-overtime").disabled = false;
+        document.getElementById("setup-shootout").disabled = false;
+    },
+
+    updateForActiveGame(game) {
+        if (!game) return;
+
+        // Populate form from game data
+        document.getElementById("setup-rules").value = game.rules;
+        document.getElementById("setup-date").value = game.date || "";
+        document.getElementById("setup-time").value = game.startTime || "";
+        document.getElementById("setup-location").value = game.location || "";
+        document.getElementById("setup-game-id").value = game.gameId || "";
+        document.getElementById("setup-overtime").checked = game.overtime;
+        document.getElementById("setup-shootout").checked = game.shootout;
+        const ta = game.timeoutsAllowed || { full: 0, to30: 0 };
+        document.getElementById("setup-to-full").value = ta.full;
+        document.getElementById("setup-to-30").value = ta.to30;
+        document.getElementById("setup-white-name").value = game.white.name === "White" ? "" : game.white.name;
+        document.getElementById("setup-dark-name").value = game.dark.name === "Dark" ? "" : game.dark.name;
+
+        // Replace Start Game with End Game button
+        const startBtn = document.getElementById("setup-start-btn");
+        startBtn.disabled = false;
+        startBtn.textContent = "END GAME IN PROGRESS";
+        startBtn.classList.add("btn-danger");
+
+        // Override click to destroy game
+        startBtn.replaceWith(startBtn.cloneNode(true)); // remove old listeners
+        const newBtn = document.getElementById("setup-start-btn");
+        newBtn.disabled = false;
+        newBtn.textContent = "END GAME IN PROGRESS";
+        newBtn.classList.add("btn-danger");
+        newBtn.addEventListener("click", () => {
+            if (confirm("⚠️ END GAME IN PROGRESS?\n\nAll game data will be permanently lost. This cannot be undone.")) {
+                Storage.clear();
+                location.reload();
+            }
+        });
+
+        // Disable rules change during game
+        document.getElementById("setup-rules").disabled = true;
+
+        // Disable OT if any OT period has started
+        const hasOT = game.log.some((e) => typeof e.period === "string" && e.period.startsWith("OT"));
+        if (hasOT) {
+            document.getElementById("setup-overtime").disabled = true;
+        }
+
+        // Disable SO if shootout has started
+        const hasSO = game.log.some((e) => e.period === "SO");
+        if (hasSO) {
+            document.getElementById("setup-shootout").disabled = true;
+        }
+
+        // Live-save editable fields back to the active game
+        const saveField = (id, setter) => {
+            document.getElementById(id).addEventListener("change", () => {
+                setter();
+                Storage.save(game);
+            });
+        };
+
+        saveField("setup-date", () => { game.date = document.getElementById("setup-date").value; });
+        saveField("setup-time", () => { game.startTime = document.getElementById("setup-time").value; });
+        saveField("setup-location", () => { game.location = document.getElementById("setup-location").value; });
+        saveField("setup-game-id", () => { game.gameId = document.getElementById("setup-game-id").value.trim(); });
+        saveField("setup-white-name", () => {
+            const v = document.getElementById("setup-white-name").value.trim();
+            game.white.name = v || "White";
+        });
+        saveField("setup-dark-name", () => {
+            const v = document.getElementById("setup-dark-name").value.trim();
+            game.dark.name = v || "Dark";
+        });
+        if (!hasOT) {
+            saveField("setup-overtime", () => { game.overtime = document.getElementById("setup-overtime").checked; });
+        }
+        if (!hasSO) {
+            saveField("setup-shootout", () => { game.shootout = document.getElementById("setup-shootout").checked; });
+        }
+        saveField("setup-to-full", () => {
+            game.timeoutsAllowed.full = parseInt(document.getElementById("setup-to-full").value) || 0;
+        });
+        saveField("setup-to-30", () => {
+            game.timeoutsAllowed.to30 = parseInt(document.getElementById("setup-to-30").value) || 0;
+        });
+    },
+
+    _populateRules() {
+        const select = document.getElementById("setup-rules");
+        select.innerHTML = "";
+        for (const [key, rules] of Object.entries(RULES)) {
+            const opt = document.createElement("option");
+            opt.value = key;
+            opt.textContent = rules.name;
+            select.appendChild(opt);
+        }
+        this._updateToggles();
+    },
+
+    _setDefaultDate() {
+        const dateInput = document.getElementById("setup-date");
+        dateInput.value = new Date().toISOString().slice(0, 10);
+    },
+
+    _updateToggles() {
+        const rulesKey = document.getElementById("setup-rules").value;
+        const rules = RULES[rulesKey];
+        document.getElementById("setup-overtime").checked = rules.overtime;
+        document.getElementById("setup-shootout").checked = rules.shootout;
+        document.getElementById("setup-to-full").value = rules.timeouts.full;
+        document.getElementById("setup-to-30").value = rules.timeouts.to30;
+    },
+
+    _bindEvents() {
+        document.getElementById("setup-rules").addEventListener("change", () => {
+            this._updateToggles();
+        });
+
+        // OT and SO are mutually exclusive
+        document.getElementById("setup-overtime").addEventListener("change", (e) => {
+            if (e.target.checked) document.getElementById("setup-shootout").checked = false;
+        });
+        document.getElementById("setup-shootout").addEventListener("change", (e) => {
+            if (e.target.checked) document.getElementById("setup-overtime").checked = false;
+        });
+
+        document.getElementById("setup-start-btn").addEventListener("click", () => {
+            this._startGame();
+        });
+    },
+
+    _startGame() {
+        const rulesKey = document.getElementById("setup-rules").value;
+        const game = Game.create(rulesKey);
+
+        game.date = document.getElementById("setup-date").value;
+        game.startTime = document.getElementById("setup-time").value;
+        game.location = document.getElementById("setup-location").value;
+        game.gameId = document.getElementById("setup-game-id").value.trim();
+        game.overtime = document.getElementById("setup-overtime").checked;
+        game.shootout = document.getElementById("setup-shootout").checked;
+        game.timeoutsAllowed = {
+            full: parseInt(document.getElementById("setup-to-full").value) || 0,
+            to30: parseInt(document.getElementById("setup-to-30").value) || 0,
+        };
+
+        const whiteName = document.getElementById("setup-white-name").value.trim();
+        const darkName = document.getElementById("setup-dark-name").value.trim();
+        if (whiteName) game.white.name = whiteName;
+        if (darkName) game.dark.name = darkName;
+
+        Storage.save(game);
+        this.onStart(game);
+    },
+};
