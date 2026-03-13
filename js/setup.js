@@ -53,8 +53,14 @@ const Setup = {
         newBtn.disabled = false;
         newBtn.textContent = "END GAME IN PROGRESS";
         newBtn.classList.add("btn-danger");
-        newBtn.addEventListener("click", () => {
-            if (confirm("⚠️ END GAME IN PROGRESS?\n\nAll game data will be permanently lost. This cannot be undone.")) {
+        newBtn.addEventListener("click", async () => {
+            const ok = await ConfirmDialog.show({
+                title: "END GAME IN PROGRESS?",
+                message: "All game data will be permanently lost. This cannot be undone.",
+                confirmLabel: "End Game",
+                type: "danger",
+            });
+            if (ok) {
                 Storage.clear();
                 location.reload();
             }

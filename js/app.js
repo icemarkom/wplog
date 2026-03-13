@@ -5,6 +5,9 @@ const App = {
     game: null,
 
     init() {
+        // Initialize confirm dialog
+        ConfirmDialog.init();
+
         // Try to restore saved game
         const saved = Storage.load();
         if (saved && saved.rules) {
