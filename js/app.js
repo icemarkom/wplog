@@ -212,7 +212,7 @@ const App = {
         if (APP_VERSION !== "dev") {
             // Production: link to GitHub release
             const a = document.createElement("a");
-            a.href = "https://github.com/icemarkom/wplog/releases/tag/" + APP_VERSION;
+            a.href = "https://github.com/icemarkom/wplog/releases/tag/v" + APP_VERSION;
             a.target = "_blank";
             a.rel = "noopener";
             a.textContent = text;
