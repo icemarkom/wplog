@@ -10,6 +10,8 @@ const Game = {
             startTime: "",
             location: "",
             gameId: "",
+            periodLength: rules.periodLength,
+            otPeriodLength: rules.otPeriodLength,
             overtime: rules.overtime,
             shootout: rules.shootout,
             timeoutsAllowed: { full: rules.timeouts.full, to30: rules.timeouts.to30 },

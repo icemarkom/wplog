@@ -15,6 +15,8 @@ const RULES = {
   USAWP: {
     name: "USA Water Polo",
     periods: 4,
+    periodLength: 8,       // quarter length in minutes (3-9)
+    otPeriodLength: null,   // no OT by default; 3 min when enabled
     overtime: false,
     shootout: true,
     events: [
@@ -23,12 +25,13 @@ const RULES = {
       { name: "Penalty", code: "P", color: "amber", align: "right", isPersonalFoul: true },
       { name: "Timeout", code: "TO", color: "blue", noPlayer: true, align: "center" },
       { name: "Penalty-Exclusion", code: "P-E", color: "amber", align: "right", isPersonalFoul: true },
-      { name: "Game Exclusion", code: "E-Game", color: "red", align: "right", autoFoulOut: 1 },
       { name: "Timeout 30", code: "TO30", color: "blue", align: "center", noPlayer: true },
       { name: "Yellow Card", code: "YC", color: "yellow", align: "center" },
-      { name: "Red Card", code: "RC", color: "red", align: "center" },
       { name: "Misconduct", code: "MC", color: "red", align: "right", autoFoulOut: 1 },
       { name: "Brutality", code: "BR", color: "red", align: "right", autoFoulOut: 1 },
+      { name: "Red Card", code: "RC", color: "red", align: "center" },
+      { name: "Game Exclusion", code: "E-Game", color: "red", align: "right", autoFoulOut: 1 },
+
     ],
     foulOutLimit: 3,
     timeouts: { full: 2, to30: 0 },

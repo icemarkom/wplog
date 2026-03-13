@@ -4,6 +4,7 @@ const Setup = {
     init(onStart) {
         this.onStart = onStart;
         this._bindEvents();
+        this._populatePeriodLengths();
         this._populateRules();
         this._setDefaultDate();
         this._resetForm();
@@ -31,6 +32,9 @@ const Setup = {
         document.getElementById("setup-game-id").value = game.gameId || "";
         document.getElementById("setup-overtime").checked = game.overtime;
         document.getElementById("setup-shootout").checked = game.shootout;
+        document.getElementById("setup-period-length").value = game.periodLength || 8;
+        document.getElementById("setup-ot-length").value = game.otPeriodLength || 3;
+        this._updateOTLengthVisibility();
         const ta = game.timeoutsAllowed || { full: 0, to30: 0 };
         document.getElementById("setup-to-full").value = ta.full;
         document.getElementById("setup-to-30").value = ta.to30;
@@ -92,11 +96,20 @@ const Setup = {
             game.dark.name = v || "Dark";
         });
         if (!hasOT) {
-            saveField("setup-overtime", () => { game.overtime = document.getElementById("setup-overtime").checked; });
+            saveField("setup-overtime", () => {
+                game.overtime = document.getElementById("setup-overtime").checked;
+                this._updateOTLengthVisibility();
+            });
         }
         if (!hasSO) {
             saveField("setup-shootout", () => { game.shootout = document.getElementById("setup-shootout").checked; });
         }
+        saveField("setup-period-length", () => {
+            game.periodLength = parseInt(document.getElementById("setup-period-length").value);
+        });
+        saveField("setup-ot-length", () => {
+            game.otPeriodLength = parseInt(document.getElementById("setup-ot-length").value);
+        });
         saveField("setup-to-full", () => {
             game.timeoutsAllowed.full = parseInt(document.getElementById("setup-to-full").value) || 0;
         });
@@ -117,6 +130,28 @@ const Setup = {
         this._updateToggles();
     },
 
+    _populatePeriodLengths() {
+        const selects = ["setup-period-length", "setup-ot-length"];
+        for (const id of selects) {
+            const sel = document.getElementById(id);
+            sel.innerHTML = "";
+            for (let m = 3; m <= 9; m++) {
+                const opt = document.createElement("option");
+                opt.value = m;
+                opt.textContent = m + " min";
+                sel.appendChild(opt);
+            }
+        }
+    },
+
+    _updateOTLengthVisibility() {
+        const otChecked = document.getElementById("setup-overtime").checked;
+        const group = document.getElementById("setup-ot-length-group");
+        const select = document.getElementById("setup-ot-length");
+        select.disabled = !otChecked;
+        group.style.opacity = otChecked ? "" : "0.35";
+    },
+
     _setDefaultDate() {
         const dateInput = document.getElementById("setup-date");
         dateInput.value = new Date().toISOString().slice(0, 10);
@@ -127,6 +162,9 @@ const Setup = {
         const rules = RULES[rulesKey];
         document.getElementById("setup-overtime").checked = rules.overtime;
         document.getElementById("setup-shootout").checked = rules.shootout;
+        document.getElementById("setup-period-length").value = rules.periodLength;
+        document.getElementById("setup-ot-length").value = rules.otPeriodLength || 3;
+        this._updateOTLengthVisibility();
         document.getElementById("setup-to-full").value = rules.timeouts.full;
         document.getElementById("setup-to-30").value = rules.timeouts.to30;
     },
@@ -139,9 +177,11 @@ const Setup = {
         // OT and SO are mutually exclusive
         document.getElementById("setup-overtime").addEventListener("change", (e) => {
             if (e.target.checked) document.getElementById("setup-shootout").checked = false;
+            this._updateOTLengthVisibility();
         });
         document.getElementById("setup-shootout").addEventListener("change", (e) => {
             if (e.target.checked) document.getElementById("setup-overtime").checked = false;
+            this._updateOTLengthVisibility();
         });
 
         document.getElementById("setup-start-btn").addEventListener("click", () => {
@@ -164,6 +204,10 @@ const Setup = {
         game.gameId = document.getElementById("setup-game-id").value.trim();
         game.overtime = document.getElementById("setup-overtime").checked;
         game.shootout = document.getElementById("setup-shootout").checked;
+        game.periodLength = parseInt(document.getElementById("setup-period-length").value);
+        game.otPeriodLength = game.overtime
+            ? parseInt(document.getElementById("setup-ot-length").value)
+            : null;
         game.timeoutsAllowed = {
             full: parseInt(document.getElementById("setup-to-full").value) || 0,
             to30: parseInt(document.getElementById("setup-to-30").value) || 0,
