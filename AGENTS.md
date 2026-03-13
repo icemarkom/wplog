@@ -82,11 +82,15 @@ These were explicitly discussed and agreed with the user:
 | **Auto-close disabled** | GitHub auto-close via commit messages is disabled in this repo. Close issues manually with `gh issue close`. |
 | **Don't commit without confirmation** | Always wait for user to confirm before committing and pushing. |
 | **"Geronimo" workflow** | When user says "geronimo", it's one-time approval to commit, push, and close the relevant issue. See `.agents/workflows/geronimo.md`. |
+| **"Kraken" workflow** | When user says "kraken", triggers the release workflow: evaluate changes, update AGENTS.md, propose version, prepare release notes, tag and release. See `.agents/workflows/kraken.md`. |
 | **Auto-clear on refocus** | Tapping a filled time/cap field in the modal auto-clears it for re-entry. Only on user clicks, not auto-advance. |
 | **Custom dialogs** | All `confirm()` calls replaced with `ConfirmDialog` (overlay-based). Supports `danger` (red) and `warning` (amber) types. |
 | **Version system** | `APP_VERSION = "dev"` in `config.js`. Deploy workflow injects the release tag. In dev, runtime auto-detects latest file modification timestamp via `Last-Modified` HTTP headers → displays `dev-YYYYMMDD-HHMM`. No git or build step needed at runtime. |
 | **About dialog** | Overlay popup (not a screen) accessible via footer "About" link. Shows version, license, author, source link. |
 | **SW cache = version** | Service worker cache name is `"wplog-" + APP_VERSION`. Each release busts stale caches automatically. |
+| **SW dev vs prod** | Service worker uses network-first strategy in dev mode (no stale cache issues) and cache-first in production (offline reliability). |
+| **QR code sharing** | Single SVG (`img/qr-wplog.svg`) with white modules on transparent background. CSS `filter: invert(1)` for high-contrast overlay. Share screen always accessible. |
+| **Share tab always active** | Share tab is always enabled. Print Game Sheet button is disabled when no game is active. |
 
 ### USAWP Events
 
@@ -157,6 +161,12 @@ NFHS does not have Brutality.
 - About dialog (overlay popup from footer link: version, license, author, source)
 - Service worker cache name tied to `APP_VERSION` for automatic cache busting
 - Deploy-time version injection via `sed` in `deploy.yml`
+- QR code on Share screen for app URL sharing (single SVG, CSS-controlled colors)
+- Share tab always active; Print Game Sheet disabled without active game
+- Tap-to-expand QR overlay: full-screen on mobile, dialog-sized on desktop, high-contrast (black on white)
+- Service worker: network-first in dev, cache-first in production
+- `.btn:disabled` styling matching nav tab pattern (opacity 0.3)
+- "Kraken" workflow for version tagging and release
 
 ### Known Gaps / Future Work 📋
 - No NCAA rules yet (structure ready)
