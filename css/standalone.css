@@ -1,0 +1,128 @@
+/* ============================
+   Standalone Page Styles
+   Shared by privacy.html, help.html,
+   and other standalone pages.
+   ============================ */
+
+:root {
+  --bg-primary: #0a0e1a;
+  --bg-card: #1a2236;
+  --text-primary: #e8ecf4;
+  --text-secondary: #8892a8;
+  --text-muted: #5a6478;
+  --accent-blue: #3b82f6;
+  --border: rgba(255, 255, 255, 0.08);
+  --font: 'Inter', system-ui, -apple-system, sans-serif;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  font-size: 16px;
+}
+
+body {
+  font-family: var(--font);
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  min-height: 100dvh;
+  -webkit-font-smoothing: antialiased;
+  line-height: 1.7;
+}
+
+.container {
+  max-width: 640px;
+  margin: 0 auto;
+  padding: 40px 20px 60px;
+}
+
+h1 {
+  font-size: 28px;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  margin-bottom: 4px;
+}
+
+.effective-date {
+  font-size: 13px;
+  color: var(--text-muted);
+  margin-bottom: 32px;
+}
+
+h2 {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--accent-blue);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-top: 32px;
+  margin-bottom: 10px;
+}
+
+p {
+  font-size: 14px;
+  color: var(--text-secondary);
+  margin-bottom: 12px;
+}
+
+a {
+  color: var(--accent-blue);
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
+/* Help-specific styles */
+
+.help-section {
+  margin-bottom: 20px;
+}
+
+.help-section h2 {
+  margin-top: 0;
+}
+
+/* Help-specific list styles */
+
+.help-list {
+  font-size: 13px;
+  color: var(--text-secondary);
+  padding-left: 20px;
+  line-height: 1.6;
+}
+
+.help-list li {
+  margin-bottom: 2px;
+}
+
+.help-list strong {
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+/* Footer */
+.footer {
+  margin-top: 48px;
+  padding-top: 20px;
+  border-top: 1px solid var(--border);
+  font-size: 11px;
+  color: var(--text-muted);
+  text-align: center;
+}
+
+.footer a {
+  color: var(--accent-blue);
+  text-decoration: none;
+}
+
+.footer a:hover {
+  text-decoration: underline;
+}

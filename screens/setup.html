@@ -1,0 +1,74 @@
+<h1 class="app-title">wplog</h1>
+<p class="app-subtitle">Water Polo Game Log</p>
+
+<div class="form-group">
+  <label for="setup-rules">Rules</label>
+  <select id="setup-rules" class="form-input"></select>
+</div>
+
+<div class="form-row">
+  <div class="form-group">
+    <label for="setup-date">Date</label>
+    <input id="setup-date" type="date" class="form-input">
+  </div>
+  <div class="form-group">
+    <label for="setup-time">Start Time</label>
+    <input id="setup-time" type="time" class="form-input">
+  </div>
+</div>
+
+<div class="form-group">
+  <label for="setup-location">Location</label>
+  <input id="setup-location" type="text" class="form-input" placeholder="Optional">
+</div>
+
+<div class="form-group">
+  <label for="setup-game-id">Game #</label>
+  <input id="setup-game-id" type="text" class="form-input" placeholder="Optional">
+</div>
+
+<div class="form-row">
+  <div class="form-group">
+    <label for="setup-white-name">White Team</label>
+    <input id="setup-white-name" type="text" class="form-input" placeholder="White">
+  </div>
+  <div class="form-group">
+    <label for="setup-dark-name">Dark Team</label>
+    <input id="setup-dark-name" type="text" class="form-input" placeholder="Dark">
+  </div>
+</div>
+
+<div class="form-row toggle-row">
+  <label class="toggle-label">
+    <input id="setup-overtime" type="checkbox">
+    <span>Overtime</span>
+  </label>
+  <label class="toggle-label">
+    <input id="setup-shootout" type="checkbox">
+    <span>Shootout</span>
+  </label>
+</div>
+
+<div class="form-row">
+  <div class="form-group">
+    <label for="setup-period-length">Quarter Length</label>
+    <select id="setup-period-length" class="form-input"></select>
+  </div>
+  <div class="form-group" id="setup-ot-length-group">
+    <label for="setup-ot-length">OT Length</label>
+    <select id="setup-ot-length" class="form-input"></select>
+  </div>
+</div>
+
+<div class="form-row">
+  <div class="form-group">
+    <label for="setup-to-full">Full TOs (per team)</label>
+    <input id="setup-to-full" type="number" class="form-input" min="0" max="9" value="3">
+  </div>
+  <div class="form-group">
+    <label for="setup-to-30">30s TOs (per team)</label>
+    <input id="setup-to-30" type="number" class="form-input" min="0" max="9" value="1">
+  </div>
+</div>
+
+<button id="setup-start-btn" class="btn btn-primary btn-large">Start Game</button>

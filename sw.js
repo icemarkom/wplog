@@ -8,6 +8,7 @@ const ASSETS = [
     "./index.html",
     "./css/style.css",
     "./css/print.css",
+    "./css/standalone.css",
     "./js/config.js",
     "./js/confirm.js",
     "./js/storage.js",
@@ -18,7 +19,13 @@ const ASSETS = [
     "./js/share.js",
     "./js/app.js",
     "./img/qr-wplog.svg",
+    "./screens/setup.html",
+    "./screens/live.html",
+    "./screens/modal.html",
+    "./screens/sheet.html",
+    "./screens/share.html",
     "./privacy.html",
+    "./help.html",
     "./manifest.json",
 ];
 

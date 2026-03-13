@@ -120,8 +120,24 @@ const App = {
             Share.init(this.game);
         });
 
-        document.getElementById("nav-help").addEventListener("click", () => {
+        document.getElementById("nav-help").addEventListener("click", async () => {
             this.showScreen("help");
+
+            // Load content from help.html (single source of truth)
+            const el = document.getElementById("help-content");
+            if (!el.innerHTML) {
+                try {
+                    const res = await fetch("help.html");
+                    const html = await res.text();
+                    const doc = new DOMParser().parseFromString(html, "text/html");
+                    el.innerHTML = doc.querySelector(".container").innerHTML;
+                    // Remove the footer — not needed in-app
+                    const footer = el.querySelector(".footer");
+                    if (footer) footer.remove();
+                } catch {
+                    el.innerHTML = "<p>Could not load help content.</p>";
+                }
+            }
         });
 
     },
