@@ -146,22 +146,19 @@
   <div id="event-modal" class="event-modal">
     <div class="event-modal-content">
 
-      <!-- Event Selector -->
-      <div class="input-section">
-        <label class="input-label">Event</label>
-        <select id="modal-event-select" class="form-input"></select>
-      </div>
+      <!-- Event Title -->
+      <div id="modal-event-title" class="modal-event-title"></div>
 
       <!-- Time (tap to target numpad) -->
       <div class="modal-field active" id="field-time" data-target="time">
         <label class="input-label">Time</label>
-        <div id="time-display" class="field-display">—</div>
+        <div id="time-display" class="field-display"></div>
       </div>
 
       <!-- Cap (tap to target numpad) -->
       <div class="modal-field" id="field-cap" data-target="cap">
-        <label class="input-label">Cap #</label>
-        <div id="cap-display" class="field-display">—</div>
+        <label class="input-label">CAP</label>
+        <div id="cap-display" class="field-display"></div>
       </div>
 
       <!-- Team Toggle -->
@@ -175,16 +172,17 @@
         <button class="numpad-btn" data-value="1">1</button>
         <button class="numpad-btn" data-value="2">2</button>
         <button class="numpad-btn" data-value="3">3</button>
+        <button class="numpad-btn numpad-letter" data-value="A">A</button>
         <button class="numpad-btn" data-value="4">4</button>
         <button class="numpad-btn" data-value="5">5</button>
         <button class="numpad-btn" data-value="6">6</button>
+        <button class="numpad-btn numpad-letter" data-value="B">B</button>
         <button class="numpad-btn" data-value="7">7</button>
         <button class="numpad-btn" data-value="8">8</button>
         <button class="numpad-btn" data-value="9">9</button>
-        <button class="numpad-btn numpad-letter" data-value="A">A</button>
-        <button class="numpad-btn" data-value="0">0</button>
-        <button class="numpad-btn numpad-letter" data-value="B">B</button>
         <button class="numpad-btn numpad-letter" data-value="C">C</button>
+        <span></span>
+        <button class="numpad-btn" data-value="0">0</button>
         <button class="numpad-btn numpad-clear" data-value="clear">⌫</button>
       </div>
 

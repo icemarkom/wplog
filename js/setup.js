@@ -24,7 +24,9 @@ const Setup = {
         // Populate form from game data
         document.getElementById("setup-rules").value = game.rules;
         document.getElementById("setup-date").value = game.date || "";
-        document.getElementById("setup-time").value = game.startTime || "";
+        const timeEl = document.getElementById("setup-time");
+        timeEl.value = game.startTime || "";
+        timeEl.classList.toggle("has-value", !!timeEl.value);
         document.getElementById("setup-location").value = game.location || "";
         document.getElementById("setup-game-id").value = game.gameId || "";
         document.getElementById("setup-overtime").checked = game.overtime;
@@ -144,6 +146,11 @@ const Setup = {
 
         document.getElementById("setup-start-btn").addEventListener("click", () => {
             this._startGame();
+        });
+
+        // Toggle has-value class for time input styling
+        document.getElementById("setup-time").addEventListener("change", (e) => {
+            e.target.classList.toggle("has-value", !!e.target.value);
         });
     },
 
