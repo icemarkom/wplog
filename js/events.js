@@ -25,37 +25,46 @@ const Events = {
     },
 
     // ── Time Parsing ────────────────────────────────────────
-    // "453" → { display: "4:53", stored: "04:53" }
-    // "7" → { display: "7:00", stored: "07:00" }
-    // "30" → { display: "0:30", stored: "00:30" }
+    // Water polo game clock: M:SS format (max 9:59)
+    // Digits fill right-to-left: S2, S1, M
+    // "4"   → 0:04  (4 seconds)
+    // "45"  → 0:45  (45 seconds)
+    // "453" → 4:53  (4 min 53 sec)
 
     _parseTime(digits) {
         if (digits.length === 0) return null;
 
-        let minutes, seconds;
-        if (digits.length === 1) {
-            minutes = parseInt(digits); seconds = 0;
-        } else if (digits.length === 2) {
-            minutes = 0; seconds = parseInt(digits);
-        } else if (digits.length === 3) {
-            minutes = parseInt(digits[0]); seconds = parseInt(digits.slice(1));
-        } else {
-            const last4 = digits.slice(-4);
-            minutes = parseInt(last4.slice(0, 2)); seconds = parseInt(last4.slice(2));
-        }
+        // Right-justify into 3 positions: M S1 S2
+        const padded = digits.padStart(3, "0");
+        const minutes = parseInt(padded[0]);
+        const seconds = parseInt(padded.slice(1));
 
-        if (seconds > 59 || minutes > 99) return null;
+        if (seconds > 59 || minutes > 9) return null;
 
         return {
             display: minutes + ":" + String(seconds).padStart(2, "0"),
-            stored: String(minutes).padStart(2, "0") + ":" + String(seconds).padStart(2, "0"),
+            stored: minutes + ":" + String(seconds).padStart(2, "0"),
         };
     },
 
     _formatTimeDisplay(digits) {
-        if (digits.length === 0) return "—";
-        const parsed = this._parseTime(digits);
-        return parsed ? parsed.display : digits;
+        // Right-to-left fill into M:S1S2 — placeholder is -:--
+        const padded = digits.padStart(3, "\0"); // pad with nulls
+        const parts = [];
+
+        for (let i = 0; i < 3; i++) {
+            if (padded[i] === "\0") {
+                parts.push(`<span class="time-placeholder">-</span>`);
+            } else {
+                parts.push(padded[i]);
+            }
+        }
+
+        // Colon is dim only when no digits entered
+        const colonClass = digits.length > 0 ? "" : ' class="time-placeholder"';
+
+        // Minutes placeholder shows for 0-2 digits, hidden when 3 digits (minutes filled)
+        return `<span class="time-formatted">${parts[0]}<span${colonClass}>:</span>${parts[1]}${parts[2]}</span>`;
     },
 
     // ── Modal Controls ──────────────────────────────────────
@@ -92,12 +101,12 @@ const Events = {
                 this._timeRaw = this._timeRaw.slice(0, -1);
             } else if (["A", "B", "C"].includes(val)) {
                 return; // letters not valid for time
-            } else if (this._timeRaw.length < 4) {
+            } else if (this._timeRaw.length < 3) {
                 this._timeRaw += val;
             }
-            document.getElementById("time-display").textContent = this._formatTimeDisplay(this._timeRaw);
+            document.getElementById("time-display").innerHTML = this._formatTimeDisplay(this._timeRaw);
 
-            // Auto-advance to cap after 3 digits (most common: e.g. "453")
+            // Auto-advance to cap after 3 digits (M:SS complete)
             if (this._timeRaw.length >= 3 && !this._isNoPlayer()) {
                 this._setNumpadTarget("cap");
             }
@@ -128,7 +137,7 @@ const Events = {
                     this._capRaw += val;
                 }
             }
-            document.getElementById("cap-display").textContent = this._capRaw || "—";
+            document.getElementById("cap-display").textContent = this._capRaw;
         }
         this._updateOkButton();
     },
@@ -186,8 +195,8 @@ const Events = {
         // Reset inputs
         this._timeRaw = "";
         this._capRaw = "";
-        document.getElementById("time-display").textContent = "—";
-        document.getElementById("cap-display").textContent = "—";
+        document.getElementById("time-display").innerHTML = this._formatTimeDisplay("");
+        document.getElementById("cap-display").textContent = "";
 
         // Show/hide sections
         this._updateModalSections();
@@ -399,7 +408,7 @@ const Events = {
                 const eventDef = rules.events.find((e) => e.code === entry.event);
                 const eventName = eventDef ? eventDef.name : entry.event;
                 row.innerHTML = `
-          <span class="log-time">${entry.time}</span>
+          <span class="log-time">${entry.time.replace(/^0(\d:)/, '$1')}</span>
           <span class="log-team ${entry.team === 'W' ? 'team-white' : 'team-dark'}">${entry.team}</span>
           <span class="log-cap">${entry.cap}</span>
           <span class="log-event event-${this._getEventClass(entry.event)}">${eventName}</span>

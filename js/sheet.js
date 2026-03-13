@@ -109,7 +109,7 @@ const Sheet = {
                 const eventDef = rules.events.find((e) => e.code === entry.event);
                 const align = eventDef && eventDef.align ? eventDef.align : "center";
                 tr.innerHTML = `
-          <td>${entry.time}</td>
+          <td>${entry.time.replace(/^0(\d:)/, '$1')}</td>
           <td>${entry.cap || "—"}</td>
           <td>${entry.team || "—"}</td>
           <td style="text-align:${align}">${entry.event}</td>
@@ -294,7 +294,7 @@ const Sheet = {
             tr.innerHTML = `
         <td>${entry.team === "W" ? "White" : (entry.team === "D" ? "Dark" : "—")}</td>
         <td>${Game.getPeriodLabel(entry.period)}</td>
-        <td>${entry.time}</td>
+        <td>${entry.time.replace(/^0(\d:)/, '$1')}</td>
         <td>${eventDef ? eventDef.name : entry.event}</td>
       `;
             tbody.appendChild(tr);
@@ -337,7 +337,7 @@ const Sheet = {
         <td>${entry.team === "W" ? "White" : (entry.team === "D" ? "Dark" : "—")}</td>
         <td>${entry.cap || "—"}</td>
         <td>${Game.getPeriodLabel(entry.period)}</td>
-        <td>${entry.time}</td>
+        <td>${entry.time.replace(/^0(\d:)/, '$1')}</td>
         <td>${eventDef ? eventDef.name : entry.event}</td>
       `;
             tbody.appendChild(tr);

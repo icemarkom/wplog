@@ -857,6 +857,8 @@ select.form-input {
 .modal-field {
   display: flex;
   align-items: center;
+  justify-content: center;
+  position: relative;
   padding: 1.5dvh 12px;
   height: auto;
   border: 2px solid var(--border);
@@ -873,8 +875,9 @@ select.form-input {
 }
 
 .modal-field .input-label {
+  position: absolute;
+  left: 12px;
   margin-bottom: 0;
-  margin-right: 12px;
   flex-shrink: 0;
 }
 
@@ -886,6 +889,16 @@ select.form-input {
   color: var(--text-primary);
   flex: 1;
   font-variant-numeric: tabular-nums;
+}
+
+.time-formatted {
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.05em;
+}
+
+.time-placeholder {
+  color: var(--text-muted);
+  opacity: 0.35;
 }
 
 .modal-actions {
