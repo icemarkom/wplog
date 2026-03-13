@@ -54,19 +54,6 @@ const App = {
             }
         });
 
-        // New game button
-        document.getElementById("new-game-btn")?.addEventListener("click", () => {
-            if (confirm("Start a new game? Current game data will be cleared.")) {
-                Storage.clear();
-                this.game = null;
-                this.showScreen("setup");
-                Setup.init((game) => {
-                    this.game = game;
-                    this.showScreen("live");
-                    Events.init(this.game);
-                });
-            }
-        });
     },
 
     showScreen(name) {

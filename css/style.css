@@ -93,13 +93,13 @@ body {
    ============================ */
 .nav-bar {
   position: fixed;
-  bottom: 0;
+  bottom: 24px;
   left: 0;
   right: 0;
   display: flex;
   background: var(--bg-secondary);
   border-top: 1px solid var(--border);
-  padding: 6px 8px calc(env(safe-area-inset-bottom, 0px) + 6px);
+  padding: 6px 8px;
   z-index: 100;
   backdrop-filter: blur(12px);
 }
@@ -134,7 +134,7 @@ body {
    ============================ */
 .screen {
   display: none;
-  padding-bottom: 80px; /* nav bar space */
+  padding-bottom: 104px; /* nav bar + footer space */
 }
 
 .screen.active {
@@ -1155,10 +1155,17 @@ select.form-input {
    Footer
    ============================ */
 .app-footer {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
   text-align: center;
   font-size: 11px;
   color: var(--text-muted);
-  padding: 16px 12px calc(var(--nav-height) + 16px);
+  padding: 4px 12px calc(env(safe-area-inset-bottom, 0px) + 4px);
+  background: var(--bg-primary);
+  border-top: 1px solid var(--border);
+  z-index: 101;
   opacity: 0.6;
 }
 
