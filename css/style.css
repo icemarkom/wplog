@@ -1006,7 +1006,7 @@ select.form-input {
 
 .sheet-meta-times {
   display: flex;
-  gap: 16px;
+  gap: 12px;
   flex-wrap: wrap;
 }
 

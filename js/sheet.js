@@ -51,8 +51,8 @@ const Sheet = {
         </div>
         <div class="sheet-meta-row sheet-meta-times">
           <span class="sheet-meta-pair"><span class="sheet-label">Date:</span> <span class="sheet-value">${game.date}</span></span>
-          <span class="sheet-meta-pair"><span class="sheet-label">Scheduled Time:</span> <span class="sheet-value">${game.startTime || "--:--"}</span></span>
-          <span class="sheet-meta-pair"><span class="sheet-label">End Time:</span> <span class="sheet-value">${game.endTime || "--:--"}</span></span>
+          <span class="sheet-meta-pair"><span class="sheet-label">Scheduled:</span> <span class="sheet-value">${game.startTime || "--:--"}</span></span>
+          <span class="sheet-meta-pair"><span class="sheet-label">Ended:</span> <span class="sheet-value">${game.endTime || "--:--"}</span></span>
         </div>
       </div>
       <div class="sheet-teams">
@@ -87,7 +87,7 @@ const Sheet = {
         thead.innerHTML = `
       <tr>
         <th>Time</th>
-        <th>Cap#</th>
+        <th>Cap</th>
         <th>Team</th>
         <th>Remarks</th>
         <th>Score</th>
@@ -227,7 +227,7 @@ const Sheet = {
         table.className = "sheet-table";
         table.innerHTML = `
       <thead>
-        <tr><th>Team</th><th>Cap#</th><th>Fouls</th><th>Details</th></tr>
+        <tr><th>Team</th><th>Cap</th><th>Fouls</th><th>Details</th></tr>
       </thead>
     `;
 
@@ -324,7 +324,7 @@ const Sheet = {
         table.className = "sheet-table";
         table.innerHTML = `
       <thead>
-        <tr><th>Team</th><th>Cap#</th><th>Period</th><th>Time</th><th>Type</th></tr>
+        <tr><th>Team</th><th>Cap</th><th>Period</th><th>Time</th><th>Type</th></tr>
       </thead>
     `;
 

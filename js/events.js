@@ -271,12 +271,12 @@ const Events = {
             const teamLabel = this.selectedTeam === "W" ? "White" : "Dark";
             if (foulOut.type === "auto") {
                 this._showFoulOutPopup(
-                    `FOUL OUT — ${teamLabel} #${cap}`,
+                    `FOUL OUT — ${teamLabel} ${cap}`,
                     `${foulOut.event} — automatic game exclusion`
                 );
             } else {
                 this._showFoulOutPopup(
-                    `FOUL OUT — ${teamLabel} #${cap}`,
+                    `FOUL OUT — ${teamLabel} ${cap}`,
                     `${foulOut.count} exclusion fouls (limit: ${foulOut.limit})`
                 );
             }
@@ -401,7 +401,7 @@ const Events = {
                 row.innerHTML = `
           <span class="log-time">${entry.time}</span>
           <span class="log-team ${entry.team === 'W' ? 'team-white' : 'team-dark'}">${entry.team}</span>
-          <span class="log-cap">#${entry.cap}</span>
+          <span class="log-cap">${entry.cap}</span>
           <span class="log-event event-${this._getEventClass(entry.event)}">${eventName}</span>
           <span class="log-score">${entry.scoreW}–${entry.scoreD}</span>
           <button class="log-delete-btn" data-id="${entry.id}" title="Delete">✕</button>
