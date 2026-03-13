@@ -122,7 +122,7 @@ NFHS does not have Brutality.
 
 ---
 
-## Current State (as of 2026-03-14)
+## Current State (as of 2026-03-13)
 
 ### What's Done ✅
 - Complete setup screen (rules, date, time, location, Game #, team names, OT/SO toggles, timeout overrides)
