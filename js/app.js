@@ -27,6 +27,14 @@ const App = {
             }
         });
 
+        // QR code full-screen overlay
+        document.querySelector(".qr-code").addEventListener("click", () => {
+            document.getElementById("qr-overlay").classList.add("visible");
+        });
+        document.getElementById("qr-overlay").addEventListener("click", () => {
+            document.getElementById("qr-overlay").classList.remove("visible");
+        });
+
         // Try to restore saved game
         const saved = Storage.load();
         if (saved && saved.rules) {
@@ -70,10 +78,8 @@ const App = {
         });
 
         document.getElementById("nav-share").addEventListener("click", () => {
-            if (this.game) {
-                this.showScreen("share");
-                Share.init(this.game);
-            }
+            this.showScreen("share");
+            Share.init(this.game);
         });
 
     },
@@ -157,7 +163,6 @@ const App = {
         const hasGame = !!this.game;
         document.getElementById("nav-live").disabled = !hasGame;
         document.getElementById("nav-sheet").disabled = !hasGame;
-        document.getElementById("nav-share").disabled = !hasGame;
     },
 };
 
