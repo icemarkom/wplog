@@ -186,6 +186,7 @@ body {
 .form-input {
   width: 100%;
   padding: 12px 14px;
+  min-height: 44px;
   background: var(--bg-input);
   border: 1px solid var(--border);
   border-radius: var(--radius-md);
@@ -205,6 +206,21 @@ body {
 
 .form-input::placeholder {
   color: var(--text-muted);
+}
+
+/* Style native time input placeholder (--:--) */
+input[type="time"]::-webkit-datetime-edit {
+  color: var(--text-muted);
+}
+
+input[type="time"]::-webkit-datetime-edit-fields-wrapper {
+  color: var(--text-muted);
+}
+
+/* When time has a value, use normal text color */
+input[type="time"].has-value::-webkit-datetime-edit,
+input[type="time"].has-value::-webkit-datetime-edit-fields-wrapper {
+  color: var(--text-primary);
 }
 
 select.form-input {
@@ -478,7 +494,8 @@ select.form-input {
 
 .team-btn {
   flex: 1;
-  padding: 1.5dvh;
+  padding: 0 12px;
+  min-height: 48px;
   border: 2px solid var(--border);
   border-radius: var(--radius-md);
   background: var(--bg-card);
@@ -534,7 +551,7 @@ select.form-input {
   cursor: pointer;
   transition: all var(--transition);
   touch-action: manipulation;
-  min-height: 44px;
+  min-height: 48px;
 }
 
 .numpad-btn:active {
@@ -859,7 +876,8 @@ select.form-input {
   align-items: center;
   justify-content: center;
   position: relative;
-  padding: 1.5dvh 12px;
+  padding: 0 12px;
+  min-height: 48px;
   height: auto;
   border: 2px solid var(--border);
   border-radius: var(--radius-md);
@@ -910,7 +928,8 @@ select.form-input {
 
 .modal-action-btn {
   flex: 1;
-  padding: 1.5dvh;
+  padding: 0 12px;
+  min-height: 48px;
   font-size: 15px;
   border-radius: var(--radius-md);
 }
@@ -1248,7 +1267,7 @@ select.form-input {
   }
 
   .team-btn {
-    padding: 12px;
+    min-height: 48px;
   }
 
   .numpad {
@@ -1259,8 +1278,8 @@ select.form-input {
   }
 
   .numpad-btn {
-    padding: 14px 8px;
-    min-height: 48px;
+    padding: 0 8px;
+    min-height: 56px;
   }
 
   .modal-actions {
@@ -1268,7 +1287,7 @@ select.form-input {
   }
 
   .modal-action-btn {
-    padding: 14px;
+    min-height: 48px;
   }
 }
 
