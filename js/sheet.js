@@ -177,40 +177,25 @@ const Sheet = {
         title.textContent = "Personal Fouls";
         section.appendChild(title);
 
-        // Collect all players with fouls
-        const foulEvents = ["E", "E-Game", "P-E"];
+        // Collect all players with personal fouls or auto-foul-out events
+        const rules = RULES[this.game.rules];
+        const foulCodes = rules.events
+            .filter(e => e.isPersonalFoul || e.autoFoulOut)
+            .map(e => e.code);
         const playerFouls = {};
 
         for (const entry of this.game.log) {
-            if (foulEvents.includes(entry.event) && entry.cap) {
+            if (foulCodes.includes(entry.event) && entry.cap) {
                 const key = entry.team + "#" + entry.cap;
                 if (!playerFouls[key]) {
                     playerFouls[key] = { team: entry.team, cap: entry.cap, fouls: [] };
                 }
-                const rules = RULES[this.game.rules];
                 const eventDef = rules.events.find((e) => e.code === entry.event);
                 playerFouls[key].fouls.push({
                     period: entry.period,
                     time: entry.time,
                     event: eventDef ? eventDef.name : entry.event,
-                });
-            }
-        }
-
-        // Also include auto foul-out events
-        const autoFoulEvents = ["MC", "BR"];
-        for (const entry of this.game.log) {
-            if (autoFoulEvents.includes(entry.event) && entry.cap) {
-                const key = entry.team + "#" + entry.cap;
-                if (!playerFouls[key]) {
-                    playerFouls[key] = { team: entry.team, cap: entry.cap, fouls: [] };
-                }
-                const rules = RULES[this.game.rules];
-                const eventDef = rules.events.find((e) => e.code === entry.event);
-                playerFouls[key].fouls.push({
-                    period: entry.period,
-                    time: entry.time,
-                    event: eventDef ? eventDef.name : entry.event,
+                    code: entry.event,
                 });
             }
         }
@@ -232,13 +217,18 @@ const Sheet = {
     `;
 
         const tbody = document.createElement("tbody");
-        const rules = RULES[this.game.rules];
 
         for (const [, player] of Object.entries(playerFouls)) {
             const tr = document.createElement("tr");
-            const isFouledOut =
-                player.fouls.length >= rules.foulOutLimit ||
-                player.fouls.some((f) => autoFoulEvents.some((ae) => f.event === (RULES[this.game.rules].events.find(e => e.code === ae)?.name)));
+            const personalFoulCount = player.fouls.filter(f => {
+                const def = rules.events.find(e => e.name === f.event);
+                return def && def.isPersonalFoul;
+            }).length;
+            const hasAutoFoulOut = player.fouls.some(f => {
+                const def = rules.events.find(e => e.name === f.event);
+                return def && def.autoFoulOut;
+            });
+            const isFouledOut = personalFoulCount >= rules.foulOutLimit || hasAutoFoulOut;
             if (isFouledOut) tr.classList.add("sheet-fouled-out");
 
             const details = player.fouls

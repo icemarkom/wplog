@@ -286,7 +286,7 @@ const Events = {
             } else {
                 this._showFoulOutPopup(
                     `FOUL OUT — ${teamLabel} ${cap}`,
-                    `${foulOut.count} exclusion fouls (limit: ${foulOut.limit})`
+                    `${foulOut.count} personal fouls (limit: ${foulOut.limit})`
                 );
             }
         }

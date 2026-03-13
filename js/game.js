@@ -105,8 +105,10 @@ const Game = {
 
     // Get personal fouls for a specific player (team + cap)
     getPlayerFouls(game, team, cap) {
+        const rules = RULES[game.rules];
+        const foulCodes = rules.events.filter(e => e.isPersonalFoul).map(e => e.code);
         return game.log.filter(
-            (e) => e.team === team && e.cap === cap && e.event === "E"
+            (e) => e.team === team && e.cap === cap && foulCodes.includes(e.event)
         ).length;
     },
 
@@ -136,8 +138,8 @@ const Game = {
             }
         }
 
-        // Accumulated exclusion fouls
-        if (eventCode === "E") {
+        // Accumulated personal fouls
+        if (eventDef && eventDef.isPersonalFoul) {
             const fouls = this.getPlayerFouls(game, team, cap);
             if (fouls + 1 >= rules.foulOutLimit) {
                 return {
