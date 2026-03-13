@@ -70,12 +70,19 @@
     </div>
   </div>
 
+  <!-- QR Code Full-Screen Overlay -->
+  <div id="qr-overlay" class="overlay qr-overlay">
+    <div class="qr-fullscreen-wrap">
+      <img src="img/qr-wplog.svg" alt="QR code for wplog" class="qr-fullscreen">
+    </div>
+  </div>
+
   <!-- Navigation -->
   <nav class="nav-bar">
     <button id="nav-setup" class="nav-btn active">Setup</button>
     <button id="nav-live" class="nav-btn" disabled>Live</button>
     <button id="nav-sheet" class="nav-btn" disabled>Sheet</button>
-    <button id="nav-share" class="nav-btn" disabled>Share</button>
+    <button id="nav-share" class="nav-btn">Share</button>
   </nav>
 
   <!-- ==================== SETUP SCREEN ==================== -->
@@ -255,8 +262,10 @@
   <!-- ==================== SHARE SCREEN ==================== -->
   <section id="screen-share" class="screen">
     <div class="screen-content">
-      <h2 class="share-title">Share Game Sheet</h2>
-      <p class="share-description">Print or save as PDF to share via email, messages, or other apps.</p>
+      <div class="qr-container">
+        <img src="img/qr-wplog.svg" alt="QR code for wplog" class="qr-code">
+        <p class="qr-label">Scan to open wplog</p>
+      </div>
       <div class="share-buttons">
         <button id="print-sheet-btn" class="btn btn-primary btn-large">Print Game Sheet</button>
       </div>

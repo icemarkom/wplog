@@ -293,6 +293,11 @@ select.form-input {
   box-shadow: var(--shadow-md), var(--shadow-glow);
 }
 
+.btn:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
 .btn-primary:active {
   transform: translateY(0);
 }
@@ -1232,18 +1237,68 @@ select.form-input {
 /* ============================
    Share Screen
    ============================ */
-.share-title {
-  font-size: 22px;
-  font-weight: 700;
-  text-align: center;
-  margin-bottom: 12px;
+.qr-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 32px;
 }
 
-.share-description {
-  text-align: center;
+.qr-code {
+  width: 200px;
+  height: 200px;
+  border-radius: var(--radius-md);
+  padding: 16px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  cursor: pointer;
+  transition: transform 0.15s ease;
+  /* Tint white modules to accent blue */
+  filter: brightness(0.75) sepia(1) hue-rotate(190deg) saturate(3);
+}
+
+.qr-code:hover {
+  transform: scale(1.03);
+}
+
+.qr-overlay {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  cursor: pointer;
+}
+
+.qr-fullscreen-wrap {
+  width: 90%;
+  aspect-ratio: 1;
+  max-height: 90%;
+  background: #fff;
+  padding: 12px;
+  border-radius: var(--radius-lg);
+  box-sizing: border-box;
+}
+
+/* Desktop: match modal dialog sizing */
+@media (min-width: 900px) and (min-height: 700px) {
+  .qr-fullscreen-wrap {
+    width: 480px;
+    height: 480px;
+  }
+}
+
+.qr-fullscreen {
+  width: 100%;
+  height: auto;
+  display: block;
+  filter: invert(1);
+}
+
+.qr-label {
+  margin-top: 12px;
+  font-size: 13px;
   color: var(--text-muted);
-  font-size: 14px;
-  margin-bottom: 24px;
+  text-align: center;
 }
 
 .share-buttons {

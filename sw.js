@@ -17,6 +17,7 @@ const ASSETS = [
     "./js/sheet.js",
     "./js/share.js",
     "./js/app.js",
+    "./img/qr-wplog.svg",
     "./manifest.json",
 ];
 
@@ -40,18 +41,31 @@ self.addEventListener("activate", (event) => {
     self.clients.claim();
 });
 
-// Fetch — cache-first strategy
+// Fetch — network-first in dev, cache-first in production
 self.addEventListener("fetch", (event) => {
-    event.respondWith(
-        caches.match(event.request).then((cached) => {
-            return cached || fetch(event.request).then((response) => {
-                // Cache successful responses
+    if (APP_VERSION === "dev") {
+        // Dev: always fetch from network, fall back to cache
+        event.respondWith(
+            fetch(event.request).then((response) => {
                 if (response.status === 200) {
                     const clone = response.clone();
                     caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
                 }
                 return response;
-            });
-        })
-    );
+            }).catch(() => caches.match(event.request))
+        );
+    } else {
+        // Production: cache-first for offline reliability
+        event.respondWith(
+            caches.match(event.request).then((cached) => {
+                return cached || fetch(event.request).then((response) => {
+                    if (response.status === 200) {
+                        const clone = response.clone();
+                        caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
+                    }
+                    return response;
+                });
+            })
+        );
+    }
 });
