@@ -8,6 +8,25 @@ const App = {
         // Initialize confirm dialog
         ConfirmDialog.init();
 
+        // Display version
+        this._initVersion();
+
+        // Footer "About" link
+        document.getElementById("footer-about-link").addEventListener("click", (e) => {
+            e.preventDefault();
+            document.getElementById("about-overlay").classList.add("visible");
+        });
+
+        // About dismiss
+        document.getElementById("about-dismiss").addEventListener("click", () => {
+            document.getElementById("about-overlay").classList.remove("visible");
+        });
+        document.getElementById("about-overlay").addEventListener("click", (e) => {
+            if (e.target === e.currentTarget) {
+                document.getElementById("about-overlay").classList.remove("visible");
+            }
+        });
+
         // Try to restore saved game
         const saved = Storage.load();
         if (saved && saved.rules) {
@@ -59,6 +78,69 @@ const App = {
 
     },
 
+    // ── Version Display ──────────────────────────────────────
+
+    _initVersion() {
+        if (APP_VERSION === "dev") {
+            // Dev mode: detect latest source file modification time
+            this._setVersionText("dev");
+            this._detectDevTimestamp();
+        } else {
+            this._setVersionText("v" + APP_VERSION);
+        }
+    },
+
+    _setVersionText(text) {
+        document.getElementById("app-version").textContent = text;
+        document.getElementById("about-version").textContent = text;
+    },
+
+    async _detectDevTimestamp() {
+        const files = [
+            "index.html",
+            "css/style.css",
+            "js/config.js",
+            "js/app.js",
+            "js/events.js",
+            "js/game.js",
+            "js/setup.js",
+            "js/sheet.js",
+            "js/share.js",
+            "js/confirm.js",
+            "js/storage.js",
+        ];
+
+        try {
+            const responses = await Promise.all(
+                files.map((f) => fetch(f, { method: "HEAD" }).catch(() => null))
+            );
+
+            let latest = 0;
+            for (const res of responses) {
+                if (!res) continue;
+                const lm = res.headers.get("Last-Modified");
+                if (lm) {
+                    const ts = new Date(lm).getTime();
+                    if (ts > latest) latest = ts;
+                }
+            }
+
+            if (latest > 0) {
+                const d = new Date(latest);
+                const pad = (n) => String(n).padStart(2, "0");
+                const stamp = d.getFullYear()
+                    + pad(d.getMonth() + 1)
+                    + pad(d.getDate())
+                    + "-"
+                    + pad(d.getHours())
+                    + pad(d.getMinutes());
+                this._setVersionText("dev-" + stamp);
+            }
+        } catch (e) {
+            // Silently keep "dev" if detection fails
+        }
+    },
+
     showScreen(name) {
         this.currentScreen = name;
         document.querySelectorAll(".screen").forEach((el) => {
@@ -68,6 +150,7 @@ const App = {
         // Update nav active state
         document.querySelectorAll(".nav-btn").forEach((btn) => {
             btn.classList.toggle("active", btn.id === "nav-" + name);
+            // Deactivate all nav buttons when showing About (no nav button for it)
         });
 
         // Disable nav buttons that require a game

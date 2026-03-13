@@ -1,3 +1,7 @@
+// wplog — Application Version
+// Default is "dev"; deploy workflow injects the release tag.
+const APP_VERSION = "dev";
+
 // wplog — Rules Configuration
 // USAWP only for now. Structure supports future NFHS/NCAA additions.
 //

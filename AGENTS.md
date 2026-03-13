@@ -20,26 +20,27 @@ wplog/
 │   ├── style.css       # Dark-mode design system, mobile-first
 │   └── print.css       # Print-only B&W styles for game sheet
 ├── js/
-│   ├── config.js       # RULES definitions (USAWP, NFHS Varsity, NFHS JV)
+│   ├── config.js       # APP_VERSION + RULES definitions (USAWP, NFHS Varsity, NFHS JV)
+│   ├── confirm.js      # Custom confirmation dialog (replaces native confirm())
 │   ├── storage.js      # localStorage wrapper
 │   ├── game.js         # Core data model + game logic
 │   ├── setup.js        # Setup screen (with active-game guards)
 │   ├── events.js       # Live log screen (main UI)
 │   ├── sheet.js        # Game sheet rendering (2-page print layout)
 │   ├── share.js        # Share/Print functionality
-│   └── app.js          # App init + screen navigation
-├── sw.js               # Service worker (offline caching, v2)
+│   └── app.js          # App init + screen navigation + version display
+├── sw.js               # Service worker (offline caching, version-keyed cache)
 ├── manifest.json       # PWA manifest (relative paths for GH Pages)
 ├── .github/
 │   └── workflows/
-│       └── deploy.yml  # Release-triggered deploy to gh-pages
+│       └── deploy.yml  # Release-triggered deploy to gh-pages (injects version)
 ├── .agents/
 │   └── workflows/
 │       └── geronimo.md # "geronimo" = one-time approval to commit/push/close
 └── lib/                # Empty (previously had vendored libs, now removed)
 ```
 
-Script load order matters: `config.js` → `storage.js` → `game.js` → `setup.js` → `events.js` → `sheet.js` → `share.js` → `app.js`
+Script load order matters: `config.js` → `confirm.js` → `storage.js` → `game.js` → `setup.js` → `events.js` → `sheet.js` → `share.js` → `app.js`
 
 ---
 
@@ -48,7 +49,7 @@ Script load order matters: `config.js` → `storage.js` → `game.js` → `setup
 - **GitHub Pages** serves from `gh-pages` branch (not `main`)
 - **Development** happens on `main` — pushes do NOT affect the live site
 - **Releases** trigger the deploy Action: `gh release create v1.x.x --title "..." --notes "..."`
-- Deploy Action uses `peaceiris/actions-gh-pages@v4` to copy files to `gh-pages`
+- Deploy Action injects the release tag version into `config.js` via `sed`, then uses `peaceiris/actions-gh-pages@v4` to copy files to `gh-pages`
 
 ---
 
@@ -82,6 +83,10 @@ These were explicitly discussed and agreed with the user:
 | **Don't commit without confirmation** | Always wait for user to confirm before committing and pushing. |
 | **"Geronimo" workflow** | When user says "geronimo", it's one-time approval to commit, push, and close the relevant issue. See `.agents/workflows/geronimo.md`. |
 | **Auto-clear on refocus** | Tapping a filled time/cap field in the modal auto-clears it for re-entry. Only on user clicks, not auto-advance. |
+| **Custom dialogs** | All `confirm()` calls replaced with `ConfirmDialog` (overlay-based). Supports `danger` (red) and `warning` (amber) types. |
+| **Version system** | `APP_VERSION = "dev"` in `config.js`. Deploy workflow injects the release tag. In dev, runtime auto-detects latest file modification timestamp via `Last-Modified` HTTP headers → displays `dev-YYYYMMDD-HHMM`. No git or build step needed at runtime. |
+| **About dialog** | Overlay popup (not a screen) accessible via footer "About" link. Shows version, license, author, source link. |
+| **SW cache = version** | Service worker cache name is `"wplog-" + APP_VERSION`. Each release busts stale caches automatically. |
 
 ### USAWP Events
 
@@ -147,6 +152,11 @@ NFHS does not have Brutality.
 - Copyright footer with dynamic year
 - Subdued placeholder color on native time input (`--:--`)
 - "Geronimo" workflow for quick commit/push/close
+- Custom confirmation dialog (`ConfirmDialog`) replacing all native `confirm()` calls
+- Version display in footer (`APP_VERSION` with auto dev timestamp detection)
+- About dialog (overlay popup from footer link: version, license, author, source)
+- Service worker cache name tied to `APP_VERSION` for automatic cache busting
+- Deploy-time version injection via `sed` in `deploy.yml`
 
 ### Known Gaps / Future Work 📋
 - No NCAA rules yet (structure ready)
@@ -157,7 +167,6 @@ NFHS does not have Brutality.
 - Service worker hasn't been tested offline
 - `lib/` directory is empty and could be removed
 - Issue #13 open: Add Additional Rule Sets (NFHS partially done, NCAA pending)
-- Issue #10 open: About Tab or Version
 - Issue #3 open: Basic User Guide / Help
 
 ---
@@ -190,3 +199,5 @@ Then open `http://localhost:8080`.
 10. **Modal uses responsive breakpoints** — default is full-screen (mobile), `@media (min-width: 900px) and (min-height: 700px)` switches to desktop dialog.
 11. **Personal fouls are config-driven** — use `isPersonalFoul: true` on events. Don't hardcode event codes for foul counting.
 12. **MAM is a dual-trigger event** — `isPersonalFoul: true` + `autoFoulOut: 2`. This pattern was explicitly designed for NFHS/NCAA.
+13. **Version system** — `APP_VERSION` lives in `config.js`. Default is `"dev"`. Deploy workflow injects release tag. Dev mode auto-detects file timestamp via `HEAD` requests. Don't hardcode versions elsewhere.
+14. **About is an overlay** — not a screen/section. It uses the same `.overlay` pattern as `ConfirmDialog` and the foul-out popup.

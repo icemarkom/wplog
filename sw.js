@@ -1,6 +1,8 @@
 // wplog — Service Worker (Offline Caching)
 
-const CACHE_NAME = "wplog-v3";
+importScripts("./js/config.js");
+
+const CACHE_NAME = "wplog-" + APP_VERSION;
 const ASSETS = [
     "./",
     "./index.html",
