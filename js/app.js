@@ -82,6 +82,10 @@ const App = {
             Share.init(this.game);
         });
 
+        document.getElementById("nav-help").addEventListener("click", () => {
+            this.showScreen("help");
+        });
+
     },
 
     // ── Version Display ──────────────────────────────────────

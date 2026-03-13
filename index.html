@@ -83,6 +83,7 @@
     <button id="nav-live" class="nav-btn" disabled>Live</button>
     <button id="nav-sheet" class="nav-btn" disabled>Sheet</button>
     <button id="nav-share" class="nav-btn">Share</button>
+    <button id="nav-help" class="nav-btn">Help</button>
   </nav>
 
   <!-- ==================== SETUP SCREEN ==================== -->
@@ -268,6 +269,96 @@
       </div>
       <div class="share-buttons">
         <button id="print-sheet-btn" class="btn btn-primary btn-large">Print Game Sheet</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== HELP SCREEN ==================== -->
+  <section id="screen-help" class="screen">
+    <div class="screen-content">
+      <h2 class="help-title">Quick Reference</h2>
+
+      <div class="help-section">
+        <h3 class="help-heading">Quick Start</h3>
+        <ol class="help-list">
+          <li>Choose your <strong>Rules</strong> (USAWP, NFHS Varsity, NFHS JV)</li>
+          <li>Fill in game details (date, time, location, teams)</li>
+          <li>Tap <strong>Start Game</strong></li>
+          <li>Log events from the <strong>Live</strong> screen</li>
+          <li>View the game sheet in <strong>Sheet</strong>, print from <strong>Share</strong></li>
+        </ol>
+      </div>
+
+      <div class="help-section">
+        <h3 class="help-heading">Logging Events</h3>
+        <ol class="help-list">
+          <li>Tap an <strong>event button</strong> (Goal, Exclusion, etc.)</li>
+          <li>Enter <strong>time</strong> — digits fill right-to-left as M:SS</li>
+          <li>Enter <strong>cap number</strong></li>
+          <li>Select <strong>team</strong> (White or Dark)</li>
+          <li>Tap <strong>OK</strong></li>
+        </ol>
+      </div>
+
+      <div class="help-section">
+        <h3 class="help-heading">Cap Numbers</h3>
+        <ul class="help-list">
+          <li>Digits <strong>1–99</strong> for field players</li>
+          <li>Goalies: <strong>1A</strong>, <strong>1B</strong>, <strong>1C</strong> (tap 1 then A/B/C)</li>
+          <li>Cards: <strong>C</strong> for coach, <strong>AC</strong> for assistant coach</li>
+        </ul>
+      </div>
+
+      <div class="help-section">
+        <h3 class="help-heading">Periods</h3>
+        <ul class="help-list">
+          <li><strong>End Period</strong> advances to the next period</li>
+          <li><strong>End Game</strong> appears when the score is not tied</li>
+          <li>Delete an End of Period entry to revert</li>
+        </ul>
+      </div>
+
+      <div class="help-section">
+        <h3 class="help-heading">Overtime &amp; Shootout</h3>
+        <ul class="help-list">
+          <li>Enable OT or SO in <strong>Setup</strong> (mutually exclusive)</li>
+          <li>OT plays in pairs (OT1 → OT2); unlimited if still tied</li>
+          <li>Shootout locks time to 0:00</li>
+        </ul>
+      </div>
+
+      <div class="help-section">
+        <h3 class="help-heading">Timeouts</h3>
+        <ul class="help-list">
+          <li><strong>TOL</strong> shows timeouts remaining per team</li>
+          <li>Warning when a team exceeds their limit</li>
+        </ul>
+      </div>
+
+      <div class="help-section">
+        <h3 class="help-heading">Foul Tracking</h3>
+        <ul class="help-list">
+          <li>Personal fouls accumulate toward the foul-out limit</li>
+          <li>Some events trigger <strong>immediate ejection</strong> (MC, BR, E-Game, FM)</li>
+          <li>A popup alerts you when a player fouls out</li>
+        </ul>
+      </div>
+
+      <div class="help-section">
+        <h3 class="help-heading">Game Sheet &amp; Printing</h3>
+        <ul class="help-list">
+          <li><strong>Sheet</strong> tab shows a printable 2-page game summary</li>
+          <li><strong>Share</strong> tab → <strong>Print Game Sheet</strong> to print or save as PDF</li>
+        </ul>
+      </div>
+
+      <div class="help-section">
+        <h3 class="help-heading">Tips</h3>
+        <ul class="help-list">
+          <li>Tap a filled time or cap field to clear and re-enter</li>
+          <li>Delete any event from the recent log with the ✕ button</li>
+          <li>Setup fields (date, teams, etc.) stay editable during a game</li>
+        </ul>
       </div>
     </div>
   </section>
