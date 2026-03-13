@@ -97,8 +97,8 @@ const Events = {
         document.getElementById("team-dark-btn").addEventListener("click", () => this._selectTeam("D"));
 
         // Field selection — tap to switch numpad target
-        document.getElementById("field-time").addEventListener("click", () => this._setNumpadTarget("time"));
-        document.getElementById("field-cap").addEventListener("click", () => this._setNumpadTarget("cap"));
+        document.getElementById("field-time").addEventListener("click", () => this._setNumpadTarget("time", true));
+        document.getElementById("field-cap").addEventListener("click", () => this._setNumpadTarget("cap", true));
 
         // Shared numpad
         document.querySelectorAll("#shared-numpad .numpad-btn").forEach((btn) => {
@@ -172,8 +172,22 @@ const Events = {
         btn.disabled = !(hasTime && hasCap && hasTeam);
     },
 
-    _setNumpadTarget(target) {
+    _setNumpadTarget(target, isUserClick) {
         this._numpadTarget = target;
+
+        // Auto-clear only on user-initiated clicks, not auto-advance
+        if (isUserClick) {
+            if (target === "time" && this._timeRaw.length > 0 && this.game.currentPeriod !== "SO") {
+                this._timeRaw = "";
+                document.getElementById("time-display").innerHTML = this._formatTimeDisplay("");
+                this._updateOkButton();
+            } else if (target === "cap" && this._capRaw.length > 0) {
+                this._capRaw = "";
+                document.getElementById("cap-display").textContent = "";
+                this._updateOkButton();
+            }
+        }
+
         document.getElementById("field-time").classList.toggle("active", target === "time");
         document.getElementById("field-cap").classList.toggle("active", target === "cap");
     },
