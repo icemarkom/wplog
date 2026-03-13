@@ -156,7 +156,19 @@ const App = {
 
     _setVersionText(text) {
         document.getElementById("app-version").textContent = text;
-        document.getElementById("about-version").textContent = text;
+        const aboutEl = document.getElementById("about-version");
+        if (APP_VERSION !== "dev") {
+            // Production: link to GitHub release
+            const a = document.createElement("a");
+            a.href = "https://github.com/icemarkom/wplog/releases/tag/" + APP_VERSION;
+            a.target = "_blank";
+            a.rel = "noopener";
+            a.textContent = text;
+            aboutEl.textContent = "";
+            aboutEl.appendChild(a);
+        } else {
+            aboutEl.textContent = text;
+        }
     },
 
     async _detectDevTimestamp() {
