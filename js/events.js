@@ -412,7 +412,7 @@ const Events = {
           <span class="log-team ${entry.team === 'W' ? 'team-white' : 'team-dark'}">${entry.team}</span>
           <span class="log-cap">${entry.cap}</span>
           <span class="log-event event-${this._getEventClass(entry.event)}">${eventName}</span>
-          <span class="log-score">${entry.scoreW}–${entry.scoreD}</span>
+          <span class="log-score">${entry.event === "G" ? entry.scoreW + "–" + entry.scoreD : ""}</span>
           <button class="log-delete-btn" data-id="${entry.id}" title="Delete">✕</button>
         `;
             }

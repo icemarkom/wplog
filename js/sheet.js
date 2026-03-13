@@ -113,7 +113,7 @@ const Sheet = {
           <td>${entry.cap || "—"}</td>
           <td>${entry.team || "—"}</td>
           <td style="text-align:${align}">${entry.event}</td>
-          <td>${entry.scoreW}–${entry.scoreD}</td>
+          <td>${entry.event === "G" ? entry.scoreW + "–" + entry.scoreD : ""}</td>
         `;
             }
             tbody.appendChild(tr);
