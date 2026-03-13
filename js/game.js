@@ -88,6 +88,30 @@ const Game = {
         return { white: last.scoreW, dark: last.scoreD };
     },
 
+    // Get display-formatted score (fractional for SO)
+    getDisplayScore(game) {
+        const score = this.getScore(game);
+        const soW = game.log.filter(e => e.event === "G" && e.team === "W" && e.period === "SO").length;
+        const soD = game.log.filter(e => e.event === "G" && e.team === "D" && e.period === "SO").length;
+        const inSO = game.currentPeriod === "SO" || soW > 0 || soD > 0;
+
+        if (!inSO) return { white: String(score.white), dark: String(score.dark) };
+
+        return {
+            white: (score.white - soW) + "." + soW,
+            dark: (score.dark - soD) + "." + soD,
+        };
+    },
+
+    // Format score for a specific log entry (fractional for SO goals)
+    formatEntryScore(entry, game) {
+        if (entry.event !== "G") return "";
+        const soW = game.log.filter(e => e.id <= entry.id && e.event === "G" && e.team === "W" && e.period === "SO").length;
+        const soD = game.log.filter(e => e.id <= entry.id && e.event === "G" && e.team === "D" && e.period === "SO").length;
+        if (soW === 0 && soD === 0) return entry.scoreW + "–" + entry.scoreD;
+        return (entry.scoreW - soW) + "." + soW + "–" + (entry.scoreD - soD) + "." + soD;
+    },
+
     // Get timeouts used per team
     getTimeoutsUsed(game, team) {
         const full = game.log.filter((e) => e.event === "TO" && e.team === team).length;
