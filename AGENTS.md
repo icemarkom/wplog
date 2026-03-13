@@ -15,7 +15,7 @@
 
 ```
 wplog/
-├── index.html          # Single-page app shell (4 screens as <section>)
+├── index.html          # Single-page app shell (5 screens as <section>)
 ├── css/
 │   ├── style.css       # Dark-mode design system, mobile-first
 │   └── print.css       # Print-only B&W styles for game sheet
@@ -91,6 +91,7 @@ These were explicitly discussed and agreed with the user:
 | **SW dev vs prod** | Service worker uses network-first strategy in dev mode (no stale cache issues) and cache-first in production (offline reliability). |
 | **QR code sharing** | Single SVG (`img/qr-wplog.svg`) with white modules on transparent background. CSS `filter: invert(1)` for high-contrast overlay. Share screen always accessible. |
 | **Share tab always active** | Share tab is always enabled. Print Game Sheet button is disabled when no game is active. |
+| **Help screen** | 5th nav tab (always enabled). Full screen section with concise quick-reference guide (~1 min read). Not a footer link or overlay — too undiscoverable. |
 
 ### USAWP Events
 
@@ -121,7 +122,7 @@ NFHS does not have Brutality.
 
 ---
 
-## Current State (as of 2026-03-13)
+## Current State (as of 2026-03-14)
 
 ### What's Done ✅
 - Complete setup screen (rules, date, time, location, Game #, team names, OT/SO toggles, timeout overrides)
@@ -167,6 +168,7 @@ NFHS does not have Brutality.
 - Service worker: network-first in dev, cache-first in production
 - `.btn:disabled` styling matching nav tab pattern (opacity 0.3)
 - "Kraken" workflow for version tagging and release
+- Help screen: 5th nav tab with quick-reference guide (9 sections, always enabled)
 
 ### Known Gaps / Future Work 📋
 - No NCAA rules yet (structure ready)
@@ -177,7 +179,7 @@ NFHS does not have Brutality.
 - Service worker hasn't been tested offline
 - `lib/` directory is empty and could be removed
 - Issue #13 open: Add Additional Rule Sets (NFHS partially done, NCAA pending)
-- Issue #3 open: Basic User Guide / Help
+
 
 ---
 
