@@ -1,3 +1,19 @@
+/**
+ * Copyright 2026 Marko Milivojevic
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 // wplog — App Initialization + Screen Navigation
 
 const App = {
@@ -61,6 +77,42 @@ const App = {
         document.getElementById("privacy-overlay").addEventListener("click", (e) => {
             if (e.target === e.currentTarget) {
                 document.getElementById("privacy-overlay").classList.remove("visible");
+                document.getElementById("about-overlay").classList.add("visible");
+            }
+        });
+
+        // License overlay (opened from About dialog)
+        document.getElementById("about-license-link").addEventListener("click", async (e) => {
+            e.preventDefault();
+            document.getElementById("about-overlay").classList.remove("visible");
+
+            // Load content from LICENSE (plain text)
+            const body = document.getElementById("license-body");
+            if (!body.innerHTML) {
+                try {
+                    const res = await fetch("LICENSE");
+                    const raw = await res.text();
+                    // Split into paragraphs (blank-line separated), join hard-wrapped lines
+                    const paragraphs = raw.trim().split(/\n\s*\n/).map(p =>
+                        p.split("\n").map(l => l.trimStart()).join(" ")
+                    );
+                    body.innerHTML = "<h1>License</h1>" +
+                        paragraphs.map(p => "<p>" + p.replace(/</g, "&lt;").replace(/>/g, "&gt;") + "</p>").join("");
+                } catch {
+                    body.innerHTML = "<p>Could not load license.</p>";
+                }
+            }
+
+            document.getElementById("license-overlay").classList.add("visible");
+        });
+
+        document.getElementById("license-dismiss").addEventListener("click", () => {
+            document.getElementById("license-overlay").classList.remove("visible");
+            document.getElementById("about-overlay").classList.add("visible");
+        });
+        document.getElementById("license-overlay").addEventListener("click", (e) => {
+            if (e.target === e.currentTarget) {
+                document.getElementById("license-overlay").classList.remove("visible");
                 document.getElementById("about-overlay").classList.add("visible");
             }
         });

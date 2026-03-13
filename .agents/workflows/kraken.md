@@ -35,11 +35,12 @@ When the user says **"kraken"**, they want to prepare and publish a new release.
 
 // turbo-all
 
-   a. Commit the `AGENTS.md` update: `git add AGENTS.md && git commit -m "docs: update AGENTS.md for vX.Y.Z release"`
-   b. Push: `git push origin main`
-   c. Create the annotated tag: `git tag -a vX.Y.Z -m "<release notes>"`
-   d. Push the tag: `git push origin vX.Y.Z`
-   e. Create the GitHub release: `gh release create vX.Y.Z --title "vX.Y.Z — <title>" --notes "<release notes>"`
+   a. Fix license headers: `addlicense -c "Marko Milivojevic" -l apache -ignore '.github/**' -ignore '.agents/**' -ignore 'lib/**' .`
+   b. Commit the `AGENTS.md` update: `git add AGENTS.md && git commit -m "docs: update AGENTS.md for vX.Y.Z release"`
+   c. Push: `git push origin main`
+   d. Create the annotated tag: `git tag -a vX.Y.Z -m "<release notes>"`
+   e. Push the tag: `git push origin vX.Y.Z`
+   f. Create the GitHub release: `gh release create vX.Y.Z --title "vX.Y.Z — <title>" --notes "<release notes>"`
 
 > **Important:** Steps 6a–6e are only executed AFTER the user explicitly approves the release notes. The `// turbo-all` annotation applies only to step 6 sub-steps. Steps 1–5 require normal interaction and review.
 
