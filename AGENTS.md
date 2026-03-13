@@ -57,8 +57,8 @@ These were explicitly discussed and agreed with the user:
 |---|---|
 | **No roster/player entry** | Cap numbers are entered per-event, not pre-game. No player names. |
 | **Team names in UI vs reports** | UI always shows "White"/"Dark". Game sheet shows "White (Team Name)" when custom name set. |
-| **Cap numbers are strings** | Support goalie modifiers: `"1A"`, `"1B"`, `"1C"` (max C). Input via large numpad. |
-| **Time format** | 0-padded: `"07:00"` not `"7:00"`. Clock counts DOWN in water polo. |
+| **Cap numbers are strings** | Support goalie modifiers: `"1A"`, `"1B"`, `"1C"` (max C). Input via 4-column numpad (digits + A/B/C column). |
+| **Game clock time format** | `M:SS` (single-digit minutes, max 9:59). Digits fill right-to-left (S2→S1→M). Stored as `"4:53"`. NOT `MM:SS`. Start/end times are `HH:MM` (separate). |
 | **`rules` not `competition`** | Field is named `rules` in the data model. Config constant is `RULES`. |
 | **Period End code** | Uses `"---"` (non-alphanumeric) to avoid collision with real event codes. |
 | **OT/SO mutually exclusive** | Only one can be enabled per game. |
@@ -69,6 +69,12 @@ These were explicitly discussed and agreed with the user:
 | **Game # replaces Rules on sheet** | Rules only relevant for setup; Game # shown on printed game sheet header. |
 | **Print = Share** | `window.print()` is the sharing mechanism. Mobile print dialogs offer Save as PDF + native share. |
 | **USAWP only for now** | NFHS and NCAA to be added later. Structure supports it. |
+| **No `#` in Cap display** | Cap numbers shown without `#` prefix everywhere (modal, live log, sheet tables). |
+| **Score on Goals only** | Score column in game log (live + sheet) only shows on Goal events. Other events leave it empty. |
+| **Responsive modal** | Full-screen on mobile (default), fixed centered dialog on desktop (`@media min-width:900px and min-height:700px`). |
+| **Numpad layout** | 4 columns: digits 1-9/0, A/B/C in rightmost column, backspace next to 0. |
+| **Auto-close disabled** | GitHub auto-close via commit messages is disabled in this repo. Close issues manually with `gh issue close`. |
+| **Don't commit without confirmation** | Always wait for user to confirm before committing and pushing. |
 
 ### USAWP Events (current)
 
@@ -88,27 +94,32 @@ These were explicitly discussed and agreed with the user:
 
 ---
 
-## Current State (as of 2026-03-12, v1.0.0)
+## Current State (as of 2026-03-12)
 
 ### What's Done ✅
 - Complete setup screen (rules, date, time, location, Game #, team names, OT/SO toggles, timeout overrides)
 - Setup guards during active game (disable Start/rules, lock OT/SO if started, red END GAME button)
 - Live-save of editable setup fields during active game
 - Live log with score bar, TOL display, period tabs, time input, team toggle, cap numpad
-- All 11 USAWP event types with event-first modal workflow
+- All 11 USAWP event types with event-first modal workflow (no event dropdown — title shows event)
+- 4-column numpad (digits + A/B/C), right-to-left time input with `-:--` placeholder
 - Event alignment framework (left/right/center per event in config)
 - Foul-out detection (accumulated + auto) with popup overlay
 - Period End / End Game logic (OT/SO aware, score-tie checks)
 - Timeout tracking with configurable limits, TOL display, over-limit warnings
+- Responsive event modal: full-screen on mobile, centered dialog on desktop
+- Consistent element heights across modal (48px min-height for all interactive elements)
 - Game sheet: progress of game, period scores, personal fouls, timeouts, cards
+- Score column shows only on Goal events (live log + sheet)
 - Print-friendly layout (US Letter, 2-page with page break, B&W)
-- 3-row sheet header: Game#, Location, Date/Scheduled Time/End Time
+- 3-row sheet header: Game#, Location, Date/Scheduled/Ended
 - Share screen with Print Game Sheet button (`window.print()`)
 - localStorage persistence
 - PWA manifest + service worker (v2, relative paths)
 - GitHub Pages deployment (release-gated via Actions)
 - Dark mode, mobile-first CSS (Source Code Pro for scores/times/tables)
 - Copyright footer with dynamic year
+- Subdued placeholder color on native time input (`--:--`)
 
 ### Known Gaps / Future Work 📋
 - No NFHS or NCAA rules yet (structure ready)
@@ -119,6 +130,9 @@ These were explicitly discussed and agreed with the user:
 - Service worker hasn't been tested offline
 - `lib/` directory is empty and could be removed
 - User may want to review and adjust event codes/names
+- Issue #8 open: Game Setup Should Include Period Configuration
+- Issue #3 open: Basic User Guide / Help
+- Issue #1 open: Personal Fouls are not Correctly Counted
 
 ---
 
@@ -142,5 +156,9 @@ Then open `http://localhost:8080`.
 2. **Keep it simple** — the user deliberately chose "no framework, no build tools." Honor that.
 3. **Event codes** — the user specifically chose codes like `"E-Game"` (not abbreviated). Don't change them without asking.
 4. **The user is iterative** — expect inline comments on artifacts with specific feedback. Incorporate exactly what they say.
-5. **Release to publish** — development happens on `main`. Use `gh release create` to deploy to GitHub Pages.
-6. **Previous conversations** exist about a full water polo scoreboard/timer controller (WTTC-1) — this is a separate, simpler project.
+5. **Don't commit/push without confirmation** — always wait for the user to say it's ready before `git commit` and `git push`.
+6. **Close issues manually** — auto-close is disabled. Use `gh issue close N -c "comment"` after pushing.
+7. **Release to publish** — development happens on `main`. Use `gh release create` to deploy to GitHub Pages.
+8. **Previous conversations** exist about a full water polo scoreboard/timer controller (WTTC-1) — this is a separate, simpler project.
+9. **Game clock is M:SS** — single-digit minutes (0-9), max 9:59. Right-to-left digit entry. Start/end times remain HH:MM.
+10. **Modal uses responsive breakpoints** — default is full-screen (mobile), `@media (min-width: 900px) and (min-height: 700px)` switches to desktop dialog.
