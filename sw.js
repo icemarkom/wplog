@@ -18,6 +18,7 @@ const ASSETS = [
     "./js/share.js",
     "./js/app.js",
     "./img/qr-wplog.svg",
+    "./privacy.html",
     "./manifest.json",
 ];
 

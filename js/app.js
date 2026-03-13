@@ -27,6 +27,44 @@ const App = {
             }
         });
 
+        // Privacy Policy overlay (opened from About dialog)
+        document.getElementById("about-privacy-link").addEventListener("click", async (e) => {
+            e.preventDefault();
+            document.getElementById("about-overlay").classList.remove("visible");
+
+            // Load content from privacy.html (single source of truth)
+            const body = document.getElementById("privacy-body");
+            if (!body.innerHTML) {
+                try {
+                    const res = await fetch("privacy.html");
+                    const html = await res.text();
+                    const doc = new DOMParser().parseFromString(html, "text/html");
+                    body.innerHTML = doc.querySelector(".container").innerHTML;
+                    // Remove the back link — not needed in overlay
+                    const backLink = body.querySelector(".back-link");
+                    if (backLink) backLink.remove();
+                    // Remove the footer — not needed in overlay
+                    const footer = body.querySelector(".footer");
+                    if (footer) footer.remove();
+                } catch {
+                    body.innerHTML = "<p>Could not load privacy policy.</p>";
+                }
+            }
+
+            document.getElementById("privacy-overlay").classList.add("visible");
+        });
+
+        document.getElementById("privacy-dismiss").addEventListener("click", () => {
+            document.getElementById("privacy-overlay").classList.remove("visible");
+            document.getElementById("about-overlay").classList.add("visible");
+        });
+        document.getElementById("privacy-overlay").addEventListener("click", (e) => {
+            if (e.target === e.currentTarget) {
+                document.getElementById("privacy-overlay").classList.remove("visible");
+                document.getElementById("about-overlay").classList.add("visible");
+            }
+        });
+
         // QR code full-screen overlay
         document.querySelector(".qr-code").addEventListener("click", () => {
             document.getElementById("qr-overlay").classList.add("visible");

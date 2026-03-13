@@ -5,7 +5,7 @@
 **wplog** is a water polo secondary game log — a client-side-only PWA (Progressive Web App) built with **Vanilla HTML/CSS/JS** (no npm, no build tools). It lets a coach or volunteer log game events poolside and produce an official-looking game sheet.
 
 - **Repo**: `github.com/icemarkom/wplog`
-- **Live**: `https://icemarkom.github.io/wplog/`
+- **Live**: `https://log.wpref.org/`
 - **License**: Apache 2.0, copyright Marko Milivojevic
 - **Tech**: Pure HTML/CSS/JS, no framework, no build step. No vendored libs.
 
@@ -37,6 +37,8 @@ wplog/
 ├── .agents/
 │   └── workflows/
 │       └── geronimo.md # "geronimo" = one-time approval to commit/push/close
+├── PRIVACY.md          # Privacy policy (Markdown, for GitHub)
+├── privacy.html        # Privacy policy (HTML, canonical for OAuth consent)
 └── lib/                # Empty (previously had vendored libs, now removed)
 ```
 
@@ -47,6 +49,7 @@ Script load order matters: `config.js` → `confirm.js` → `storage.js` → `ga
 ## Hosting & Deployment
 
 - **GitHub Pages** serves from `gh-pages` branch (not `main`)
+- **Production domain**: `https://log.wpref.org/` (via CNAME)
 - **Development** happens on `main` — pushes do NOT affect the live site
 - **Releases** trigger the deploy Action: `gh release create v1.x.x --title "..." --notes "..."`
 - Deploy Action injects the release tag version into `config.js` via `sed`, then uses `peaceiris/actions-gh-pages@v4` to copy files to `gh-pages`
@@ -169,6 +172,7 @@ NFHS does not have Brutality.
 - `.btn:disabled` styling matching nav tab pattern (opacity 0.3)
 - "Kraken" workflow for version tagging and release
 - Help screen: 5th nav tab with quick-reference guide (9 sections, always enabled)
+- Privacy policy: standalone `privacy.html` + `PRIVACY.md`, linked from footer and About dialog
 
 ### Known Gaps / Future Work 📋
 - No NCAA rules yet (structure ready)
