@@ -1261,6 +1261,90 @@ select.form-input {
 }
 
 /* ============================
+   About Dialog
+   ============================ */
+.about-card {
+  max-width: 380px;
+}
+
+.about-title {
+  font-size: 28px;
+  font-weight: 800;
+  text-align: center;
+  letter-spacing: -0.03em;
+  background: linear-gradient(135deg, var(--accent-blue) 0%, #818cf8 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 2px;
+}
+
+.about-subtitle {
+  text-align: center;
+  color: var(--text-secondary);
+  font-size: 13px;
+  margin-bottom: 20px;
+}
+
+.about-info {
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 8px 16px;
+  margin-bottom: 16px;
+}
+
+.about-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  padding: 6px 0;
+}
+
+.about-row + .about-row {
+  border-top: 1px solid var(--border);
+}
+
+.about-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  flex-shrink: 0;
+  margin-right: 16px;
+}
+
+.about-value {
+  font-size: 13px;
+  color: var(--text-primary);
+  text-align: right;
+  font-family: 'Source Code Pro', monospace;
+}
+
+.about-value a {
+  color: var(--accent-blue);
+  text-decoration: none;
+}
+
+.about-value a:hover {
+  text-decoration: underline;
+}
+
+.about-description {
+  text-align: center;
+  color: var(--text-secondary);
+  font-size: 13px;
+  line-height: 1.6;
+  margin-bottom: 20px;
+}
+
+.about-dismiss-btn {
+  width: 100%;
+  min-height: 44px;
+}
+
+/* ============================
    Footer
    ============================ */
 .app-footer {

@@ -42,6 +42,34 @@
     </div>
   </div>
 
+  <!-- About Dialog -->
+  <div id="about-overlay" class="overlay">
+    <div class="overlay-content about-card">
+      <div class="about-title">wplog</div>
+      <div class="about-subtitle">Water Polo Game Log</div>
+      <div class="about-info">
+        <div class="about-row">
+          <span class="about-label">Version</span>
+          <span class="about-value" id="about-version"></span>
+        </div>
+        <div class="about-row">
+          <span class="about-label">License</span>
+          <span class="about-value">Apache 2.0</span>
+        </div>
+        <div class="about-row">
+          <span class="about-label">Author</span>
+          <span class="about-value">Marko Milivojevic</span>
+        </div>
+        <div class="about-row">
+          <span class="about-label">Source</span>
+          <span class="about-value"><a href="https://github.com/icemarkom/wplog" target="_blank" rel="noopener">github.com/icemarkom/wplog</a></span>
+        </div>
+      </div>
+      <p class="about-description">Log water polo game events poolside and produce official game sheets. Works offline as a Progressive Web App.</p>
+      <button id="about-dismiss" class="btn btn-primary about-dismiss-btn">OK</button>
+    </div>
+  </div>
+
   <!-- Navigation -->
   <nav class="nav-bar">
     <button id="nav-setup" class="nav-btn active">Setup</button>
@@ -236,8 +264,10 @@
   </section>
 
   <footer class="app-footer">
-    Copyright &copy; <span id="copy-year"></span> Marko Milivojevic &middot; <a
-      href="https://github.com/icemarkom/wplog" target="_blank" rel="noopener">wplog</a>
+    Copyright &copy; <span id="copy-year"></span> Marko Milivojevic &middot;
+    <a href="https://github.com/icemarkom/wplog" target="_blank" rel="noopener">wplog</a>
+    <span id="app-version"></span> &middot;
+    <a href="#" id="footer-about-link">About</a>
   </footer>
   <script>document.getElementById("copy-year").textContent = new Date().getFullYear();</script>
 
