@@ -188,6 +188,11 @@ NFHS does not have Brutality.
 - Shared `.overlay-title`/`.overlay-message` base classes for all overlay dialogs
 - Consistent `letter-spacing: 0.04em` on all uppercase labels app-wide
 - Consistent `opacity: 0.3` on all disabled elements
+- Version link in About dialog: links to GitHub release page in production, plain text in dev
+- Inline license display: clickable "Apache 2.0" in About opens scrollable license overlay
+- Apache 2.0 copyright headers on all source files via `addlicense`
+- `addlicense` enforcement in bazinga (pre-commit hook), geronimo, and kraken workflows
+- Author name in About links to `https://icemarkom.dev/`
 
 ### Known Gaps / Future Work 📋
 - No NCAA rules yet (structure ready)

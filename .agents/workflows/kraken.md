@@ -25,9 +25,10 @@ When the user says **"kraken"**, they want to prepare and publish a new release.
 4. **Prepare release notes** — create an implementation plan artifact with:
    - Proposed version number (e.g., `v1.4.0`)
    - Release title
-   - Categorized changelog (Features, Fixes, Improvements)
-   - List of files changed
+   - Categorized changelog
    - Any breaking changes or migration notes
+
+   > **Release notes must be user-facing and user-centric.** Only changes that affect end users belong under "Features" or "Fixes." Code refactoring, CSS consolidation, internal architecture changes, dependency updates, license headers, workflow changes, etc., go under "Internal" (with subsections if needed). When evaluating the version bump, only count user-visible changes — internal-only changes are patch-level regardless of scope.
 
 5. **Request review** — present the release notes and `AGENTS.md` changes to the user via `notify_user`. Iterate on feedback until the user approves.
 
