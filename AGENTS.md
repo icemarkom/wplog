@@ -134,6 +134,8 @@ NFHS does not have Brutality.
 - Responsive event modal: full-screen on mobile, centered dialog on desktop
 - Consistent element heights across modal (48px min-height for all interactive elements)
 - Game sheet: progress of game, period scores, personal fouls, timeouts, cards
+- Fractional SO scores (5.3–5.2 format, no floats — computed at render time)
+- SO events display without time (always 0:00, redundant)
 - Score column shows only on Goal events (live log + sheet)
 - Print-friendly layout (US Letter, 2-page with page break, B&W)
 - 3-row sheet header: Game#, Location, Date/Scheduled/Ended
@@ -155,7 +157,6 @@ NFHS does not have Brutality.
 - Service worker hasn't been tested offline
 - `lib/` directory is empty and could be removed
 - Issue #13 open: Add Additional Rule Sets (NFHS partially done, NCAA pending)
-- Issue #12 open: Shootout Scores are Fractional
 - Issue #10 open: About Tab or Version
 - Issue #3 open: Basic User Guide / Help
 
