@@ -25,9 +25,10 @@ When the user says **"kraken"**, they want to prepare and publish a new release.
 4. **Prepare release notes** — create an implementation plan artifact with:
    - Proposed version number (e.g., `v1.4.0`)
    - Release title
-   - Categorized changelog (Features, Fixes, Improvements)
-   - List of files changed
+   - Categorized changelog
    - Any breaking changes or migration notes
+
+   > **Release notes must be user-facing and user-centric.** Only changes that affect end users belong under "Features" or "Fixes." Code refactoring, CSS consolidation, internal architecture changes, dependency updates, license headers, workflow changes, etc., go under "Internal" (with subsections if needed). When evaluating the version bump, only count user-visible changes — internal-only changes are patch-level regardless of scope.
 
 5. **Request review** — present the release notes and `AGENTS.md` changes to the user via `notify_user`. Iterate on feedback until the user approves.
 
@@ -35,11 +36,12 @@ When the user says **"kraken"**, they want to prepare and publish a new release.
 
 // turbo-all
 
-   a. Commit the `AGENTS.md` update: `git add AGENTS.md && git commit -m "docs: update AGENTS.md for vX.Y.Z release"`
-   b. Push: `git push origin main`
-   c. Create the annotated tag: `git tag -a vX.Y.Z -m "<release notes>"`
-   d. Push the tag: `git push origin vX.Y.Z`
-   e. Create the GitHub release: `gh release create vX.Y.Z --title "vX.Y.Z — <title>" --notes "<release notes>"`
+   a. Fix license headers: `addlicense -c "Marko Milivojevic" -l apache -ignore '.github/**' -ignore '.agents/**' -ignore 'lib/**' .`
+   b. Commit the `AGENTS.md` update: `git add AGENTS.md && git commit -m "docs: update AGENTS.md for vX.Y.Z release"`
+   c. Push: `git push origin main`
+   d. Create the annotated tag: `git tag -a vX.Y.Z -m "<release notes>"`
+   e. Push the tag: `git push origin vX.Y.Z`
+   f. Create the GitHub release: `gh release create vX.Y.Z --title "vX.Y.Z — <title>" --notes "<release notes>"`
 
 > **Important:** Steps 6a–6e are only executed AFTER the user explicitly approves the release notes. The `// turbo-all` annotation applies only to step 6 sub-steps. Steps 1–5 require normal interaction and review.
 

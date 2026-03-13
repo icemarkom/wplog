@@ -1,3 +1,19 @@
+/**
+ * Copyright 2026 Marko Milivojevic
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 // wplog — App Initialization + Screen Navigation
 
 const App = {
@@ -65,6 +81,42 @@ const App = {
             }
         });
 
+        // License overlay (opened from About dialog)
+        document.getElementById("about-license-link").addEventListener("click", async (e) => {
+            e.preventDefault();
+            document.getElementById("about-overlay").classList.remove("visible");
+
+            // Load content from LICENSE (plain text)
+            const body = document.getElementById("license-body");
+            if (!body.innerHTML) {
+                try {
+                    const res = await fetch("LICENSE");
+                    const raw = await res.text();
+                    // Split into paragraphs (blank-line separated), join hard-wrapped lines
+                    const paragraphs = raw.trim().split(/\n\s*\n/).map(p =>
+                        p.split("\n").map(l => l.trimStart()).join(" ")
+                    );
+                    body.innerHTML = "<h1>License</h1>" +
+                        paragraphs.map(p => "<p>" + p.replace(/</g, "&lt;").replace(/>/g, "&gt;") + "</p>").join("");
+                } catch {
+                    body.innerHTML = "<p>Could not load license.</p>";
+                }
+            }
+
+            document.getElementById("license-overlay").classList.add("visible");
+        });
+
+        document.getElementById("license-dismiss").addEventListener("click", () => {
+            document.getElementById("license-overlay").classList.remove("visible");
+            document.getElementById("about-overlay").classList.add("visible");
+        });
+        document.getElementById("license-overlay").addEventListener("click", (e) => {
+            if (e.target === e.currentTarget) {
+                document.getElementById("license-overlay").classList.remove("visible");
+                document.getElementById("about-overlay").classList.add("visible");
+            }
+        });
+
         // QR code full-screen overlay
         document.querySelector(".qr-code").addEventListener("click", () => {
             document.getElementById("qr-overlay").classList.add("visible");
@@ -120,8 +172,24 @@ const App = {
             Share.init(this.game);
         });
 
-        document.getElementById("nav-help").addEventListener("click", () => {
+        document.getElementById("nav-help").addEventListener("click", async () => {
             this.showScreen("help");
+
+            // Load content from help.html (single source of truth)
+            const el = document.getElementById("help-content");
+            if (!el.innerHTML) {
+                try {
+                    const res = await fetch("help.html");
+                    const html = await res.text();
+                    const doc = new DOMParser().parseFromString(html, "text/html");
+                    el.innerHTML = doc.querySelector(".container").innerHTML;
+                    // Remove the footer — not needed in-app
+                    const footer = el.querySelector(".footer");
+                    if (footer) footer.remove();
+                } catch {
+                    el.innerHTML = "<p>Could not load help content.</p>";
+                }
+            }
         });
 
     },
@@ -140,7 +208,19 @@ const App = {
 
     _setVersionText(text) {
         document.getElementById("app-version").textContent = text;
-        document.getElementById("about-version").textContent = text;
+        const aboutEl = document.getElementById("about-version");
+        if (APP_VERSION !== "dev") {
+            // Production: link to GitHub release
+            const a = document.createElement("a");
+            a.href = "https://github.com/icemarkom/wplog/releases/tag/" + APP_VERSION;
+            a.target = "_blank";
+            a.rel = "noopener";
+            a.textContent = text;
+            aboutEl.textContent = "";
+            aboutEl.appendChild(a);
+        } else {
+            aboutEl.textContent = text;
+        }
     },
 
     async _detectDevTimestamp() {

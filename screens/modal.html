@@ -1,0 +1,61 @@
+<!--
+ Copyright 2026 Marko Milivojevic
+
+ Licensed under the Apache License, Version 2.0 (the "License");
+ you may not use this file except in compliance with the License.
+ You may obtain a copy of the License at
+
+     http://www.apache.org/licenses/LICENSE-2.0
+
+ Unless required by applicable law or agreed to in writing, software
+ distributed under the License is distributed on an "AS IS" BASIS,
+ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ See the License for the specific language governing permissions and
+ limitations under the License.
+-->
+
+<!-- Event Title -->
+<div id="modal-event-title" class="modal-event-title"></div>
+
+<!-- Time (tap to target numpad) -->
+<div class="modal-field active" id="field-time" data-target="time">
+  <label class="input-label">Time</label>
+  <div id="time-display" class="field-display"></div>
+</div>
+
+<!-- Cap (tap to target numpad) -->
+<div class="modal-field" id="field-cap" data-target="cap">
+  <label class="input-label">CAP</label>
+  <div id="cap-display" class="field-display"></div>
+</div>
+
+<!-- Team Toggle -->
+<div id="modal-team-section" class="team-toggle">
+  <button id="team-white-btn" class="team-btn team-btn-white">WHITE</button>
+  <button id="team-dark-btn" class="team-btn team-btn-dark">DARK</button>
+</div>
+
+<!-- Shared Numpad -->
+<div id="shared-numpad" class="numpad">
+  <button class="numpad-btn" data-value="1">1</button>
+  <button class="numpad-btn" data-value="2">2</button>
+  <button class="numpad-btn" data-value="3">3</button>
+  <button class="numpad-btn numpad-letter" data-value="A">A</button>
+  <button class="numpad-btn" data-value="4">4</button>
+  <button class="numpad-btn" data-value="5">5</button>
+  <button class="numpad-btn" data-value="6">6</button>
+  <button class="numpad-btn numpad-letter" data-value="B">B</button>
+  <button class="numpad-btn" data-value="7">7</button>
+  <button class="numpad-btn" data-value="8">8</button>
+  <button class="numpad-btn" data-value="9">9</button>
+  <button class="numpad-btn numpad-letter" data-value="C">C</button>
+  <span></span>
+  <button class="numpad-btn" data-value="0">0</button>
+  <button class="numpad-btn numpad-clear" data-value="clear">⌫</button>
+</div>
+
+<!-- OK / Cancel -->
+<div class="modal-actions">
+  <button id="event-modal-cancel" class="btn btn-outline modal-action-btn">Cancel</button>
+  <button id="event-modal-confirm" class="btn btn-primary modal-action-btn" disabled>OK</button>
+</div>

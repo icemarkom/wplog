@@ -11,7 +11,15 @@ When the user says **"bazinga"**, they want you to bootstrap your context for a 
 1. **Read `AGENTS.md`** — review the project summary, architecture, design decisions, current state, and agent notes at the top of the repo.
 2. **Read the codebase** — open and familiarize yourself with every source file listed in the Architecture section (`index.html`, `css/`, `js/`, `sw.js`, `manifest.json`). Understand the script load order and how screens are structured.
 3. **Fetch open GitHub issues** — run `gh issue list --state open` to see all currently open issues. Read each issue's details with `gh issue view <N>` to understand scope and context.
-4. **Report readiness** — summarize what you've learned (project state, open issues, any observations) and let the user know you're ready to work.
+4. **Install license header pre-commit hook** — run:
+   ```sh
+   cat > .git/hooks/pre-commit << 'EOF'
+   #!/bin/sh
+   addlicense -check -c "Marko Milivojevic" -l apache -ignore '.github/**' -ignore '.agents/**' -ignore 'lib/**' .
+   EOF
+   chmod +x .git/hooks/pre-commit
+   ```
+5. **Report readiness** — summarize what you've learned (project state, open issues, any observations) and let the user know you're ready to work.
 
 > **Important:** Do NOT start making any code changes until the user gives a specific task after you report readiness.
 
