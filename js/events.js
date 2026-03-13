@@ -25,11 +25,21 @@ const Events = {
     },
 
     // ── Time Parsing ────────────────────────────────────────
-    // Water polo game clock: M:SS format (max 9:59)
+    // Water polo game clock: M:SS format
     // Digits fill right-to-left: S2, S1, M
     // "4"   → 0:04  (4 seconds)
     // "45"  → 0:45  (45 seconds)
     // "453" → 4:53  (4 min 53 sec)
+    // Max time is capped by the current period's length.
+
+    _getMaxMinutes() {
+        const period = this.game.currentPeriod;
+        if (period === "SO") return 0;
+        if (typeof period === "string" && period.startsWith("OT")) {
+            return this.game.otPeriodLength || 3;
+        }
+        return this.game.periodLength || 8;
+    },
 
     _parseTime(digits) {
         if (digits.length === 0) return null;
@@ -40,6 +50,10 @@ const Events = {
         const seconds = parseInt(padded.slice(1));
 
         if (seconds > 59 || minutes > 9) return null;
+
+        // Cap at period length
+        const maxMin = this._getMaxMinutes();
+        if (minutes > maxMin || (minutes === maxMin && seconds > 0)) return null;
 
         return {
             display: minutes + ":" + String(seconds).padStart(2, "0"),
@@ -83,8 +97,8 @@ const Events = {
         document.getElementById("team-dark-btn").addEventListener("click", () => this._selectTeam("D"));
 
         // Field selection — tap to switch numpad target
-        document.getElementById("field-time").addEventListener("click", () => this._setNumpadTarget("time"));
-        document.getElementById("field-cap").addEventListener("click", () => this._setNumpadTarget("cap"));
+        document.getElementById("field-time").addEventListener("click", () => this._setNumpadTarget("time", true));
+        document.getElementById("field-cap").addEventListener("click", () => this._setNumpadTarget("cap", true));
 
         // Shared numpad
         document.querySelectorAll("#shared-numpad .numpad-btn").forEach((btn) => {
@@ -158,8 +172,22 @@ const Events = {
         btn.disabled = !(hasTime && hasCap && hasTeam);
     },
 
-    _setNumpadTarget(target) {
+    _setNumpadTarget(target, isUserClick) {
         this._numpadTarget = target;
+
+        // Auto-clear only on user-initiated clicks, not auto-advance
+        if (isUserClick) {
+            if (target === "time" && this._timeRaw.length > 0 && this.game.currentPeriod !== "SO") {
+                this._timeRaw = "";
+                document.getElementById("time-display").innerHTML = this._formatTimeDisplay("");
+                this._updateOkButton();
+            } else if (target === "cap" && this._capRaw.length > 0) {
+                this._capRaw = "";
+                document.getElementById("cap-display").textContent = "";
+                this._updateOkButton();
+            }
+        }
+
         document.getElementById("field-time").classList.toggle("active", target === "time");
         document.getElementById("field-cap").classList.toggle("active", target === "cap");
     },
@@ -195,14 +223,27 @@ const Events = {
         // Reset inputs
         this._timeRaw = "";
         this._capRaw = "";
-        document.getElementById("time-display").innerHTML = this._formatTimeDisplay("");
+
+        // Shootout: lock time to 0:00
+        const isSO = this.game.currentPeriod === "SO";
+        const timeField = document.getElementById("field-time");
+        if (isSO) {
+            this._timeRaw = "000";
+            document.getElementById("time-display").innerHTML = this._formatTimeDisplay("000");
+            timeField.style.pointerEvents = "none";
+            timeField.style.opacity = "0.5";
+        } else {
+            document.getElementById("time-display").innerHTML = this._formatTimeDisplay("");
+            timeField.style.pointerEvents = "";
+            timeField.style.opacity = "";
+        }
         document.getElementById("cap-display").textContent = "";
 
         // Show/hide sections
         this._updateModalSections();
 
-        // Default target = time, no team pre-selected
-        this._setNumpadTarget("time");
+        // Default target: cap for SO (time is locked), time otherwise
+        this._setNumpadTarget(isSO && !eventDef.noPlayer ? "cap" : "time");
         this.selectedTeam = null;
         document.getElementById("team-white-btn").classList.remove("active");
         document.getElementById("team-dark-btn").classList.remove("active");
@@ -286,7 +327,7 @@ const Events = {
             } else {
                 this._showFoulOutPopup(
                     `FOUL OUT — ${teamLabel} ${cap}`,
-                    `${foulOut.count} exclusion fouls (limit: ${foulOut.limit})`
+                    `${foulOut.count} personal fouls (limit: ${foulOut.limit})`
                 );
             }
         }
@@ -363,7 +404,7 @@ const Events = {
     },
 
     _updateScoreBar() {
-        const score = Game.getScore(this.game);
+        const score = Game.getDisplayScore(this.game);
         document.getElementById("score-white").textContent = score.white;
         document.getElementById("score-dark").textContent = score.dark;
         document.getElementById("current-period").textContent = Game.getPeriodLabel(
@@ -408,11 +449,11 @@ const Events = {
                 const eventDef = rules.events.find((e) => e.code === entry.event);
                 const eventName = eventDef ? eventDef.name : entry.event;
                 row.innerHTML = `
-          <span class="log-time">${entry.time.replace(/^0(\d:)/, '$1')}</span>
+          <span class="log-time">${entry.period === "SO" ? "" : entry.time.replace(/^0(\d:)/, '$1')}</span>
           <span class="log-team ${entry.team === 'W' ? 'team-white' : 'team-dark'}">${entry.team}</span>
           <span class="log-cap">${entry.cap}</span>
           <span class="log-event event-${this._getEventClass(entry.event)}">${eventName}</span>
-          <span class="log-score">${entry.event === "G" ? entry.scoreW + "–" + entry.scoreD : ""}</span>
+          <span class="log-score">${Game.formatEntryScore(entry, this.game)}</span>
           <button class="log-delete-btn" data-id="${entry.id}" title="Delete">✕</button>
         `;
             }
