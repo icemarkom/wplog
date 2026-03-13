@@ -15,10 +15,17 @@
 
 ```
 wplog/
-├── index.html          # Single-page app shell (5 screens as <section>)
+├── index.html          # App shell (overlays, nav, empty screen placeholders + async loader)
+├── screens/
+│   ├── setup.html      # Setup screen content (rules, date, teams, etc.)
+│   ├── live.html       # Live log screen content (score bar, event buttons, log)
+│   ├── modal.html      # Event modal content (time, cap, numpad)
+│   ├── sheet.html      # Game sheet container
+│   └── share.html      # Share screen content (QR code, print button)
 ├── css/
 │   ├── style.css       # Dark-mode design system, mobile-first
-│   └── print.css       # Print-only B&W styles for game sheet
+│   ├── print.css       # Print-only B&W styles for game sheet
+│   └── standalone.css  # Shared styles for standalone pages (privacy, help)
 ├── js/
 │   ├── config.js       # APP_VERSION + RULES definitions (USAWP, NFHS Varsity, NFHS JV)
 │   ├── confirm.js      # Custom confirmation dialog (replaces native confirm())
@@ -29,6 +36,7 @@ wplog/
 │   ├── sheet.js        # Game sheet rendering (2-page print layout)
 │   ├── share.js        # Share/Print functionality
 │   └── app.js          # App init + screen navigation + version display
+├── help.html           # Standalone help page (uses standalone.css)
 ├── sw.js               # Service worker (offline caching, version-keyed cache)
 ├── manifest.json       # PWA manifest (relative paths for GH Pages)
 ├── .github/
@@ -36,7 +44,8 @@ wplog/
 │       └── deploy.yml  # Release-triggered deploy to gh-pages (injects version)
 ├── .agents/
 │   └── workflows/
-│       └── geronimo.md # "geronimo" = one-time approval to commit/push/close
+│       ├── geronimo.md # "geronimo" = one-time approval to commit/push/close
+│       └── kraken.md   # "kraken" = tag and release workflow
 ├── PRIVACY.md          # Privacy policy (Markdown, for GitHub)
 ├── privacy.html        # Privacy policy (HTML, canonical for OAuth consent)
 └── lib/                # Empty (previously had vendored libs, now removed)
@@ -173,6 +182,12 @@ NFHS does not have Brutality.
 - "Kraken" workflow for version tagging and release
 - Help screen: 5th nav tab with quick-reference guide (9 sections, always enabled)
 - Privacy policy: standalone `privacy.html` + `PRIVACY.md`, linked from footer and About dialog
+- File-per-screen architecture: `index.html` is app shell, content in `screens/*.html` loaded via async loader
+- Shared `css/standalone.css` for standalone pages (`privacy.html`, `help.html`)
+- Unified `.fetched-content` class for privacy + help content styles
+- Shared `.overlay-title`/`.overlay-message` base classes for all overlay dialogs
+- Consistent `letter-spacing: 0.04em` on all uppercase labels app-wide
+- Consistent `opacity: 0.3` on all disabled elements
 
 ### Known Gaps / Future Work 📋
 - No NCAA rules yet (structure ready)
