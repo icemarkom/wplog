@@ -84,9 +84,6 @@ const Events = {
 
         // OK
         document.getElementById("event-modal-confirm").addEventListener("click", () => this._confirmEvent());
-
-        // Event dropdown change
-        document.getElementById("modal-event-select").addEventListener("change", () => this._updateModalSections());
     },
 
     _handleNumpad(val) {
@@ -109,7 +106,7 @@ const Events = {
             if (val === "clear") {
                 this._capRaw = this._capRaw.slice(0, -1);
             } else if (["A", "B", "C"].includes(val)) {
-                const code = document.getElementById("modal-event-select").value;
+                const code = document.getElementById("modal-event-title").dataset.code;
                 const isCard = (code === "YC" || code === "RC");
                 if (isCard) {
                     // Cards: allow "C" (coach), "A" then "C" → "AC" (asst coach)
@@ -137,7 +134,7 @@ const Events = {
     },
 
     _isNoPlayer() {
-        const code = document.getElementById("modal-event-select").value;
+        const code = document.getElementById("modal-event-title").dataset.code;
         const rules = RULES[this.game.rules];
         const eventDef = rules.events.find((e) => e.code === code);
         return eventDef && eventDef.noPlayer;
@@ -158,22 +155,14 @@ const Events = {
         document.getElementById("field-cap").classList.toggle("active", target === "cap");
     },
 
-    _populateEventDropdown(selectedCode) {
-        const select = document.getElementById("modal-event-select");
-        select.innerHTML = "";
-        const rules = RULES[this.game.rules];
-
-        for (const evt of rules.events) {
-            const opt = document.createElement("option");
-            opt.value = evt.code;
-            opt.textContent = evt.name;
-            if (evt.code === selectedCode) opt.selected = true;
-            select.appendChild(opt);
-        }
+    _setModalTitle(eventDef) {
+        const el = document.getElementById("modal-event-title");
+        el.textContent = eventDef.name;
+        el.dataset.code = eventDef.code;
     },
 
     _updateModalSections() {
-        const code = document.getElementById("modal-event-select").value;
+        const code = document.getElementById("modal-event-title").dataset.code;
         const rules = RULES[this.game.rules];
         const eventDef = rules.events.find((e) => e.code === code);
 
@@ -191,8 +180,8 @@ const Events = {
     _openModal(eventDef) {
         this._pendingEvent = eventDef;
 
-        // Populate dropdown
-        this._populateEventDropdown(eventDef.code);
+        // Set title
+        this._setModalTitle(eventDef);
 
         // Reset inputs
         this._timeRaw = "";
@@ -230,7 +219,7 @@ const Events = {
 
     _confirmEvent() {
         const rules = RULES[this.game.rules];
-        const code = document.getElementById("modal-event-select").value;
+        const code = document.getElementById("modal-event-title").dataset.code;
         const eventDef = rules.events.find((e) => e.code === code);
         if (!eventDef) return;
 
