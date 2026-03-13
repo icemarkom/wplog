@@ -30,6 +30,18 @@
     </div>
   </div>
 
+  <!-- Confirm Dialog -->
+  <div id="confirm-overlay" class="overlay">
+    <div class="overlay-content confirm-card">
+      <div id="confirm-title" class="confirm-title"></div>
+      <div id="confirm-message" class="confirm-message"></div>
+      <div class="confirm-actions">
+        <button id="confirm-cancel" class="btn btn-outline confirm-action-btn">Cancel</button>
+        <button id="confirm-ok" class="btn confirm-action-btn">OK</button>
+      </div>
+    </div>
+  </div>
+
   <!-- Navigation -->
   <nav class="nav-bar">
     <button id="nav-setup" class="nav-btn active">Setup</button>
@@ -231,6 +243,7 @@
 
   <!-- Scripts (order matters — dependencies first) -->
   <script src="js/config.js"></script>
+  <script src="js/confirm.js"></script>
   <script src="js/storage.js"></script>
   <script src="js/game.js"></script>
   <script src="js/setup.js"></script>

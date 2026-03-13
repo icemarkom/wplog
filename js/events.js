@@ -267,7 +267,7 @@ const Events = {
         this._updateOkButton();
     },
 
-    _confirmEvent() {
+    async _confirmEvent() {
         const rules = RULES[this.game.rules];
         const code = document.getElementById("modal-event-title").dataset.code;
         const eventDef = rules.events.find((e) => e.code === code);
@@ -295,7 +295,13 @@ const Events = {
         // Validate time order
         const timeCheck = Game.validateTime(this.game, period, time);
         if (!timeCheck.valid) {
-            if (!confirm(timeCheck.warning)) return;
+            const ok = await ConfirmDialog.show({
+                title: "Out of Order Time",
+                message: timeCheck.warning,
+                confirmLabel: "Continue",
+                type: "warning",
+            });
+            if (!ok) return;
         }
 
         // Check foul-out BEFORE logging
@@ -461,12 +467,18 @@ const Events = {
         }
 
         container.querySelectorAll(".log-delete-btn").forEach((btn) => {
-            btn.addEventListener("click", (e) => {
+            btn.addEventListener("click", async (e) => {
                 e.stopPropagation();
                 const id = parseInt(btn.dataset.id);
                 const entry = this.game.log.find((ev) => ev.id === id);
                 const isPeriodEnd = entry && entry.event === "---";
-                if (confirm(isPeriodEnd ? "Delete End of Period and revert?" : "Delete this event?")) {
+                const ok = await ConfirmDialog.show({
+                    title: isPeriodEnd ? "Revert Period" : "Delete Event",
+                    message: isPeriodEnd ? "Delete End of Period and revert?" : "Delete this event?",
+                    confirmLabel: isPeriodEnd ? "Revert" : "Delete",
+                    type: "danger",
+                });
+                if (ok) {
                     if (isPeriodEnd) {
                         // Revert to the period that was ended
                         this.game.currentPeriod = entry.period;

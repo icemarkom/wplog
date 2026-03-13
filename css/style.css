@@ -816,6 +816,59 @@ select.form-input {
 }
 
 /* ============================
+   Confirm Dialog
+   ============================ */
+.confirm-card {
+  max-width: 340px;
+}
+
+.confirm-title {
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--text-primary);
+  margin-bottom: 8px;
+  letter-spacing: -0.01em;
+}
+
+.confirm-message {
+  font-size: 14px;
+  color: var(--text-secondary);
+  margin-bottom: 24px;
+  line-height: 1.5;
+}
+
+.confirm-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.confirm-action-btn {
+  flex: 1;
+  min-height: 48px;
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.confirm-btn-danger {
+  background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+  color: white;
+  box-shadow: var(--shadow-sm), 0 0 12px rgba(220, 38, 38, 0.3);
+}
+
+.confirm-btn-danger:hover {
+  box-shadow: var(--shadow-md), 0 0 16px rgba(220, 38, 38, 0.5);
+}
+
+.confirm-btn-warning {
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+  color: #111;
+  box-shadow: var(--shadow-sm), 0 0 12px rgba(245, 158, 11, 0.3);
+}
+
+.confirm-btn-warning:hover {
+  box-shadow: var(--shadow-md), 0 0 16px rgba(245, 158, 11, 0.5);
+}
+/* ============================
    Event Modal
    ============================ */
 .event-modal {
