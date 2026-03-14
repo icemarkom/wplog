@@ -22,6 +22,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
   <meta name="description" content="Water polo game log — log events poolside, produce official game sheets">
   <meta name="theme-color" content="#0a0e1a">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:;">
+  <meta http-equiv="X-Content-Type-Options" content="nosniff">
   <title>wplog — Water Polo Game Log</title>
   <link rel="manifest" href="manifest.json">
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -180,7 +182,7 @@
 
       // Load JS files in order (dependencies first)
       const scripts = [
-        "js/config.js", "js/confirm.js", "js/storage.js", "js/game.js",
+        "js/sanitize.js", "js/config.js", "js/confirm.js", "js/storage.js", "js/game.js",
         "js/setup.js", "js/events.js", "js/sheet.js", "js/share.js", "js/app.js",
       ];
       for (const src of scripts) {

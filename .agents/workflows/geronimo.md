@@ -4,13 +4,23 @@ description: Commit, push, and close issue — triggered by user saying "geronim
 
 # Geronimo — Ship It Workflow
 
-When the user says **"geronimo"**, they are giving one-time approval to run all three (or any required) steps below. This approval covers ONLY the current set of changes — it does NOT carry over to future work.
+When the user says **"geronimo"**, they are giving one-time approval to run all steps below. This approval covers ONLY the current set of changes — it does NOT carry over to future work.
+
+> **Branch-aware:** Check `.agents/workflows/branching.md` for the current branching strategy. On long-lived feature branches (e.g., `feature/stats-v2`), skip steps 4-5 (PR/merge) — only commit and push. On short-lived fix branches, run the full workflow.
 
 // turbo-all
 
 1. **Fix license headers** — run `addlicense -c "Marko Milivojevic" -l apache -ignore '.github/**' -ignore '.agents/**' -ignore 'lib/**' .` to add any missing headers.
 2. **Commit** the staged/changed files with an appropriate commit message referencing the issue number.
-3. **Push** to `origin main`.
-4. **Comment on and close** the relevant GitHub issue using `gh issue close <N> -c "<comment>"`.
+3. **Push** the current branch to `origin`.
+4. **Merge to main via GitHub** (skip on long-lived feature branches) — create a PR and merge:
+   ```sh
+   gh pr create --fill --base main
+   gh pr merge --merge --delete-branch
+   ```
+5. **Pull main** locally (skip on long-lived feature branches): `git pull origin main`.
+6. **Comment on and close** the relevant GitHub issue using `gh issue close <N> -c "<comment>"`. Skip if the issue is still in progress.
 
 > **Important:** Outside of the "geronimo" trigger, NEVER commit, push, or close issues without explicit user confirmation.
+
+> **Note:** Development happens on branches, never directly on `main`. All merges to `main` go through GitHub.

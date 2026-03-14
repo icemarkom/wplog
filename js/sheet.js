@@ -60,26 +60,26 @@ const Sheet = {
       <div class="sheet-title">Game Sheet</div>
       <div class="sheet-meta">
         <div class="sheet-meta-row">
-          <span class="sheet-meta-pair"><span class="sheet-label">Game #:</span> <span class="sheet-value">${game.gameId || "—"}</span></span>
+          <span class="sheet-meta-pair"><span class="sheet-label">Game #:</span> <span class="sheet-value">${escapeHTML(game.gameId || "—")}</span></span>
         </div>
         <div class="sheet-meta-row">
-          <span class="sheet-meta-pair"><span class="sheet-label">Location:</span> <span class="sheet-value">${game.location || "—"}</span></span>
+          <span class="sheet-meta-pair"><span class="sheet-label">Location:</span> <span class="sheet-value">${escapeHTML(game.location || "—")}</span></span>
         </div>
         <div class="sheet-meta-row sheet-meta-times">
-          <span class="sheet-meta-pair"><span class="sheet-label">Date:</span> <span class="sheet-value">${game.date}</span></span>
-          <span class="sheet-meta-pair"><span class="sheet-label">Scheduled:</span> <span class="sheet-value">${game.startTime || "--:--"}</span></span>
-          <span class="sheet-meta-pair"><span class="sheet-label">Ended:</span> <span class="sheet-value">${game.endTime || "--:--"}</span></span>
+          <span class="sheet-meta-pair"><span class="sheet-label">Date:</span> <span class="sheet-value">${escapeHTML(game.date)}</span></span>
+          <span class="sheet-meta-pair"><span class="sheet-label">Scheduled:</span> <span class="sheet-value">${escapeHTML(game.startTime || "--:--")}</span></span>
+          <span class="sheet-meta-pair"><span class="sheet-label">Ended:</span> <span class="sheet-value">${escapeHTML(game.endTime || "--:--")}</span></span>
         </div>
       </div>
       <div class="sheet-teams">
         <div class="sheet-team sheet-team-white">
           <span class="sheet-team-label">White</span>
-          <span class="sheet-team-name">${whiteName}</span>
+          <span class="sheet-team-name">${escapeHTML(whiteName)}</span>
         </div>
-        <div class="sheet-final-score">${score.white} — ${score.dark}</div>
+        <div class="sheet-final-score">${escapeHTML(score.white)} — ${escapeHTML(score.dark)}</div>
         <div class="sheet-team sheet-team-dark">
           <span class="sheet-team-label">Dark</span>
-          <span class="sheet-team-name">${darkName}</span>
+          <span class="sheet-team-name">${escapeHTML(darkName)}</span>
         </div>
       </div>
     `;
@@ -125,11 +125,11 @@ const Sheet = {
                 const eventDef = rules.events.find((e) => e.code === entry.event);
                 const align = eventDef && eventDef.align ? eventDef.align : "center";
                 tr.innerHTML = `
-          <td>${entry.period === "SO" ? "" : entry.time.replace(/^0(\d:)/, '$1')}</td>
-          <td>${entry.cap || "—"}</td>
-          <td>${entry.team || "—"}</td>
-          <td style="text-align:${align}">${entry.event}</td>
-          <td>${Game.formatEntryScore(entry, this.game)}</td>
+          <td>${entry.period === "SO" ? "" : escapeHTML(entry.time.replace(/^0(\d:)/, '$1'))}</td>
+          <td>${escapeHTML(entry.cap || "—")}</td>
+          <td>${escapeHTML(entry.team || "—")}</td>
+          <td style="text-align:${align}">${escapeHTML(entry.event)}</td>
+          <td>${escapeHTML(Game.formatEntryScore(entry, this.game))}</td>
         `;
             }
             tbody.appendChild(tr);
@@ -256,9 +256,9 @@ const Sheet = {
 
             tr.innerHTML = `
         <td>${player.team === "W" ? "White" : "Dark"}</td>
-        <td>${player.cap}</td>
+        <td>${escapeHTML(player.cap)}</td>
         <td>${player.fouls.length}</td>
-        <td class="sheet-foul-details">${details}</td>
+        <td class="sheet-foul-details">${escapeHTML(details)}</td>
       `;
             tbody.appendChild(tr);
         }
@@ -344,10 +344,10 @@ const Sheet = {
             const eventDef = rules.events.find((e) => e.code === entry.event);
             tr.innerHTML = `
         <td>${entry.team === "W" ? "White" : (entry.team === "D" ? "Dark" : "—")}</td>
-        <td>${entry.cap || "—"}</td>
+        <td>${escapeHTML(entry.cap || "—")}</td>
         <td>${Game.getPeriodLabel(entry.period)}</td>
-        <td>${entry.time.replace(/^0(\d:)/, '$1')}</td>
-        <td>${eventDef ? eventDef.name : entry.event}</td>
+        <td>${escapeHTML(entry.time.replace(/^0(\d:)/, '$1'))}</td>
+        <td>${eventDef ? eventDef.name : escapeHTML(entry.event)}</td>
       `;
             tbody.appendChild(tr);
         }

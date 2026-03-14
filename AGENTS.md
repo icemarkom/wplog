@@ -27,6 +27,7 @@ wplog/
 │   ├── print.css       # Print-only B&W styles for game sheet
 │   └── standalone.css  # Shared styles for standalone pages (privacy, help)
 ├── js/
+│   ├── sanitize.js    # escapeHTML() utility — loaded first, used by sheet.js + events.js
 │   ├── config.js       # APP_VERSION + RULES definitions (USAWP, NFHS Varsity, NFHS JV)
 │   ├── confirm.js      # Custom confirmation dialog (replaces native confirm())
 │   ├── storage.js      # localStorage wrapper
@@ -44,14 +45,15 @@ wplog/
 │       └── deploy.yml  # Release-triggered deploy to gh-pages (injects version)
 ├── .agents/
 │   └── workflows/
-│       ├── geronimo.md # "geronimo" = one-time approval to commit/push/close
-│       └── kraken.md   # "kraken" = tag and release workflow
+│       ├── branching.md # Branching strategy for parallel v1/v2 development
+│       ├── geronimo.md  # "geronimo" = one-time approval to commit/push/close
+│       └── kraken.md    # "kraken" = tag and release workflow
 ├── PRIVACY.md          # Privacy policy (Markdown, for GitHub)
 ├── privacy.html        # Privacy policy (HTML, canonical for OAuth consent)
 └── lib/                # Empty (previously had vendored libs, now removed)
 ```
 
-Script load order matters: `config.js` → `confirm.js` → `storage.js` → `game.js` → `setup.js` → `events.js` → `sheet.js` → `share.js` → `app.js`
+Script load order matters: `sanitize.js` → `config.js` → `confirm.js` → `storage.js` → `game.js` → `setup.js` → `events.js` → `sheet.js` → `share.js` → `app.js`
 
 ---
 
@@ -59,9 +61,12 @@ Script load order matters: `config.js` → `confirm.js` → `storage.js` → `ga
 
 - **GitHub Pages** serves from `gh-pages` branch (not `main`)
 - **Production domain**: `https://log.wpref.org/` (via CNAME)
-- **Development** happens on `main` — pushes do NOT affect the live site
+- **Stable releases** are on `main` — pushes do NOT affect the live site
+- **v2 development** happens on `feature/stats-v2` — a long-lived feature branch
+- **v1 hotfixes**: branch off `main`, fix, merge back, release. Then rebase `feature/stats-v2` onto updated `main`
 - **Releases** trigger the deploy Action: `gh release create v1.x.x --title "..." --notes "..."`
 - Deploy Action injects the release tag version into `config.js` via `sed`, then uses `peaceiris/actions-gh-pages@v4` to copy files to `gh-pages`
+- See `.agents/workflows/branching.md` for full branching strategy
 
 ---
 
@@ -93,8 +98,9 @@ These were explicitly discussed and agreed with the user:
 | **Numpad layout** | 4 columns: digits 1-9/0, A/B/C in rightmost column, backspace next to 0. |
 | **Auto-close disabled** | GitHub auto-close via commit messages is disabled in this repo. Close issues manually with `gh issue close`. |
 | **Don't commit without confirmation** | Always wait for user to confirm before committing and pushing. |
-| **"Geronimo" workflow** | When user says "geronimo", it's one-time approval to commit, push, and close the relevant issue. See `.agents/workflows/geronimo.md`. |
+| **"Geronimo" workflow** | When user says "geronimo", it's one-time approval to commit, push, and close the relevant issue. Branch-aware: on long-lived feature branches, skip PR/merge. See `.agents/workflows/geronimo.md`. |
 | **"Kraken" workflow** | When user says "kraken", triggers the release workflow: evaluate changes, update AGENTS.md, propose version, prepare release notes, tag and release. See `.agents/workflows/kraken.md`. |
+| **Branching strategy** | v1 hotfixes branch off `main`; v2 work stays on `feature/stats-v2`. After v1 fixes land, rebase v2 onto `main`. See `.agents/workflows/branching.md`. |
 | **Auto-clear on refocus** | Tapping a filled time/cap field in the modal auto-clears it for re-entry. Only on user clicks, not auto-advance. |
 | **Custom dialogs** | All `confirm()` calls replaced with `ConfirmDialog` (overlay-based). Supports `danger` (red) and `warning` (amber) types. |
 | **Version system** | `APP_VERSION = "dev"` in `config.js`. Deploy workflow injects the release tag. In dev, runtime auto-detects latest file modification timestamp via `Last-Modified` HTTP headers → displays `dev-YYYYMMDD-HHMM`. No git or build step needed at runtime. |
@@ -104,6 +110,8 @@ These were explicitly discussed and agreed with the user:
 | **QR code sharing** | Single SVG (`img/qr-wplog.svg`) with white modules on transparent background. CSS `filter: invert(1)` for high-contrast overlay. Share screen always accessible. |
 | **Share tab always active** | Share tab is always enabled. Print Game Sheet button is disabled when no game is active. |
 | **Help screen** | 5th nav tab (always enabled). Full screen section with concise quick-reference guide (~1 min read). Not a footer link or overlay — too undiscoverable. |
+| **innerHTML sanitization** | All user-supplied values (team names, cap numbers, Game #, location, etc.) MUST be escaped via `escapeHTML()` from `sanitize.js` before `innerHTML` interpolation. Config-driven data (event names/codes) and internally computed values are safe but should still be escaped where mixed with user data. |
+| **CSP meta tags** | `Content-Security-Policy` and `X-Content-Type-Options` meta tags in `<head>` of `index.html`, `privacy.html`, and `help.html`. CSP uses `'unsafe-inline'` for scripts (due to inline loader) — blocks external script injection. |
 
 ### USAWP Events
 
@@ -195,6 +203,8 @@ NFHS does not have Brutality.
 - Author name in About links to `https://icemarkom.dev/`
 - Privacy link in About dialog as a row (Privacy: Policy), reordered: Version → License → Privacy → Source → Author
 - Events sorted by game time within each period (`_sortLog` in `game.js`), with scores recalculated after sort
+- HTML sanitization: `escapeHTML()` in `sanitize.js` applied to all user-controlled `innerHTML` interpolation in `sheet.js` and `events.js`
+- CSP meta tag (`Content-Security-Policy`) + `X-Content-Type-Options: nosniff` on all HTML pages (`index.html`, `privacy.html`, `help.html`)
 
 ### Known Gaps / Future Work 📋
 - No NCAA rules yet (structure ready)
@@ -231,7 +241,7 @@ Then open `http://localhost:8080`.
 4. **The user is iterative** — expect inline comments on artifacts with specific feedback. Incorporate exactly what they say.
 5. **Don't commit/push without confirmation** — always wait for the user to say it's ready before `git commit` and `git push`. Exception: "geronimo" = one-time blanket approval.
 6. **Close issues manually** — auto-close is disabled. Use `gh issue close N -c "comment"` after pushing.
-7. **Release to publish** — development happens on `main`. Use `gh release create` to deploy to GitHub Pages.
+7. **Release to publish** — stable releases from `main`. Use `gh release create` to deploy to GitHub Pages. See `.agents/workflows/branching.md` for the v1/v2 parallel development strategy.
 8. **Previous conversations** exist about a full water polo scoreboard/timer controller (WTTC-1) — this is a separate, simpler project.
 9. **Game clock is M:SS** — max time is capped by period length (not hardcoded 9:59). Right-to-left digit entry. Start/end times remain HH:MM.
 10. **Modal uses responsive breakpoints** — default is full-screen (mobile), `@media (min-width: 900px) and (min-height: 700px)` switches to desktop dialog.
@@ -239,3 +249,4 @@ Then open `http://localhost:8080`.
 12. **MAM is a dual-trigger event** — `isPersonalFoul: true` + `autoFoulOut: 2`. This pattern was explicitly designed for NFHS/NCAA.
 13. **Version system** — `APP_VERSION` lives in `config.js`. Default is `"dev"`. Deploy workflow injects release tag. Dev mode auto-detects file timestamp via `HEAD` requests. Don't hardcode versions elsewhere.
 14. **About is an overlay** — not a screen/section. It uses the same `.overlay` pattern as `ConfirmDialog` and the foul-out popup.
+15. **Always use `escapeHTML()`** — when building `innerHTML` templates with user-supplied data (team names, cap numbers, Game #, location, etc.), wrap them in `escapeHTML()`. This is mandatory — see `sanitize.js`.
