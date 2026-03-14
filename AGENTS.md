@@ -193,6 +193,7 @@ NFHS does not have Brutality.
 - Apache 2.0 copyright headers on all source files via `addlicense`
 - `addlicense` enforcement in bazinga (pre-commit hook), geronimo, and kraken workflows
 - Author name in About links to `https://icemarkom.dev/`
+- Privacy link in About dialog as a row (Privacy: Policy), reordered: Version → License → Privacy → Source → Author
 
 ### Known Gaps / Future Work 📋
 - No NCAA rules yet (structure ready)
