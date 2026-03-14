@@ -27,6 +27,7 @@ wplog/
 │   ├── print.css       # Print-only B&W styles for game sheet
 │   └── standalone.css  # Shared styles for standalone pages (privacy, help)
 ├── js/
+│   ├── sanitize.js    # escapeHTML() utility — loaded first, used by sheet.js + events.js
 │   ├── config.js       # APP_VERSION + RULES definitions (USAWP, NFHS Varsity, NFHS JV)
 │   ├── confirm.js      # Custom confirmation dialog (replaces native confirm())
 │   ├── storage.js      # localStorage wrapper
@@ -52,7 +53,7 @@ wplog/
 └── lib/                # Empty (previously had vendored libs, now removed)
 ```
 
-Script load order matters: `config.js` → `confirm.js` → `storage.js` → `game.js` → `setup.js` → `events.js` → `sheet.js` → `share.js` → `app.js`
+Script load order matters: `sanitize.js` → `config.js` → `confirm.js` → `storage.js` → `game.js` → `setup.js` → `events.js` → `sheet.js` → `share.js` → `app.js`
 
 ---
 
@@ -109,6 +110,8 @@ These were explicitly discussed and agreed with the user:
 | **QR code sharing** | Single SVG (`img/qr-wplog.svg`) with white modules on transparent background. CSS `filter: invert(1)` for high-contrast overlay. Share screen always accessible. |
 | **Share tab always active** | Share tab is always enabled. Print Game Sheet button is disabled when no game is active. |
 | **Help screen** | 5th nav tab (always enabled). Full screen section with concise quick-reference guide (~1 min read). Not a footer link or overlay — too undiscoverable. |
+| **innerHTML sanitization** | All user-supplied values (team names, cap numbers, Game #, location, etc.) MUST be escaped via `escapeHTML()` from `sanitize.js` before `innerHTML` interpolation. Config-driven data (event names/codes) and internally computed values are safe but should still be escaped where mixed with user data. |
+| **CSP meta tags** | `Content-Security-Policy` and `X-Content-Type-Options` meta tags in `<head>` of `index.html`, `privacy.html`, and `help.html`. CSP uses `'unsafe-inline'` for scripts (due to inline loader) — blocks external script injection. |
 
 ### USAWP Events
 
@@ -200,6 +203,8 @@ NFHS does not have Brutality.
 - Author name in About links to `https://icemarkom.dev/`
 - Privacy link in About dialog as a row (Privacy: Policy), reordered: Version → License → Privacy → Source → Author
 - Events sorted by game time within each period (`_sortLog` in `game.js`), with scores recalculated after sort
+- HTML sanitization: `escapeHTML()` in `sanitize.js` applied to all user-controlled `innerHTML` interpolation in `sheet.js` and `events.js`
+- CSP meta tag (`Content-Security-Policy`) + `X-Content-Type-Options: nosniff` on all HTML pages (`index.html`, `privacy.html`, `help.html`)
 
 ### Known Gaps / Future Work 📋
 - No NCAA rules yet (structure ready)
@@ -244,3 +249,4 @@ Then open `http://localhost:8080`.
 12. **MAM is a dual-trigger event** — `isPersonalFoul: true` + `autoFoulOut: 2`. This pattern was explicitly designed for NFHS/NCAA.
 13. **Version system** — `APP_VERSION` lives in `config.js`. Default is `"dev"`. Deploy workflow injects release tag. Dev mode auto-detects file timestamp via `HEAD` requests. Don't hardcode versions elsewhere.
 14. **About is an overlay** — not a screen/section. It uses the same `.overlay` pattern as `ConfirmDialog` and the foul-out popup.
+15. **Always use `escapeHTML()`** — when building `innerHTML` templates with user-supplied data (team names, cap numbers, Game #, location, etc.), wrap them in `escapeHTML()`. This is mandatory — see `sanitize.js`.
