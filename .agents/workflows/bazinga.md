@@ -34,3 +34,11 @@ All new work — including work started in a bazinga-bootstrapped thread — **m
 5. Only **after approval**, you proceed with implementation on the branch.
 
 > **CAUTION:** Never skip the planning and discussion phase for anything beyond the simplest, most obvious tasks (e.g., a trivial typo fix). When in doubt, plan first.
+
+## Security Checklist
+
+When making changes that render user-supplied data (team names, cap numbers, Game #, location, etc.) into the DOM via `innerHTML`:
+
+- **Always use `escapeHTML()`** from `js/sanitize.js` to wrap user-controlled values before interpolation
+- **Never bypass** this requirement — even if the data "looks safe" (e.g., cap numbers)
+- Refer to `AGENTS.md` design decision on **innerHTML sanitization** for full details
