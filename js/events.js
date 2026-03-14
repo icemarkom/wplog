@@ -424,46 +424,45 @@ const Events = {
         const logEvents = rules.events.filter((e) => !e.statsOnly);
         const statEvents = rules.events.filter((e) => e.statsOnly);
 
-        // In full or log-only mode, show log events
-        if (showLog) {
-            for (const evt of logEvents) {
-                const btn = document.createElement("button");
-                btn.className = "event-btn event-" + (evt.color || "default");
-                btn.textContent = evt.name;
-                btn.dataset.code = evt.code;
-                btn.addEventListener("click", () => this._openModal(evt));
-                container.appendChild(btn);
-            }
-        }
-
-        // In full mode (both on), add separator then stats in teal
-        if (showLog && showStats && statEvents.length > 0) {
-            const sep = document.createElement("div");
-            sep.className = "stats-separator";
-            container.appendChild(sep);
-        }
-
-        // Show stat events (teal in full mode, teal in stats-only mode)
-        if (showStats) {
-            for (const evt of statEvents) {
-                const btn = document.createElement("button");
-                btn.className = "event-btn event-teal";
-                btn.textContent = evt.name;
-                btn.dataset.code = evt.code;
-                btn.addEventListener("click", () => this._openModal(evt));
-                container.appendChild(btn);
-            }
-        }
-
-        // In stats-only mode, also show log events but all in teal
+        // Stats-only mode: show ALL events in config order, all teal
         if (statsOnly) {
-            for (const evt of logEvents) {
+            for (const evt of rules.events) {
                 const btn = document.createElement("button");
                 btn.className = "event-btn event-teal";
                 btn.textContent = evt.name;
                 btn.dataset.code = evt.code;
                 btn.addEventListener("click", () => this._openModal(evt));
                 container.appendChild(btn);
+            }
+        } else {
+            // Log-only or hybrid mode
+            if (showLog) {
+                for (const evt of logEvents) {
+                    const btn = document.createElement("button");
+                    btn.className = "event-btn event-" + (evt.color || "default");
+                    btn.textContent = evt.name;
+                    btn.dataset.code = evt.code;
+                    btn.addEventListener("click", () => this._openModal(evt));
+                    container.appendChild(btn);
+                }
+            }
+
+            // Hybrid: add separator then stats in teal
+            if (showLog && showStats && statEvents.length > 0) {
+                const sep = document.createElement("div");
+                sep.className = "stats-separator";
+                container.appendChild(sep);
+            }
+
+            if (showStats) {
+                for (const evt of statEvents) {
+                    const btn = document.createElement("button");
+                    btn.className = "event-btn event-teal";
+                    btn.textContent = evt.name;
+                    btn.dataset.code = evt.code;
+                    btn.addEventListener("click", () => this._openModal(evt));
+                    container.appendChild(btn);
+                }
             }
         }
 
