@@ -134,7 +134,7 @@ NFHS does not have Brutality.
 
 ---
 
-## Current State (as of 2026-03-13)
+## Current State (as of 2026-03-14)
 
 ### What's Done ✅
 - Complete setup screen (rules, date, time, location, Game #, team names, OT/SO toggles, timeout overrides)
@@ -194,6 +194,7 @@ NFHS does not have Brutality.
 - `addlicense` enforcement in bazinga (pre-commit hook), geronimo, and kraken workflows
 - Author name in About links to `https://icemarkom.dev/`
 - Privacy link in About dialog as a row (Privacy: Policy), reordered: Version → License → Privacy → Source → Author
+- Events sorted by game time within each period (`_sortLog` in `game.js`), with scores recalculated after sort
 
 ### Known Gaps / Future Work 📋
 - No NCAA rules yet (structure ready)
