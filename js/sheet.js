@@ -473,7 +473,7 @@ const Sheet = {
                     const cap = wCaps[i];
                     const capData = counts[st.code].W[cap];
                     let total = 0;
-                    cells += `<td>${cap}</td>`;
+                    cells += `<td>${escapeHTML(cap)}</td>`;
                     for (const period of periodOrder) {
                         const val = capData[period] || 0;
                         total += val;
@@ -489,7 +489,7 @@ const Sheet = {
                     const cap = dCaps[i];
                     const capData = counts[st.code].D[cap];
                     let total = 0;
-                    cells += `<td>${cap}</td>`;
+                    cells += `<td>${escapeHTML(cap)}</td>`;
                     for (const period of periodOrder) {
                         const val = capData[period] || 0;
                         total += val;
