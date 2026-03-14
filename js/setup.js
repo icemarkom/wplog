@@ -24,6 +24,7 @@ const Setup = {
         this._populateRules();
         this._setDefaultDate();
         this._resetForm();
+        this._bindStatsToggles();
     },
 
     _resetForm() {
@@ -138,6 +139,18 @@ const Setup = {
         saveField("setup-to-30", () => {
             game.timeoutsAllowed.to30 = parseInt(document.getElementById("setup-to-30").value) || 0;
         });
+
+        // Stats toggles during active game — disable changing mode
+        document.getElementById("setup-enable-log").disabled = true;
+        document.getElementById("setup-enable-stats").disabled = true;
+        document.getElementById("setup-stats-time-mode").disabled = true;
+        document.getElementById("setup-enable-log").checked = game.enableLog;
+        document.getElementById("setup-enable-stats").checked = game.enableStats;
+        document.getElementById("setup-stats-time-mode").value = game.statsTimeMode || "off";
+        this._updateStatsTimeVisibility();
+        if (game.enableStats) {
+            document.getElementById("setup-stats-section").open = true;
+        }
     },
 
     _populateRules() {
@@ -216,6 +229,41 @@ const Setup = {
         });
     },
 
+    _bindStatsToggles() {
+        const logToggle = document.getElementById("setup-enable-log");
+        const statsToggle = document.getElementById("setup-enable-stats");
+
+        // Mutual exclusion: can't deselect the last one
+        logToggle.addEventListener("change", () => {
+            if (!logToggle.checked && !statsToggle.checked) {
+                logToggle.checked = true;
+                return;
+            }
+            this._updateStatsTimeDefault();
+        });
+        statsToggle.addEventListener("change", () => {
+            if (!statsToggle.checked && !logToggle.checked) {
+                statsToggle.checked = true;
+                return;
+            }
+            this._updateStatsTimeVisibility();
+            this._updateStatsTimeDefault();
+        });
+    },
+
+    _updateStatsTimeVisibility() {
+        const statsOn = document.getElementById("setup-enable-stats").checked;
+        document.getElementById("setup-stats-time-group").style.display = statsOn ? "" : "none";
+    },
+
+    _updateStatsTimeDefault() {
+        const logOn = document.getElementById("setup-enable-log").checked;
+        const statsOn = document.getElementById("setup-enable-stats").checked;
+        if (!statsOn) return;
+        // Default: OFF for both hybrid and stats-only
+        document.getElementById("setup-stats-time-mode").value = "off";
+    },
+
     _startGame() {
         const rulesKey = document.getElementById("setup-rules").value;
         const game = Game.create(rulesKey);
@@ -234,6 +282,11 @@ const Setup = {
             full: parseInt(document.getElementById("setup-to-full").value) || 0,
             to30: parseInt(document.getElementById("setup-to-30").value) || 0,
         };
+
+        // Stats settings
+        game.enableLog = document.getElementById("setup-enable-log").checked;
+        game.enableStats = document.getElementById("setup-enable-stats").checked;
+        game.statsTimeMode = document.getElementById("setup-stats-time-mode").value;
 
         const whiteName = document.getElementById("setup-white-name").value.trim();
         const darkName = document.getElementById("setup-dark-name").value.trim();

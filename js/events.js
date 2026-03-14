@@ -181,10 +181,24 @@ const Events = {
 
     _updateOkButton() {
         const btn = document.getElementById("event-modal-confirm");
-        const hasTime = this._timeRaw.length > 0 && this._parseTime(this._timeRaw) !== null;
         const noPlayer = this._isNoPlayer();
         const hasCap = noPlayer || this._capRaw.length > 0;
         const hasTeam = this.selectedTeam !== null;
+
+        // Stats events: time requirement depends on statsTimeMode
+        const code = document.getElementById("modal-event-title").dataset.code;
+        const rules = RULES[this.game.rules];
+        const eventDef = rules.events.find((e) => e.code === code);
+        const isStatsOnly = eventDef && eventDef.statsOnly;
+        const timeMode = this.game.statsTimeMode || "off";
+
+        let hasTime;
+        if (isStatsOnly && (timeMode === "off" || timeMode === "optional")) {
+            hasTime = true; // time not required
+        } else {
+            hasTime = this._timeRaw.length > 0 && this._parseTime(this._timeRaw) !== null;
+        }
+
         btn.disabled = !(hasTime && hasCap && hasTeam);
     },
 
@@ -259,7 +273,22 @@ const Events = {
         this._updateModalSections();
 
         // Default target: cap for SO (time is locked), time otherwise
-        this._setNumpadTarget(isSO && !eventDef.noPlayer ? "cap" : "time");
+        // Stats events: adjust for statsTimeMode
+        const isStatsOnly = eventDef.statsOnly;
+        const timeMode = this.game.statsTimeMode || "off";
+
+        if (isStatsOnly && timeMode === "off") {
+            // Hide time field entirely
+            timeField.style.display = "none";
+            this._setNumpadTarget(eventDef.noPlayer ? "time" : "cap");
+        } else if (isStatsOnly && timeMode === "optional") {
+            timeField.style.display = "";
+            this._setNumpadTarget(eventDef.noPlayer ? "time" : "cap");
+        } else {
+            timeField.style.display = "";
+            this._setNumpadTarget(isSO && !eventDef.noPlayer ? "cap" : "time");
+        }
+
         this.selectedTeam = null;
         document.getElementById("team-white-btn").classList.remove("active");
         document.getElementById("team-dark-btn").classList.remove("active");
@@ -289,14 +318,22 @@ const Events = {
         const eventDef = rules.events.find((e) => e.code === code);
         if (!eventDef) return;
 
-        // Parse time
-        const parsed = this._parseTime(this._timeRaw);
-        if (!parsed) {
-            this._showToast("Enter a valid time", "warning");
-            this._setNumpadTarget("time");
-            return;
+        // Parse time (stats events may have no time)
+        const isStatsOnly = eventDef.statsOnly;
+        const timeMode = this.game.statsTimeMode || "off";
+        let time;
+
+        if (isStatsOnly && (timeMode === "off" || (timeMode === "optional" && this._timeRaw.length === 0))) {
+            time = "";
+        } else {
+            const parsed = this._parseTime(this._timeRaw);
+            if (!parsed) {
+                this._showToast("Enter a valid time", "warning");
+                this._setNumpadTarget("time");
+                return;
+            }
+            time = parsed.stored;
         }
-        const time = parsed.stored;
 
         const cap = this._capRaw;
         const period = this.game.currentPeriod;
@@ -308,20 +345,22 @@ const Events = {
             return;
         }
 
-        // Validate time order
-        const timeCheck = Game.validateTime(this.game, period, time);
-        if (!timeCheck.valid) {
-            const ok = await ConfirmDialog.show({
-                title: "Out of Order Time",
-                message: timeCheck.warning,
-                confirmLabel: "Continue",
-                type: "warning",
-            });
-            if (!ok) return;
+        // Validate time order (skip for statsOnly events without time)
+        if (time) {
+            const timeCheck = Game.validateTime(this.game, period, time);
+            if (!timeCheck.valid) {
+                const ok = await ConfirmDialog.show({
+                    title: "Out of Order Time",
+                    message: timeCheck.warning,
+                    confirmLabel: "Continue",
+                    type: "warning",
+                });
+                if (!ok) return;
+            }
         }
 
-        // Check foul-out BEFORE logging
-        const foulOut = eventDef.noPlayer
+        // Check foul-out BEFORE logging (skip for statsOnly events)
+        const foulOut = (eventDef.noPlayer || isStatsOnly)
             ? null
             : Game.checkFoulOut(this.game, this.selectedTeam, cap, eventDef.code);
 
@@ -377,23 +416,68 @@ const Events = {
         const container = document.getElementById("event-buttons");
         container.innerHTML = "";
         const rules = RULES[this.game.rules];
+        const showLog = this.game.enableLog;
+        const showStats = this.game.enableStats;
+        const statsOnly = showStats && !showLog;
 
-        for (const evt of rules.events) {
-            const btn = document.createElement("button");
-            btn.className = "event-btn event-" + (evt.color || "default");
-            btn.textContent = evt.name;
-            btn.dataset.code = evt.code;
-            btn.addEventListener("click", () => this._openModal(evt));
-            container.appendChild(btn);
+        // Separate log events and stats events
+        const logEvents = rules.events.filter((e) => !e.statsOnly);
+        const statEvents = rules.events.filter((e) => e.statsOnly);
+
+        // In full or log-only mode, show log events
+        if (showLog) {
+            for (const evt of logEvents) {
+                const btn = document.createElement("button");
+                btn.className = "event-btn event-" + (evt.color || "default");
+                btn.textContent = evt.name;
+                btn.dataset.code = evt.code;
+                btn.addEventListener("click", () => this._openModal(evt));
+                container.appendChild(btn);
+            }
         }
 
-        // End Period / End Game
-        const endBtn = document.createElement("button");
-        endBtn.className = "event-btn event-end-period";
-        endBtn.id = "end-period-btn";
-        endBtn.addEventListener("click", () => this._logPeriodEnd());
-        container.appendChild(endBtn);
-        this._updateEndButton();
+        // In full mode (both on), add separator then stats in teal
+        if (showLog && showStats && statEvents.length > 0) {
+            const sep = document.createElement("div");
+            sep.className = "stats-separator";
+            container.appendChild(sep);
+        }
+
+        // Show stat events (teal in full mode, teal in stats-only mode)
+        if (showStats) {
+            for (const evt of statEvents) {
+                const btn = document.createElement("button");
+                btn.className = "event-btn event-teal";
+                btn.textContent = evt.name;
+                btn.dataset.code = evt.code;
+                btn.addEventListener("click", () => this._openModal(evt));
+                container.appendChild(btn);
+            }
+        }
+
+        // In stats-only mode, also show log events but all in teal
+        if (statsOnly) {
+            for (const evt of logEvents) {
+                const btn = document.createElement("button");
+                btn.className = "event-btn event-teal";
+                btn.textContent = evt.name;
+                btn.dataset.code = evt.code;
+                btn.addEventListener("click", () => this._openModal(evt));
+                container.appendChild(btn);
+            }
+        }
+
+        // End Period / End Game — wired to header button
+        const endBtn = document.getElementById("end-period-btn");
+        if (endBtn) {
+            if (showLog) {
+                endBtn.style.display = "";
+                endBtn.onclick = () => this._logPeriodEnd();
+                this._updateEndButton();
+            } else {
+                endBtn.style.display = "none";
+            }
+        }
     },
 
     _updateEndButton() {
@@ -470,12 +554,29 @@ const Events = {
                 const rules = RULES[this.game.rules];
                 const eventDef = rules.events.find((e) => e.code === entry.event);
                 const eventName = eventDef ? eventDef.name : entry.event;
+                const isStatEvent = eventDef && eventDef.statsOnly;
+                const colorClass = this._getEventClass(entry.event);
+
+                // Add colored left border for all events
+                row.classList.add("event-border-" + colorClass);
+
+                // Stat events additionally get the stat-event class
+                if (isStatEvent) {
+                    row.classList.add("stat-event");
+                }
+
+                // Time display: blank for SO events and stat events without time
+                const timeDisplay = entry.period === "SO" ? "" : (entry.time || "").replace(/^0(\d:)/, '$1');
+
+                // Score display: blank for stats-only events
+                const scoreDisplay = isStatEvent ? "" : Game.formatEntryScore(entry, this.game);
+
                 row.innerHTML = `
-          <span class="log-time">${entry.period === "SO" ? "" : entry.time.replace(/^0(\d:)/, '$1')}</span>
+          <span class="log-time">${timeDisplay}</span>
           <span class="log-team ${entry.team === 'W' ? 'team-white' : 'team-dark'}">${entry.team}</span>
           <span class="log-cap">${escapeHTML(entry.cap)}</span>
-          <span class="log-event event-${this._getEventClass(entry.event)}">${eventName}</span>
-          <span class="log-score">${Game.formatEntryScore(entry, this.game)}</span>
+          <span class="log-event event-${colorClass}">${eventName}</span>
+          <span class="log-score">${scoreDisplay}</span>
           <button class="log-delete-btn" data-id="${entry.id}" title="Delete">✕</button>
         `;
             }

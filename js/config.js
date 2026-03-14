@@ -51,7 +51,9 @@ const RULES = {
       { name: "Brutality", code: "BR", color: "red", align: "right", autoFoulOut: 1 },
       { name: "Red Card", code: "RC", color: "red", align: "center" },
       { name: "Game Exclusion", code: "E-Game", color: "red", align: "right", autoFoulOut: 1 },
-
+      // Stats-only events
+      { name: "Shot", code: "S", color: "teal", statsOnly: true },
+      { name: "Assist", code: "A", color: "teal", statsOnly: true },
     ],
     foulOutLimit: 3,
     timeouts: { full: 2, to30: 0 },
@@ -76,6 +78,9 @@ const RULES = {
       { name: "Game Exclusion", code: "E-Game", color: "red", align: "right", autoFoulOut: 1 },
       { name: "Flagrant Misconduct", code: "FM", color: "red", align: "right", autoFoulOut: 1 },
       { name: "Red Card", code: "RC", color: "red", align: "center" },
+      // Stats-only events
+      { name: "Shot", code: "S", color: "teal", statsOnly: true },
+      { name: "Assist", code: "A", color: "teal", statsOnly: true },
     ],
     foulOutLimit: 3,
     timeouts: { full: 3, to30: 1 },
@@ -100,6 +105,9 @@ const RULES = {
       { name: "Game Exclusion", code: "E-Game", color: "red", align: "right", autoFoulOut: 1 },
       { name: "Flagrant Misconduct", code: "FM", color: "red", align: "right", autoFoulOut: 1 },
       { name: "Red Card", code: "RC", color: "red", align: "center" },
+      // Stats-only events
+      { name: "Shot", code: "S", color: "teal", statsOnly: true },
+      { name: "Assist", code: "A", color: "teal", statsOnly: true },
     ],
     foulOutLimit: 3,
     timeouts: { full: 3, to30: 1 },
