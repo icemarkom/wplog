@@ -117,22 +117,30 @@ These were explicitly discussed and agreed with the user:
 | **CSP meta tags** | `Content-Security-Policy` and `X-Content-Type-Options` meta tags in `<head>` of `index.html`, `privacy.html`, and `help.html`. No `'unsafe-inline'` for scripts — all scripts are external. `style-src` still allows `'unsafe-inline'` for inline styles. |
 | **No inline scripts** | All JavaScript is in external files. `index.html` uses `js/loader.js` (app shell loader) and `js/year.js` (copyright year). Standalone pages use `js/year.js`. This enables strict CSP without `'unsafe-inline'` for `script-src`. |
 | **localStorage validation** | `Storage.load()` validates parsed data shape (`rules` is string, `log` is array) before returning. Tampered/corrupt data is silently ignored. |
+| **Stats are separate from log** | Live view: stats interleaved in recent events with teal accent. Game sheet: stats filtered from Progress of Game, shown in separate Player Stats section. |
+| **Stats config** | Foldable "Stats Configuration" section on setup. Game Log + Stats checkboxes (mutual exclusion enforced). Stats Time Entry dropdown: Disabled / Optional / Required. Default time mode = Disabled for both hybrid and stats-only. |
+| **Stats buttons teal** | Shot (S) and Assist (A) buttons styled with `color: "teal"` (`#2dd4bf`). Visual separator between log and stats buttons. |
+| **Player Stats on sheet** | Single `<table>` per stat type with colspan White/Dark headers. Per-period columns (Q1, Q2, etc.) + bold Total. All events with cap numbers aggregated (not just statsOnly). Proper English pluralization for section titles. |
+| **`statsOnly` flag** | Events with `statsOnly: true` skip foul-out checks, allow blank time, and are filtered from Progress of Game on sheet. |
+| **`statsTimeMode`** | Controls time field in modal: `"off"` = hidden, `"optional"` = shown but not required, `"on"` = required. Stored in game data model. |
 
 ### USAWP Events
 
 | Name | Code | Flags |
 |---|---|---|
-| Goal | `G` | — |
-| Exclusion | `E` | `isPersonalFoul: true` |
-| Penalty | `P` | `isPersonalFoul: true` |
-| Timeout | `TO` | `noPlayer: true` |
-| Timeout 30 | `TO30` | `noPlayer: true` |
-| Yellow Card | `YC` | — |
-| Penalty-Exclusion | `P-E` | `isPersonalFoul: true` |
-| Misconduct | `MC` | `autoFoulOut: 1` |
-| Brutality | `BR` | `autoFoulOut: 1` |
-| Red Card | `RC` | — |
-| Game Exclusion | `E-Game` | `autoFoulOut: 1` |
+| Goal | `G` | `color: "green"` |
+| Exclusion | `E` | `isPersonalFoul: true, color: "amber"` |
+| Penalty | `P` | `isPersonalFoul: true, color: "amber"` |
+| Timeout | `TO` | `noPlayer: true, color: "blue"` |
+| Timeout 30 | `TO30` | `noPlayer: true, color: "blue"` |
+| Yellow Card | `YC` | `color: "yellow"` |
+| Penalty-Exclusion | `P-E` | `isPersonalFoul: true, color: "amber"` |
+| Misconduct | `MC` | `autoFoulOut: 1, color: "red"` |
+| Brutality | `BR` | `autoFoulOut: 1, color: "red"` |
+| Red Card | `RC` | `color: "red"` |
+| Game Exclusion | `E-Game` | `autoFoulOut: 1, color: "red"` |
+| Shot | `S` | `statsOnly: true, color: "teal"` |
+| Assist | `A` | `statsOnly: true, color: "teal"` |
 
 ### NFHS Events (Varsity & JV)
 
@@ -143,7 +151,7 @@ Same as USAWP plus:
 | Minor Act | `MAM` | `isPersonalFoul: true, autoFoulOut: 2` |
 | Flagrant Misconduct | `FM` | `autoFoulOut: 1` |
 
-NFHS does not have Brutality.
+NFHS does not have Brutality. NFHS also includes Shot and Assist (same as USAWP).
 
 ---
 
@@ -215,8 +223,20 @@ NFHS does not have Brutality.
 - `Referrer-Policy: strict-origin-when-cross-origin` meta tag on all HTML pages
 - Favicon: water polo wave-splash W icon in 32px, 192px, 512px sizes (browser tab, PWA install, splash screen)
 - Apple touch icon for iOS home screen
+- Stats tracking PoC: Shot (S) and Assist (A) events with `statsOnly: true` and teal color
+- Stats Configuration foldable section on setup (Game Log / Stats toggles, Stats Time Entry dropdown)
+- `statsTimeMode` handling in event modal: hide/show/optional time field
+- Stats events interleaved in live log with teal accent and colored borders
+- Game sheet: `statsOnly` events filtered from Progress of Game
+- Game sheet: Player Stats section with per-period breakdown (Q1, Q2, etc.) and bold totals
+- Single-table layout per stat type with colspan White/Dark headers
+- All events with cap numbers aggregated in Player Stats (not just statsOnly)
+- `seq` and `deviceTime` fields on log entries for ordering and future analysis
+- Visual separator between log and stats buttons on live screen
+- Cache-busting for dynamically loaded JS/screen assets in dev
 
 ### Known Gaps / Future Work 📋
+- Stats feature is PoC — more stat types planned (steal, block, save, etc.)
 - No NCAA rules yet (structure ready)
 - No sprint tracking (user hasn't decided)
 - No substitution tracking (user hasn't decided)
@@ -225,6 +245,7 @@ NFHS does not have Brutality.
 - Service worker hasn't been tested offline
 - `lib/` directory is empty and could be removed
 - Issue #13 open: Add Additional Rule Sets (NFHS partially done, NCAA pending)
+- Issue #24 open: Feature Design for v2.0.0
 
 
 ---
