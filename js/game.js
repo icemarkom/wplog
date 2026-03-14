@@ -63,6 +63,8 @@ const Game = {
         };
 
         game.log.push(entry);
+        this._sortLog(game);
+        this._recalcScores(game);
         Storage.save(game);
         return entry;
     },
@@ -79,8 +81,46 @@ const Game = {
         const entry = game.log.find((e) => e.id === eventId);
         if (!entry) return;
         Object.assign(entry, updates);
+        this._sortLog(game);
         this._recalcScores(game);
         Storage.save(game);
+    },
+
+    // Sort events within each period by game time (descending).
+    // Period End ("---") events always sort last within their period.
+    // Equal times preserve entry order (stable sort by id).
+    _sortLog(game) {
+        // Build ordered list of unique periods as they appear
+        const periodOrder = [];
+        const periodMap = new Map();
+        for (const entry of game.log) {
+            const key = String(entry.period);
+            if (!periodMap.has(key)) {
+                periodOrder.push(key);
+                periodMap.set(key, []);
+            }
+            periodMap.get(key).push(entry);
+        }
+
+        // Sort within each period
+        for (const entries of periodMap.values()) {
+            entries.sort((a, b) => {
+                // Period End always last
+                if (a.event === "---" && b.event !== "---") return 1;
+                if (a.event !== "---" && b.event === "---") return -1;
+
+                // Compare times descending (game clock counts down)
+                if (a.time !== b.time) {
+                    return a.time > b.time ? -1 : 1;
+                }
+
+                // Equal time: preserve entry order
+                return a.id - b.id;
+            });
+        }
+
+        // Reassemble log in period order
+        game.log = periodOrder.flatMap(key => periodMap.get(key));
     },
 
     // Recalculate running scores for all events
