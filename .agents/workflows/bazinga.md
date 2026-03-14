@@ -28,8 +28,9 @@ When the user says **"bazinga"**, they want you to bootstrap your context for a 
 All new work — including work started in a bazinga-bootstrapped thread — **must** follow this pattern:
 
 1. User requests a feature or change.
-2. You create an **implementation plan** (artifact) describing the proposed approach.
-3. You and the user **iterate and discuss** the plan until the user approves it.
-4. Only **after approval**, you proceed with implementation.
+2. **Create a branch** for the work before making any changes. Never commit directly to `main`.
+3. You create an **implementation plan** (artifact) describing the proposed approach.
+4. You and the user **iterate and discuss** the plan until the user approves it.
+5. Only **after approval**, you proceed with implementation on the branch.
 
 > **CAUTION:** Never skip the planning and discussion phase for anything beyond the simplest, most obvious tasks (e.g., a trivial typo fix). When in doubt, plan first.
