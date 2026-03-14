@@ -44,8 +44,9 @@ wplog/
 │       └── deploy.yml  # Release-triggered deploy to gh-pages (injects version)
 ├── .agents/
 │   └── workflows/
-│       ├── geronimo.md # "geronimo" = one-time approval to commit/push/close
-│       └── kraken.md   # "kraken" = tag and release workflow
+│       ├── branching.md # Branching strategy for parallel v1/v2 development
+│       ├── geronimo.md  # "geronimo" = one-time approval to commit/push/close
+│       └── kraken.md    # "kraken" = tag and release workflow
 ├── PRIVACY.md          # Privacy policy (Markdown, for GitHub)
 ├── privacy.html        # Privacy policy (HTML, canonical for OAuth consent)
 └── lib/                # Empty (previously had vendored libs, now removed)
@@ -59,9 +60,12 @@ Script load order matters: `config.js` → `confirm.js` → `storage.js` → `ga
 
 - **GitHub Pages** serves from `gh-pages` branch (not `main`)
 - **Production domain**: `https://log.wpref.org/` (via CNAME)
-- **Development** happens on `main` — pushes do NOT affect the live site
+- **Stable releases** are on `main` — pushes do NOT affect the live site
+- **v2 development** happens on `feature/stats-v2` — a long-lived feature branch
+- **v1 hotfixes**: branch off `main`, fix, merge back, release. Then rebase `feature/stats-v2` onto updated `main`
 - **Releases** trigger the deploy Action: `gh release create v1.x.x --title "..." --notes "..."`
 - Deploy Action injects the release tag version into `config.js` via `sed`, then uses `peaceiris/actions-gh-pages@v4` to copy files to `gh-pages`
+- See `.agents/workflows/branching.md` for full branching strategy
 
 ---
 
@@ -93,8 +97,9 @@ These were explicitly discussed and agreed with the user:
 | **Numpad layout** | 4 columns: digits 1-9/0, A/B/C in rightmost column, backspace next to 0. |
 | **Auto-close disabled** | GitHub auto-close via commit messages is disabled in this repo. Close issues manually with `gh issue close`. |
 | **Don't commit without confirmation** | Always wait for user to confirm before committing and pushing. |
-| **"Geronimo" workflow** | When user says "geronimo", it's one-time approval to commit, push, and close the relevant issue. See `.agents/workflows/geronimo.md`. |
+| **"Geronimo" workflow** | When user says "geronimo", it's one-time approval to commit, push, and close the relevant issue. Branch-aware: on long-lived feature branches, skip PR/merge. See `.agents/workflows/geronimo.md`. |
 | **"Kraken" workflow** | When user says "kraken", triggers the release workflow: evaluate changes, update AGENTS.md, propose version, prepare release notes, tag and release. See `.agents/workflows/kraken.md`. |
+| **Branching strategy** | v1 hotfixes branch off `main`; v2 work stays on `feature/stats-v2`. After v1 fixes land, rebase v2 onto `main`. See `.agents/workflows/branching.md`. |
 | **Auto-clear on refocus** | Tapping a filled time/cap field in the modal auto-clears it for re-entry. Only on user clicks, not auto-advance. |
 | **Custom dialogs** | All `confirm()` calls replaced with `ConfirmDialog` (overlay-based). Supports `danger` (red) and `warning` (amber) types. |
 | **Version system** | `APP_VERSION = "dev"` in `config.js`. Deploy workflow injects the release tag. In dev, runtime auto-detects latest file modification timestamp via `Last-Modified` HTTP headers → displays `dev-YYYYMMDD-HHMM`. No git or build step needed at runtime. |
@@ -231,7 +236,7 @@ Then open `http://localhost:8080`.
 4. **The user is iterative** — expect inline comments on artifacts with specific feedback. Incorporate exactly what they say.
 5. **Don't commit/push without confirmation** — always wait for the user to say it's ready before `git commit` and `git push`. Exception: "geronimo" = one-time blanket approval.
 6. **Close issues manually** — auto-close is disabled. Use `gh issue close N -c "comment"` after pushing.
-7. **Release to publish** — development happens on `main`. Use `gh release create` to deploy to GitHub Pages.
+7. **Release to publish** — stable releases from `main`. Use `gh release create` to deploy to GitHub Pages. See `.agents/workflows/branching.md` for the v1/v2 parallel development strategy.
 8. **Previous conversations** exist about a full water polo scoreboard/timer controller (WTTC-1) — this is a separate, simpler project.
 9. **Game clock is M:SS** — max time is capped by period length (not hardcoded 9:59). Right-to-left digit entry. Start/end times remain HH:MM.
 10. **Modal uses responsive breakpoints** — default is full-screen (mobile), `@media (min-width: 900px) and (min-height: 700px)` switches to desktop dialog.
