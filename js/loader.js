@@ -18,12 +18,13 @@
 // Loads screen fragments and JS dependencies, then initializes the app.
 
 (async function () {
+    const _cb = "?v=" + Date.now();
     const screens = [
-        { url: "screens/setup.html", target: "setup-content" },
-        { url: "screens/live.html", target: "live-content" },
-        { url: "screens/modal.html", target: "modal-content" },
-        { url: "screens/sheet.html", target: "sheet-container" },
-        { url: "screens/share.html", target: "share-content" },
+        { url: "screens/setup.html" + _cb, target: "setup-content" },
+        { url: "screens/live.html" + _cb, target: "live-content" },
+        { url: "screens/modal.html" + _cb, target: "modal-content" },
+        { url: "screens/sheet.html" + _cb, target: "sheet-container" },
+        { url: "screens/share.html" + _cb, target: "share-content" },
     ];
     await Promise.all(screens.map(async ({ url, target }) => {
         const res = await fetch(url);
@@ -38,7 +39,7 @@
     for (const src of scripts) {
         await new Promise((resolve, reject) => {
             const s = document.createElement("script");
-            s.src = src;
+            s.src = src + _cb;
             s.onload = resolve;
             s.onerror = reject;
             document.body.appendChild(s);

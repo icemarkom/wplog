@@ -31,27 +31,38 @@ const Game = {
             overtime: rules.overtime,
             shootout: rules.shootout,
             timeoutsAllowed: { full: rules.timeouts.full, to30: rules.timeouts.to30 },
+            enableLog: true,
+            enableStats: false,
+            statsTimeMode: "off",
             white: { name: "White" },
             dark: { name: "Dark" },
             currentPeriod: 1,
             log: [],
             _nextId: 1,
+            _nextSeq: 10,
         };
     },
 
     // Add an event to the game log
     addEvent(game, { period, time, team, cap, event, note }) {
+        const rules = RULES[game.rules];
+        const eventDef = rules.events.find((e) => e.code === event);
+        const isStatsOnly = eventDef && eventDef.statsOnly;
+
         const score = this.getScore(game);
         let scoreW = score.white;
         let scoreD = score.dark;
 
-        if (event === "G") {
+        // Only count score for non-statsOnly Goal events
+        if (event === "G" && !isStatsOnly) {
             if (team === "W") scoreW++;
             else scoreD++;
         }
 
         const entry = {
             id: game._nextId++,
+            seq: game._nextSeq,
+            deviceTime: new Date().toISOString(),
             period,
             time,
             team: team || "",
@@ -62,6 +73,7 @@ const Game = {
             note: note || "",
         };
 
+        game._nextSeq += 10;
         game.log.push(entry);
         this._sortLog(game);
         this._recalcScores(game);
@@ -125,10 +137,13 @@ const Game = {
 
     // Recalculate running scores for all events
     _recalcScores(game) {
+        const rules = RULES[game.rules];
         let scoreW = 0;
         let scoreD = 0;
         for (const entry of game.log) {
-            if (entry.event === "G") {
+            const eventDef = rules.events.find((e) => e.code === entry.event);
+            const isStatsOnly = eventDef && eventDef.statsOnly;
+            if (entry.event === "G" && !isStatsOnly) {
                 if (entry.team === "W") scoreW++;
                 else scoreD++;
             }
@@ -338,10 +353,11 @@ const Game = {
 
     // Validate time entry (warn if time is after previous entry in same period)
     validateTime(game, period, time) {
-        const periodEntries = game.log.filter((e) => e.period === period && e.event !== "---");
-        if (periodEntries.length === 0) return { valid: true };
+        // Only compare against timed events (skip stats without time)
+        const timedEntries = game.log.filter((e) => e.period === period && e.event !== "---" && e.time);
+        if (timedEntries.length === 0) return { valid: true };
 
-        const lastEntry = periodEntries[periodEntries.length - 1];
+        const lastEntry = timedEntries[timedEntries.length - 1];
         // Clock counts down: later events have lower time values
         if (time > lastEntry.time) {
             return {

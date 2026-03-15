@@ -65,6 +65,31 @@
   </label>
 </div>
 
+<!-- Logging Mode (foldable) -->
+<details id="setup-stats-section" class="setup-foldable">
+  <summary class="setup-foldable-header">Logging Mode</summary>
+  <div class="setup-foldable-content">
+    <div class="form-row toggle-row">
+      <label class="toggle-label">
+        <input id="setup-enable-log" type="checkbox" checked>
+        <span>Game Log</span>
+      </label>
+      <label class="toggle-label">
+        <input id="setup-enable-stats" type="checkbox">
+        <span>Stats</span>
+      </label>
+    </div>
+    <div class="form-group" id="setup-stats-time-group" style="display: none;">
+      <label for="setup-stats-time-mode">Stats Time Entry</label>
+      <select id="setup-stats-time-mode" class="form-input">
+        <option value="off">Disabled</option>
+        <option value="optional">Optional</option>
+        <option value="on">Required</option>
+      </select>
+    </div>
+  </div>
+</details>
+
 <div class="form-row">
   <div class="form-group">
     <label for="setup-period-length">Quarter Length</label>
