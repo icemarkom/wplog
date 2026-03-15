@@ -212,13 +212,15 @@ NFHS does not have Brutality.
 - Externalized all inline scripts: `js/loader.js` (app shell), `js/year.js` (copyright year) — CSP `script-src 'self'` only (no `'unsafe-inline'`)
 - `localStorage` schema validation in `Storage.load()`
 - `Referrer-Policy: strict-origin-when-cross-origin` meta tag on all HTML pages
+- Favicon: water polo wave-splash W icon in 32px, 192px, 512px sizes (browser tab, PWA install, splash screen)
+- Apple touch icon for iOS home screen
 
 ### Known Gaps / Future Work 📋
 - No NCAA rules yet (structure ready)
 - No sprint tracking (user hasn't decided)
 - No substitution tracking (user hasn't decided)
 - Multi-game management not implemented (save/load multiple games)
-- No favicon (minor 404 in console) — tracked in issue #31
+
 - Service worker hasn't been tested offline
 - `lib/` directory is empty and could be removed
 - Issue #13 open: Add Additional Rule Sets (NFHS partially done, NCAA pending)
