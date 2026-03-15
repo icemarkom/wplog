@@ -118,7 +118,7 @@ These were explicitly discussed and agreed with the user:
 | **No inline scripts** | All JavaScript is in external files. `index.html` uses `js/loader.js` (app shell loader) and `js/year.js` (copyright year). Standalone pages use `js/year.js`. This enables strict CSP without `'unsafe-inline'` for `script-src`. |
 | **localStorage validation** | `Storage.load()` validates parsed data shape (`rules` is string, `log` is array) before returning. Tampered/corrupt data is silently ignored. |
 | **Stats are separate from log** | Live view: stats interleaved in recent events with teal accent. Game sheet: stats filtered from Progress of Game, shown in separate Player Stats section. |
-| **Stats config** | Foldable "Stats Configuration" section on setup. Game Log + Stats checkboxes (mutual exclusion enforced). Stats Time Entry dropdown: Disabled / Optional / Required. Default time mode = Disabled for both hybrid and stats-only. |
+| **Logging mode** | Foldable "Logging Mode" section on setup. Game Log + Stats checkboxes (mutual exclusion enforced). Stats Time Entry dropdown: Disabled / Optional / Required. Default time mode = Disabled for both hybrid and stats-only. |
 | **Stats buttons teal** | Shot (S) and Assist (A) buttons styled with `color: "teal"` (`#2dd4bf`). Visual separator between log and stats buttons. |
 | **Player Stats on sheet** | Single `<table>` per stat type with colspan White/Dark headers. Per-period columns (Q1, Q2, etc.) + bold Total. All events with cap numbers aggregated (not just statsOnly). Proper English pluralization for section titles. |
 | **`statsOnly` flag** | Events with `statsOnly: true` skip foul-out checks, allow blank time, and are filtered from Progress of Game on sheet. |
@@ -224,7 +224,7 @@ NFHS does not have Brutality. NFHS also includes Shot and Assist (same as USAWP)
 - Favicon: water polo wave-splash W icon in 32px, 192px, 512px sizes (browser tab, PWA install, splash screen)
 - Apple touch icon for iOS home screen
 - Stats tracking PoC: Shot (S) and Assist (A) events with `statsOnly: true` and teal color
-- Stats Configuration foldable section on setup (Game Log / Stats toggles, Stats Time Entry dropdown)
+- Logging Mode foldable section on setup (Game Log / Stats toggles, Stats Time Entry dropdown)
 - `statsTimeMode` handling in event modal: hide/show/optional time field
 - Stats events interleaved in live log with teal accent and colored borders
 - Game sheet: `statsOnly` events filtered from Progress of Game
