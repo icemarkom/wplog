@@ -30,7 +30,13 @@ const Storage = {
     load() {
         try {
             const data = localStorage.getItem(this.KEY);
-            return data ? JSON.parse(data) : null;
+            if (!data) return null;
+            const game = JSON.parse(data);
+            if (!game || typeof game.rules !== "string" || !Array.isArray(game.log)) {
+                console.warn("Invalid game data in localStorage, ignoring.");
+                return null;
+            }
+            return game;
         } catch (e) {
             console.error("Failed to load game:", e);
             return null;
