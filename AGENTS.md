@@ -30,7 +30,7 @@ wplog/
 │   ├── sanitize.js    # escapeHTML() utility — loaded first, used by sheet.js + events.js
 │   ├── loader.js      # App shell loader — fetches screens, loads JS deps, inits app
 │   ├── year.js        # Copyright year display (shared by all pages)
-│   ├── config.js       # APP_VERSION + RULES definitions (USAWP, NFHS Varsity, NFHS JV)
+│   ├── config.js       # APP_VERSION + RULES definitions (USAWP, NFHS Varsity, NFHS JV, NCAA)
 │   ├── confirm.js      # Custom confirmation dialog (replaces native confirm())
 │   ├── storage.js      # localStorage wrapper (with schema validation)
 │   ├── game.js         # Core data model + game logic
@@ -94,7 +94,9 @@ These were explicitly discussed and agreed with the user:
 | **Timeout tracking** | Configurable limits (full + TO30) in config, overridable in setup. TOL display in live view. Warning on over-limit. |
 | **Game # replaces Rules on sheet** | Rules only relevant for setup; Game # shown on printed game sheet header. |
 | **Print = Share** | `window.print()` is the sharing mechanism. Mobile print dialogs offer Save as PDF + native share. |
-| **USAWP + NFHS supported** | USAWP, NFHS Varsity (7-min, OT, MAM), NFHS JV (6-min, no OT). NCAA to be added later. |
+| **USAWP + NFHS + NCAA supported** | USAWP, NFHS Varsity (7-min, OT, MAM), NFHS JV (6-min, no OT), NCAA (8-min, OT, YRC). Additional rule sets added via inheritance. |
+| **Rule set inheritance** | `inherits` key chains parent→child. `addEvents`/`removeEvents` directives for per-ruleset event list mutations. `_base` and `_academic` are internal (hidden from dropdown). `STATS_EVENTS` auto-appended to all rule sets. |
+| **Cap flags** | `allowCoach`, `allowAssistant`, `allowBench` enable C/AC/B cap values. `allowPlayer` (default true) can be set false to block digit input. `allowNoCap` allows submitting without cap. `teamOnly` (renamed from `noPlayer`) hides cap field entirely. |
 | **No `#` in Cap display** | Cap numbers shown without `#` prefix everywhere (modal, live log, sheet tables). |
 | **Score on Goals only** | Score column in game log (live + sheet) only shows on Goal events. Other events leave it empty. |
 | **Responsive modal** | Full-screen on mobile (default), fixed centered dialog on desktop (`@media min-width:900px and min-height:700px`). |
@@ -132,13 +134,13 @@ These were explicitly discussed and agreed with the user:
 | Goal | `G` | `color: "green"` |
 | Exclusion | `E` | `isPersonalFoul: true, color: "amber"` |
 | Penalty | `P` | `isPersonalFoul: true, color: "amber"` |
-| Timeout | `TO` | `noPlayer: true, color: "blue"` |
-| Timeout 30 | `TO30` | `noPlayer: true, color: "blue"` |
-| Yellow Card | `YC` | `color: "yellow"` |
+| Timeout | `TO` | `teamOnly: true, color: "blue"` |
+| Timeout 30 | `TO30` | `teamOnly: true, color: "blue"` |
+| Yellow Card | `YC` | `color: "yellow", allowCoach: true, allowBench: true` |
 | Penalty-Exclusion | `P-E` | `isPersonalFoul: true, color: "amber"` |
 | Misconduct | `MC` | `autoFoulOut: 1, color: "red"` |
 | Brutality | `BR` | `autoFoulOut: 1, color: "red"` |
-| Red Card | `RC` | `color: "red"` |
+| Red Card | `RC` | `color: "red", allowCoach: true, allowAssistant: true` |
 | Game Exclusion | `E-Game` | `autoFoulOut: 1, color: "red"` |
 | Shot | `S` | `statsOnly: true, color: "teal"` |
 | Assist | `A` | `statsOnly: true, color: "teal"` |
@@ -153,24 +155,32 @@ These were explicitly discussed and agreed with the user:
 
 ### NFHS Events (Varsity & JV)
 
-Same as USAWP plus:
+Inherits from `_academic` (shared base). Same log events as `_academic` plus stats. NFHS does not have Brutality.
 
 | Name | Code | Flags |
 |---|---|---|
 | Minor Act | `MAM` | `isPersonalFoul: true, autoFoulOut: 2` |
 | Flagrant Misconduct | `FM` | `autoFoulOut: 1` |
 
-NFHS does not have Brutality. NFHS also includes Shot and Assist (same as USAWP).
+### NCAA Events
+
+Inherits from `_academic` (8-min periods). Adds:
+
+| Name | Code | Flags |
+|---|---|---|
+| Yellow/Red Card | `YRC` | `color: "yellow", allowPlayer: false, allowCoach: true` |
 
 ---
 
-## Current State (as of 2026-03-14)
+## Current State (as of 2026-03-15)
 
 ### What's Done ✅
 - Complete setup screen (rules, date, time, location, Game #, team names, OT/SO toggles, timeout overrides)
 - Setup guards during active game (disable Start/rules, lock OT/SO if started, red END GAME button)
 - Live-save of editable setup fields during active game
-- Three rule sets: USAWP, NFHS Varsity, NFHS JV (with MAM + Flagrant Misconduct)
+- Four rule sets: USAWP, NFHS Varsity, NFHS JV, NCAA (via inheritance-based config system)
+- Rule set inheritance: `_base`/`_academic` internal bases, `inherits`, `addEvents`/`removeEvents` directives
+- `STATS_EVENTS` array auto-appended to all rule sets
 - Period length configuration (3-9 min dropdowns for quarters and OT)
 - Time input capped to period length; SO locks time to 0:00
 - Config-driven personal foul tracking (`isPersonalFoul` flag on E, P, P-E, MAM)
@@ -181,6 +191,8 @@ NFHS does not have Brutality. NFHS also includes Shot and Assist (same as USAWP)
 - 4-column numpad (digits + A/B/C), right-to-left time input with `-:--` placeholder
 - Auto-clear time/cap on refocus (user click only, not auto-advance)
 - Event alignment framework (left/right/center per event in config)
+- Cap flags: `allowCoach`, `allowAssistant`, `allowBench`, `allowPlayer` (default true), `allowNoCap`
+- `teamOnly` flag (renamed from `noPlayer`) hides cap field entirely for team-level events
 - Period End / End Game logic (OT/SO aware, score-tie checks)
 - Timeout tracking with configurable limits, TOL display, over-limit warnings
 - Responsive event modal: full-screen on mobile, centered dialog on desktop
@@ -232,11 +244,13 @@ NFHS does not have Brutality. NFHS also includes Shot and Assist (same as USAWP)
 - `Referrer-Policy: strict-origin-when-cross-origin` meta tag on all HTML pages
 - Favicon: water polo wave-splash W icon in 32px, 192px, 512px sizes (browser tab, PWA install, splash screen)
 - Apple touch icon for iOS home screen
-- Stats tracking PoC: Shot (S) and Assist (A) events with `statsOnly: true` and teal color
-- Full stat types: Shot, Assist, Steal, Intercept, Turnover, Field Block, Save, Drawn Exclusion, Drawn Penalty, Sprint Won
+- Full stats tracking: 10 stat event types (Shot, Assist, Steal, Intercept, Turnover, Field Block, Save, Drawn Exclusion, Drawn Penalty, Sprint Won)
 - Stats events omit `code` in config — auto-derived from `name` at load time (applies to any event)
 - Logging Mode foldable section on setup (Game Log / Stats toggles, Stats Time Entry dropdown)
-- `statsTimeMode` handling in event modal: hide/show/optional time field
+- Three logging modes: Game Log only, Stats only, Full (Game Log + Stats)
+- `statsTimeMode` handling in event modal: `"off"` = hidden, `"optional"` = shown but not required, `"on"` = required
+- Stats-only mode: all buttons shown in uniform teal
+- Full mode: log buttons in event colors, separator, stats buttons in teal
 - Stats events interleaved in live log with teal accent and colored borders
 - Game sheet: `statsOnly` events filtered from Progress of Game
 - Game sheet: Player Stats section with per-period breakdown (Q1, Q2, etc.) and bold totals
@@ -245,18 +259,13 @@ NFHS does not have Brutality. NFHS also includes Shot and Assist (same as USAWP)
 - `seq` and `deviceTime` fields on log entries for ordering and future analysis
 - Visual separator between log and stats buttons on live screen
 - Cache-busting for dynamically loaded JS/screen assets in dev
+- Help screen updated with stats tracking section
 
 ### Known Gaps / Future Work 📋
-- Stats feature is PoC — more stat types planned (steal, block, save, etc.)
-- No NCAA rules yet (structure ready)
-- No sprint tracking (user hasn't decided)
 - No substitution tracking (user hasn't decided)
 - Multi-game management not implemented (save/load multiple games)
-
 - Service worker hasn't been tested offline
 - `lib/` directory is empty and could be removed
-- Issue #13 open: Add Additional Rule Sets (NFHS partially done, NCAA pending)
-- Issue #24 open: Feature Design for v2.0.0
 
 
 ---
