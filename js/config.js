@@ -32,6 +32,7 @@ const APP_VERSION = "dev";
 //   allowCoach    — (optional) true to allow "C" (coach) as cap value
 //   allowAssistant — (optional) true to allow "AC" (assistant coach) as cap value
 //   allowBench    — (optional) true to allow "B" (bench) as cap value
+//   allowPlayer   — (optional, default: true) false to block digit cap input (non-player events)
 //   allowNoCap    — (optional) true to allow submitting without a cap number
 //
 // Rule sets support inheritance via the `inherits` key:
@@ -119,7 +120,7 @@ const RULES = {
         name: "NCAA",
         periodLength: 8,
         addEvents: [
-            { before: "RC", event: { name: "Yellow/Red Card", code: "YRC", color: "yellow", align: "right", allowCoach: true, allowAssistant: false } },
+            { before: "RC", event: { name: "Yellow/Red Card", code: "YRC", color: "yellow", align: "right", allowPlayer: false, allowCoach: true, allowAssistant: false } },
         ],
     },
 };

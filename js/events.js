@@ -166,7 +166,13 @@ const Events = {
                     }
                 }
             } else {
-                if (this._capRaw.length < 2 && !this._capRaw.match(/[ABC]/)) {
+                // Digit input — blocked when allowPlayer is false
+                const code = document.getElementById("modal-event-title").dataset.code;
+                const rules = RULES[this.game.rules];
+                const eventDef = rules.events.find((e) => e.code === code);
+                if (eventDef && eventDef.allowPlayer === false) {
+                    // No digit input for non-player events
+                } else if (this._capRaw.length < 2 && !this._capRaw.match(/[ABC]/)) {
                     this._capRaw += val;
                 }
             }
