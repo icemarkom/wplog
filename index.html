@@ -22,10 +22,13 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
   <meta name="description" content="Water polo game log — log events poolside, produce official game sheets">
   <meta name="theme-color" content="#0a0e1a">
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:;">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:;">
   <meta http-equiv="X-Content-Type-Options" content="nosniff">
+  <meta name="referrer" content="strict-origin-when-cross-origin">
   <title>wplog — Water Polo Game Log</title>
   <link rel="manifest" href="manifest.json">
+  <link rel="icon" href="img/favicon-32.png" type="image/png" sizes="32x32">
+  <link rel="apple-touch-icon" href="img/favicon-192.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link
@@ -163,42 +166,10 @@
     <span id="app-version"></span> &middot;
     <a href="#" id="footer-about-link">About</a>
   </footer>
-  <script>document.getElementById("copy-year").textContent = new Date().getFullYear();</script>
+  <script src="js/year.js" defer></script>
 
   <!-- Screen Loader + Scripts -->
-  <script>
-    (async function () {
-      const screens = [
-        { url: "screens/setup.html", target: "setup-content" },
-        { url: "screens/live.html", target: "live-content" },
-        { url: "screens/modal.html", target: "modal-content" },
-        { url: "screens/sheet.html", target: "sheet-container" },
-        { url: "screens/share.html", target: "share-content" },
-      ];
-      await Promise.all(screens.map(async ({ url, target }) => {
-        const res = await fetch(url);
-        document.getElementById(target).innerHTML = await res.text();
-      }));
-
-      // Load JS files in order (dependencies first)
-      const scripts = [
-        "js/sanitize.js", "js/config.js", "js/confirm.js", "js/storage.js", "js/game.js",
-        "js/setup.js", "js/events.js", "js/sheet.js", "js/share.js", "js/app.js",
-      ];
-      for (const src of scripts) {
-        await new Promise((resolve, reject) => {
-          const s = document.createElement("script");
-          s.src = src;
-          s.onload = resolve;
-          s.onerror = reject;
-          document.body.appendChild(s);
-        });
-      }
-
-      // DOMContentLoaded already fired, so manually init the app
-      App.init();
-    })();
-  </script>
+  <script src="js/loader.js"></script>
 </body>
 
 </html>

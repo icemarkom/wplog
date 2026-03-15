@@ -22,12 +22,14 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="description" content="Quick Reference Guide for wplog — Water Polo Game Log">
   <meta name="theme-color" content="#0a0e1a">
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:;">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:;">
   <meta http-equiv="X-Content-Type-Options" content="nosniff">
+  <meta name="referrer" content="strict-origin-when-cross-origin">
   <title>Help — wplog</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="icon" href="img/favicon-32.png" type="image/png" sizes="32x32">
   <link rel="stylesheet" href="css/standalone.css">
 </head>
 
@@ -120,10 +122,11 @@
 
     <div class="footer">
       Copyright &copy;
-      <script>document.write(new Date().getFullYear())</script> Marko Milivojevic &middot;
+      <span id="year"></span> Marko Milivojevic &middot;
       <a href="https://github.com/icemarkom/wplog" target="_blank" rel="noopener">wplog</a>
     </div>
   </div>
+  <script src="js/year.js" defer></script>
 </body>
 
 </html>
