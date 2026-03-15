@@ -35,7 +35,7 @@ const Sheet = {
         page1.appendChild(this._renderProgressOfGame());
         container.appendChild(page1);
 
-        // Page 2: Header (repeated) + Period Scores + Fouls + Timeouts
+        // Page 2: Header (repeated) + Period Scores + Fouls + Timeouts + Player Stats
         const page2 = document.createElement("div");
         page2.className = "sheet-page sheet-page-break";
         page2.appendChild(this._renderHeader());
@@ -43,6 +43,9 @@ const Sheet = {
         page2.appendChild(this._renderFoulSummary());
         page2.appendChild(this._renderTimeoutSummary());
         page2.appendChild(this._renderCardSummary());
+        if (this.game.enableStats) {
+            page2.appendChild(this._renderPlayerStats());
+        }
         container.appendChild(page2);
     },
 
@@ -115,7 +118,14 @@ const Sheet = {
         const tbody = document.createElement("tbody");
         const rules = RULES[this.game.rules];
 
-        for (const entry of this.game.log) {
+        // Filter out statsOnly events from the official game log
+        const logEntries = this.game.log.filter((entry) => {
+            if (entry.event === "---") return true;
+            const eventDef = rules.events.find((e) => e.code === entry.event);
+            return !eventDef || !eventDef.statsOnly;
+        });
+
+        for (const entry of logEntries) {
             const tr = document.createElement("tr");
 
             if (entry.event === "---") {
@@ -354,6 +364,149 @@ const Sheet = {
 
         table.appendChild(tbody);
         section.appendChild(table);
+        return section;
+    },
+
+    _renderPlayerStats() {
+        const section = document.createElement("div");
+        section.className = "sheet-section";
+
+        const title = document.createElement("h3");
+        title.className = "sheet-section-title";
+        title.textContent = "Player Stats";
+        section.appendChild(title);
+
+        const rules = RULES[this.game.rules];
+        // All event types that have a cap number (exclude teamOnly events like TO)
+        const statTypes = rules.events
+            .filter((e) => !e.teamOnly)
+            .map((e) => {
+                const n = e.name;
+                const plural = n.endsWith("y") ? n.slice(0, -1) + "ies" : n + "s";
+                return { code: e.code, name: plural };
+            });
+
+        // Get ordered periods from the game log
+        const periodOrder = [];
+        const periodSeen = new Set();
+        for (const entry of this.game.log) {
+            if (entry.event === "---") continue;
+            if (!periodSeen.has(entry.period)) {
+                periodSeen.add(entry.period);
+                periodOrder.push(entry.period);
+            }
+        }
+
+        // Collect per-stat, per-team, per-cap, per-period counts
+        // Structure: counts[code][team][cap][period] = count
+        const counts = {};
+        for (const st of statTypes) {
+            counts[st.code] = { W: {}, D: {} };
+        }
+        for (const entry of this.game.log) {
+            if (!entry.cap || !entry.team) continue;
+            if (!counts[entry.event]) continue;
+            const teamData = counts[entry.event][entry.team];
+            if (!teamData[entry.cap]) teamData[entry.cap] = {};
+            teamData[entry.cap][entry.period] = (teamData[entry.cap][entry.period] || 0) + 1;
+        }
+
+        // Check if any stats exist
+        let anyStats = false;
+        for (const st of statTypes) {
+            if (Object.keys(counts[st.code].W).length > 0 || Object.keys(counts[st.code].D).length > 0) {
+                anyStats = true;
+                break;
+            }
+        }
+        if (!anyStats) {
+            const empty = document.createElement("p");
+            empty.className = "sheet-empty";
+            empty.textContent = "No stats recorded.";
+            section.appendChild(empty);
+            return section;
+        }
+
+        // Period column headers
+        const periodHeaders = periodOrder.map((p) => Game.getPeriodLabel(p));
+
+        // Render one single table per stat type
+        const colsPerTeam = 1 + periodHeaders.length + 1; // Cap + periods + Tot
+
+        for (const st of statTypes) {
+            const wCaps = Object.keys(counts[st.code].W).sort((a, b) => (parseInt(a) || 0) - (parseInt(b) || 0));
+            const dCaps = Object.keys(counts[st.code].D).sort((a, b) => (parseInt(a) || 0) - (parseInt(b) || 0));
+            if (wCaps.length === 0 && dCaps.length === 0) continue;
+
+            const subTitle = document.createElement("h4");
+            subTitle.className = "sheet-section-subtitle";
+            subTitle.textContent = st.name;
+            section.appendChild(subTitle);
+
+            const table = document.createElement("table");
+            table.className = "sheet-table sheet-table-compact sheet-table-stats";
+
+            // Row 1: Team names spanning their columns
+            const thead = document.createElement("thead");
+            const periodCols = periodHeaders.map((h) => `<th>${h}</th>`).join("");
+            thead.innerHTML = `
+              <tr>
+                <th colspan="${colsPerTeam}" class="sheet-team-header">White</th>
+                <th colspan="${colsPerTeam}" class="sheet-team-header">Dark</th>
+              </tr>
+              <tr>
+                <th>Cap</th>${periodCols}<th>Tot</th>
+                <th>Cap</th>${periodCols}<th>Tot</th>
+              </tr>
+            `;
+            table.appendChild(thead);
+
+            // Data rows: max of both team's player counts
+            const maxRows = Math.max(wCaps.length, dCaps.length);
+            const tbody = document.createElement("tbody");
+            for (let i = 0; i < maxRows; i++) {
+                const tr = document.createElement("tr");
+                let cells = "";
+
+                // White half
+                if (i < wCaps.length) {
+                    const cap = wCaps[i];
+                    const capData = counts[st.code].W[cap];
+                    let total = 0;
+                    cells += `<td>${escapeHTML(cap)}</td>`;
+                    for (const period of periodOrder) {
+                        const val = capData[period] || 0;
+                        total += val;
+                        cells += `<td>${val || ""}</td>`;
+                    }
+                    cells += `<td><strong>${total}</strong></td>`;
+                } else {
+                    cells += `<td></td>`.repeat(colsPerTeam);
+                }
+
+                // Dark half
+                if (i < dCaps.length) {
+                    const cap = dCaps[i];
+                    const capData = counts[st.code].D[cap];
+                    let total = 0;
+                    cells += `<td>${escapeHTML(cap)}</td>`;
+                    for (const period of periodOrder) {
+                        const val = capData[period] || 0;
+                        total += val;
+                        cells += `<td>${val || ""}</td>`;
+                    }
+                    cells += `<td><strong>${total}</strong></td>`;
+                } else {
+                    cells += `<td></td>`.repeat(colsPerTeam);
+                }
+
+                tr.innerHTML = cells;
+                tbody.appendChild(tr);
+            }
+            table.appendChild(tbody);
+            section.appendChild(table);
+        }
+
         return section;
     },
 };

@@ -59,6 +59,8 @@
   --event-yellow-bg: rgba(250, 204, 21, 0.15);
   --event-red: #ef4444;
   --event-red-bg: rgba(239, 68, 68, 0.15);
+  --event-stat: #2dd4bf;
+  --event-stat-bg: rgba(45, 212, 191, 0.15);
 
   --danger: #ef4444;
   --danger-bg: rgba(239, 68, 68, 0.1);
@@ -281,6 +283,44 @@ select.form-input {
 }
 
 /* ============================
+   Foldable Setup Sections
+   ============================ */
+.setup-foldable {
+  margin: 12px 0;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: transparent;
+}
+
+.setup-foldable-header {
+  padding: 12px 16px;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+  cursor: pointer;
+  list-style: none;
+}
+
+.setup-foldable-header::-webkit-details-marker {
+  display: none;
+}
+
+.setup-foldable-header::before {
+  content: "▸ ";
+  color: var(--text-muted);
+}
+
+.setup-foldable[open] .setup-foldable-header::before {
+  content: "▾ ";
+}
+
+.setup-foldable-content {
+  padding: 0 16px 12px;
+}
+
+/* ============================
    Buttons
    ============================ */
 .btn {
@@ -430,6 +470,33 @@ select.form-input {
   background: var(--accent-blue-glow);
   padding: 4px 12px;
   border-radius: var(--radius-sm);
+}
+
+.end-period-header-btn {
+  margin-top: 6px;
+  padding: 4px 12px;
+  font-size: 11px;
+  font-weight: 700;
+  font-family: var(--font);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-secondary);
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: all var(--transition);
+  white-space: nowrap;
+}
+
+.end-period-header-btn:hover {
+  color: var(--text-primary);
+  border-color: var(--text-secondary);
+}
+
+.end-period-header-btn:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
 }
 
 /* ============================
@@ -591,7 +658,6 @@ select.form-input {
 .event-buttons {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  grid-auto-rows: 56px;
   gap: 8px;
   margin-bottom: 12px;
 }
@@ -655,6 +721,12 @@ select.form-input {
   background: var(--event-red-bg);
   border-color: var(--event-red);
   color: var(--event-red);
+}
+
+.event-teal {
+  background: var(--event-stat-bg);
+  border-color: var(--event-stat);
+  color: var(--event-stat);
 }
 
 .event-default {
@@ -749,6 +821,14 @@ select.form-input {
 .log-event.event-blue { background: var(--event-timeout-bg); color: var(--event-timeout); }
 .log-event.event-yellow { background: var(--event-yellow-bg); color: var(--event-yellow); }
 .log-event.event-red { background: var(--event-red-bg); color: var(--event-red); }
+.log-event.event-teal { background: var(--event-stat-bg); color: var(--event-stat); }
+
+.stats-separator {
+  grid-column: 1 / -1;
+  height: 1px;
+  background: var(--border);
+  margin: 0;
+}
 
 .log-score {
   font-weight: 700;
@@ -776,7 +856,20 @@ select.form-input {
 
 .log-separator {
   color: var(--text-muted);
+  margin: 0 2px;
 }
+
+.log-entry.stat-event {
+  border-left: 3px solid var(--event-stat);
+}
+
+.log-entry.event-border-green { border-left: 3px solid var(--event-goal); }
+.log-entry.event-border-amber { border-left: 3px solid var(--event-exclusion); }
+.log-entry.event-border-orange { border-left: 3px solid var(--event-penalty); }
+.log-entry.event-border-blue { border-left: 3px solid var(--event-timeout); }
+.log-entry.event-border-yellow { border-left: 3px solid var(--event-yellow); }
+.log-entry.event-border-red { border-left: 3px solid var(--event-red); }
+.log-entry.event-border-teal { border-left: 3px solid var(--event-stat); }
 
 /* ============================
    Foul-Out Overlay
@@ -1170,6 +1263,55 @@ select.form-input {
   border-bottom: 2px solid var(--accent-blue);
   padding-bottom: 6px;
   margin-bottom: 8px;
+}
+
+.sheet-section-subtitle {
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-secondary);
+  margin: 8px 0 4px;
+}
+
+.sheet-stats-row {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 8px;
+  align-items: flex-start;
+}
+
+.sheet-stats-half {
+  flex: 1;
+  min-width: 0;
+}
+
+.sheet-stats-team {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-secondary);
+  margin-bottom: 4px;
+}
+
+.sheet-empty-inline {
+  font-style: italic;
+  color: var(--text-muted);
+  font-size: 12px;
+}
+
+.sheet-team-header {
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  text-align: center;
+  border-bottom: 1px solid var(--border);
+}
+
+.sheet-table-stats {
+  table-layout: fixed;
 }
 
 .sheet-table {
