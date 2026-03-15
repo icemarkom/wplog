@@ -64,8 +64,9 @@ Script load order matters: `sanitize.js` → `config.js` → `confirm.js` → `s
 - **GitHub Pages** serves from `gh-pages` branch (not `main`)
 - **Production domain**: `https://log.wpref.org/` (via CNAME)
 - **Stable releases** are on `main` — pushes do NOT affect the live site
-- **v2 development** happens on `feature/stats-v2` — a long-lived feature branch
-- **v1 hotfixes**: branch off `main`, fix, merge back, release. Then rebase `feature/stats-v2` onto updated `main`
+- **v2 development** happens on `v2-dev` — a long-lived integration branch
+- **v2 feature work**: branch off `v2-dev` as `v2/<name>`, merge back via PR
+- **v1 hotfixes**: branch off `main`, fix, merge back, release. Then rebase `v2-dev` onto updated `main`
 - **Releases** trigger the deploy Action: `gh release create v1.x.x --title "..." --notes "..."`
 - Deploy Action injects the release tag version into `config.js` via `sed`, then uses `peaceiris/actions-gh-pages@v4` to copy files to `gh-pages`
 - See `.agents/workflows/branching.md` for full branching strategy
@@ -102,7 +103,7 @@ These were explicitly discussed and agreed with the user:
 | **Don't commit without confirmation** | Always wait for user to confirm before committing and pushing. |
 | **"Geronimo" workflow** | When user says "geronimo", it's one-time approval to commit, push, and close the relevant issue. Branch-aware: on long-lived feature branches, skip PR/merge. See `.agents/workflows/geronimo.md`. |
 | **"Kraken" workflow** | When user says "kraken", triggers the release workflow: evaluate changes, update AGENTS.md, propose version, prepare release notes, tag and release. See `.agents/workflows/kraken.md`. |
-| **Branching strategy** | v1 hotfixes branch off `main`; v2 work stays on `feature/stats-v2`. After v1 fixes land, rebase v2 onto `main`. See `.agents/workflows/branching.md`. |
+| **Branching strategy** | v1 hotfixes branch off `main`; v2 uses short-lived `v2/<name>` branches off `v2-dev`. After v1 fixes land, rebase `v2-dev` onto `main`. See `.agents/workflows/branching.md`. |
 | **Auto-clear on refocus** | Tapping a filled time/cap field in the modal auto-clears it for re-entry. Only on user clicks, not auto-advance. |
 | **Custom dialogs** | All `confirm()` calls replaced with `ConfirmDialog` (overlay-based). Supports `danger` (red) and `warning` (amber) types. |
 | **Version system** | `APP_VERSION = "dev"` in `config.js`. Deploy workflow injects the release tag. In dev, runtime auto-detects latest file modification timestamp via `Last-Modified` HTTP headers → displays `dev-YYYYMMDD-HHMM`. No git or build step needed at runtime. |
