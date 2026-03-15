@@ -137,7 +137,7 @@ const Events = {
             document.getElementById("time-display").innerHTML = this._formatTimeDisplay(this._timeRaw);
 
             // Auto-advance to cap after 3 digits (M:SS complete)
-            if (this._timeRaw.length >= 3 && !this._isNoPlayer()) {
+            if (this._timeRaw.length >= 3 && !this._isTeamOnly()) {
                 this._setNumpadTarget("cap");
             }
         } else {
@@ -181,17 +181,17 @@ const Events = {
         this._updateOkButton();
     },
 
-    _isNoPlayer() {
+    _isTeamOnly() {
         const code = document.getElementById("modal-event-title").dataset.code;
         const rules = RULES[this.game.rules];
         const eventDef = rules.events.find((e) => e.code === code);
-        return eventDef && eventDef.noPlayer;
+        return eventDef && eventDef.teamOnly;
     },
 
     _updateOkButton() {
         const btn = document.getElementById("event-modal-confirm");
-        const noPlayer = this._isNoPlayer();
-        const hasCap = noPlayer || this._capRaw.length > 0;
+        const teamOnly = this._isTeamOnly();
+        const hasCap = teamOnly || this._capRaw.length > 0;
         const hasTeam = this.selectedTeam !== null;
 
         // Stats events: time requirement depends on statsTimeMode
@@ -244,7 +244,7 @@ const Events = {
 
         const capField = document.getElementById("field-cap");
 
-        if (eventDef && eventDef.noPlayer) {
+        if (eventDef && eventDef.teamOnly) {
             capField.style.display = "none";
             if (this._numpadTarget === "cap") this._setNumpadTarget("time");
         } else {
@@ -289,13 +289,13 @@ const Events = {
         if (isStatsOnly && timeMode === "off") {
             // Hide time field entirely
             timeField.style.display = "none";
-            this._setNumpadTarget(eventDef.noPlayer ? "time" : "cap");
+            this._setNumpadTarget(eventDef.teamOnly ? "time" : "cap");
         } else if (isStatsOnly && timeMode === "optional") {
             timeField.style.display = "";
-            this._setNumpadTarget(eventDef.noPlayer ? "time" : "cap");
+            this._setNumpadTarget(eventDef.teamOnly ? "time" : "cap");
         } else {
             timeField.style.display = "";
-            this._setNumpadTarget(isSO && !eventDef.noPlayer ? "cap" : "time");
+            this._setNumpadTarget(isSO && !eventDef.teamOnly ? "cap" : "time");
         }
 
         this.selectedTeam = null;
@@ -348,7 +348,7 @@ const Events = {
         const period = this.game.currentPeriod;
 
         // Validate cap for player events
-        if (!eventDef.noPlayer && !cap) {
+        if (!eventDef.teamOnly && !cap) {
             this._showToast("Enter a cap number", "warning");
             this._setNumpadTarget("cap");
             return;
@@ -369,7 +369,7 @@ const Events = {
         }
 
         // Check foul-out BEFORE logging (skip for statsOnly events)
-        const foulOut = (eventDef.noPlayer || isStatsOnly)
+        const foulOut = (eventDef.teamOnly || isStatsOnly)
             ? null
             : Game.checkFoulOut(this.game, this.selectedTeam, cap, eventDef.code);
 
@@ -378,7 +378,7 @@ const Events = {
             period,
             time,
             team: this.selectedTeam,
-            cap: eventDef.noPlayer ? "" : cap,
+            cap: eventDef.teamOnly ? "" : cap,
             event: eventDef.code,
             note: "",
         });

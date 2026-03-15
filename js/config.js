@@ -25,7 +25,7 @@ const APP_VERSION = "dev";
 //   code       — (optional) internal code stored in the log; defaults to name if omitted
 //   color      — CSS color class: "green", "amber", "orange", "blue", "yellow", "red", "teal"
 //   align      — (optional) sheet Code column alignment: "left", "right", "center" (default: "center")
-//   noPlayer      — (optional) true if event has no player (e.g. timeout)
+//   teamOnly      — (optional) true if event is team-level with no cap (e.g. timeout)
 //   autoFoulOut   — (optional) 1 = immediate ejection, 2 = after 2nd occurrence
 //   isPersonalFoul — (optional) true if event counts toward personal foul limit
 //   statsOnly     — (optional) true if event is for stats tracking only
@@ -58,7 +58,7 @@ const STATS_EVENTS = [
 ];
 
 const RULES = {
-    _base: { // this is a hidden rule; all rules starting with _ are hidden from the ui. think of them as templates.
+    _base: {
         periods: 4,
         foulOutLimit: 3,
     },
@@ -72,8 +72,8 @@ const RULES = {
             { name: "Goal", code: "G", color: "green", align: "left" },
             { name: "Exclusion", code: "E", color: "amber", align: "right", isPersonalFoul: true },
             { name: "Penalty", code: "P", color: "amber", align: "right", isPersonalFoul: true },
-            { name: "Timeout", code: "TO", color: "blue", noPlayer: true, align: "center" },
-            { name: "Timeout 30", code: "TO30", color: "blue", align: "center", noPlayer: true },
+            { name: "Timeout", code: "TO", color: "blue", teamOnly: true, align: "center" },
+            { name: "Timeout 30", code: "TO30", color: "blue", align: "center", teamOnly: true },
             { name: "Yellow Card", code: "YC", color: "yellow", align: "center", allowCoach: true, allowAssistant: false, allowBench: true },
             { name: "Penalty-Exclusion", code: "P-E", color: "amber", align: "right", isPersonalFoul: true },
             { name: "Misconduct", code: "MC", color: "red", align: "right", autoFoulOut: 1 },
@@ -96,8 +96,8 @@ const RULES = {
             { name: "Minor Act", code: "MAM", color: "amber", align: "right", isPersonalFoul: true, autoFoulOut: 2 },
             { name: "Penalty-Exclusion", code: "P-E", color: "amber", align: "right", isPersonalFoul: true },
             { name: "Yellow Card", code: "YC", color: "yellow", align: "center", allowCoach: true, allowAssistant: false, allowBench: true },
-            { name: "Timeout", code: "TO", color: "blue", noPlayer: true, align: "center" },
-            { name: "Timeout 30", code: "TO30", color: "blue", align: "center", noPlayer: true },
+            { name: "Timeout", code: "TO", color: "blue", teamOnly: true, align: "center" },
+            { name: "Timeout 30", code: "TO30", color: "blue", align: "center", teamOnly: true },
             { name: "Misconduct", code: "MC", color: "red", align: "right", autoFoulOut: 1 },
             { name: "Game Exclusion", code: "E-Game", color: "red", align: "right", autoFoulOut: 1 },
             { name: "Flagrant Misconduct", code: "FM", color: "red", align: "right", autoFoulOut: 1 },

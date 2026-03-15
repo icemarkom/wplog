@@ -377,9 +377,9 @@ const Sheet = {
         section.appendChild(title);
 
         const rules = RULES[this.game.rules];
-        // All event types that have a cap number (exclude noPlayer events like TO)
+        // All event types that have a cap number (exclude teamOnly events like TO)
         const statTypes = rules.events
-            .filter((e) => !e.noPlayer)
+            .filter((e) => !e.teamOnly)
             .map((e) => {
                 const n = e.name;
                 const plural = n.endsWith("y") ? n.slice(0, -1) + "ies" : n + "s";
