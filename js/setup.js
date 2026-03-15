@@ -157,6 +157,7 @@ const Setup = {
         const select = document.getElementById("setup-rules");
         select.innerHTML = "";
         for (const [key, rules] of Object.entries(RULES)) {
+            if (key.startsWith("_")) continue;
             const opt = document.createElement("option");
             opt.value = key;
             opt.textContent = rules.name;

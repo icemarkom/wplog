@@ -146,15 +146,18 @@ const Events = {
                 this._capRaw = this._capRaw.slice(0, -1);
             } else if (["A", "B", "C"].includes(val)) {
                 const code = document.getElementById("modal-event-title").dataset.code;
-                const isCard = (code === "YC" || code === "RC");
-                if (isCard) {
-                    // Cards: allow "C" (coach), "A" then "C" → "AC" (asst coach)
-                    if (val === "C" && this._capRaw === "") {
+                const rules = RULES[this.game.rules];
+                const eventDef = rules.events.find((e) => e.code === code);
+                if (eventDef && (eventDef.allowCoach || eventDef.allowAssistant || eventDef.allowBench)) {
+                    // Coach/assistant/bench: "C" = coach, "A" then "C" → "AC" = asst coach, "B" = bench
+                    if (val === "C" && eventDef.allowCoach && this._capRaw === "") {
                         this._capRaw = "C";
-                    } else if (val === "C" && this._capRaw === "A") {
+                    } else if (val === "C" && eventDef.allowAssistant && this._capRaw === "A") {
                         this._capRaw = "AC";
-                    } else if (val === "A" && this._capRaw === "") {
+                    } else if (val === "A" && eventDef.allowAssistant && this._capRaw === "") {
                         this._capRaw = "A";
+                    } else if (val === "B" && eventDef.allowBench && this._capRaw === "") {
+                        this._capRaw = "B";
                     }
                 } else {
                     // Normal: A/B/C only after "1" (goalie numbers)
