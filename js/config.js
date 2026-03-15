@@ -23,7 +23,7 @@ const APP_VERSION = "dev";
 //
 // Each event has:
 //   name       — display name
-//   code       — internal code stored in the log
+//   code       — (optional) internal code stored in the log; defaults to name if omitted
 //   color      — CSS color class: "green", "amber", "orange", "blue", "yellow", "red"
 //   align      — (optional) sheet Code column alignment: "left", "right", "center" (default: "center")
 //   noPlayer   — (optional) true if event has no player (e.g. timeout)
@@ -51,9 +51,17 @@ const RULES = {
       { name: "Brutality", code: "BR", color: "red", align: "right", autoFoulOut: 1 },
       { name: "Red Card", code: "RC", color: "red", align: "center" },
       { name: "Game Exclusion", code: "E-Game", color: "red", align: "right", autoFoulOut: 1 },
-      // Stats-only events
-      { name: "Shot", code: "S", color: "teal", statsOnly: true },
-      { name: "Assist", code: "A", color: "teal", statsOnly: true },
+      // Stats-only events (code auto-derived from name)
+      { name: "Shot", color: "teal", statsOnly: true },
+      { name: "Assist", color: "teal", statsOnly: true },
+      { name: "Steal", color: "teal", statsOnly: true },
+      { name: "Intercept", color: "teal", statsOnly: true },
+      { name: "Turnover", color: "teal", statsOnly: true },
+      { name: "Field Block", color: "teal", statsOnly: true },
+      { name: "Save", color: "teal", statsOnly: true },
+      { name: "Drawn Exclusion", color: "teal", statsOnly: true },
+      { name: "Drawn Penalty", color: "teal", statsOnly: true },
+      { name: "Sprint Won", color: "teal", statsOnly: true },
     ],
     foulOutLimit: 3,
     timeouts: { full: 2, to30: 0 },
@@ -78,9 +86,17 @@ const RULES = {
       { name: "Game Exclusion", code: "E-Game", color: "red", align: "right", autoFoulOut: 1 },
       { name: "Flagrant Misconduct", code: "FM", color: "red", align: "right", autoFoulOut: 1 },
       { name: "Red Card", code: "RC", color: "red", align: "center" },
-      // Stats-only events
-      { name: "Shot", code: "S", color: "teal", statsOnly: true },
-      { name: "Assist", code: "A", color: "teal", statsOnly: true },
+      // Stats-only events (code auto-derived from name)
+      { name: "Shot", color: "teal", statsOnly: true },
+      { name: "Assist", color: "teal", statsOnly: true },
+      { name: "Steal", color: "teal", statsOnly: true },
+      { name: "Intercept", color: "teal", statsOnly: true },
+      { name: "Turnover", color: "teal", statsOnly: true },
+      { name: "Field Block", color: "teal", statsOnly: true },
+      { name: "Save", color: "teal", statsOnly: true },
+      { name: "Drawn Exclusion", color: "teal", statsOnly: true },
+      { name: "Drawn Penalty", color: "teal", statsOnly: true },
+      { name: "Sprint Won", color: "teal", statsOnly: true },
     ],
     foulOutLimit: 3,
     timeouts: { full: 3, to30: 1 },
@@ -105,11 +121,28 @@ const RULES = {
       { name: "Game Exclusion", code: "E-Game", color: "red", align: "right", autoFoulOut: 1 },
       { name: "Flagrant Misconduct", code: "FM", color: "red", align: "right", autoFoulOut: 1 },
       { name: "Red Card", code: "RC", color: "red", align: "center" },
-      // Stats-only events
-      { name: "Shot", code: "S", color: "teal", statsOnly: true },
-      { name: "Assist", code: "A", color: "teal", statsOnly: true },
+      // Stats-only events (code auto-derived from name)
+      { name: "Shot", color: "teal", statsOnly: true },
+      { name: "Assist", color: "teal", statsOnly: true },
+      { name: "Steal", color: "teal", statsOnly: true },
+      { name: "Intercept", color: "teal", statsOnly: true },
+      { name: "Turnover", color: "teal", statsOnly: true },
+      { name: "Field Block", color: "teal", statsOnly: true },
+      { name: "Save", color: "teal", statsOnly: true },
+      { name: "Drawn Exclusion", color: "teal", statsOnly: true },
+      { name: "Drawn Penalty", color: "teal", statsOnly: true },
+      { name: "Sprint Won", color: "teal", statsOnly: true },
     ],
     foulOutLimit: 3,
     timeouts: { full: 3, to30: 1 },
   },
 };
+
+// Auto-derive code from name for any event that doesn't specify one
+for (const ruleSet of Object.values(RULES)) {
+  for (const evt of ruleSet.events) {
+    if (!evt.code) {
+      evt.code = evt.name;
+    }
+  }
+}
