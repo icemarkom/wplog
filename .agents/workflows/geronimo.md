@@ -6,7 +6,7 @@ description: Commit, push, and close issue — triggered by user saying "geronim
 
 When the user says **"geronimo"**, they are giving one-time approval to run all steps below. This approval covers ONLY the current set of changes — it does NOT carry over to future work.
 
-> **Branch-aware:** Check `.agents/workflows/branching.md` for the current branching strategy. Geronimo behavior depends on the branch type — see table below.
+> **Branch-aware:** The `branching` skill (`.agents/skills/branching/SKILL.md`) documents branch creation and strategy. Geronimo handles branch *shipping* — the table below maps branch type to merge behavior.
 
 | Branch pattern | Geronimo does |
 |---|---|
@@ -18,6 +18,7 @@ When the user says **"geronimo"**, they are giving one-time approval to run all 
 
 1. **Fix license headers** — run `addlicense -c "Marko Milivojevic" -l apache -ignore '.github/**' -ignore '.agents/**' -ignore 'lib/**' .` to add any missing headers.
 2. **Commit** the staged/changed files with an appropriate commit message referencing the issue number.
+   > **Signed commits:** All commits in this repo are signed. The commit command will trigger a passphrase prompt. When this happens, **pause and instruct the user to enter the passphrase in the IDE** — it is handled by an extension the agent cannot interact with. Wait for the commit to complete before proceeding.
 3. **Push** the current branch to `origin`.
 4. **Merge via GitHub** (skip on `v2-dev`) — create a PR and merge into the appropriate base branch:
    - `fix/<name>` branches → PR into `main`

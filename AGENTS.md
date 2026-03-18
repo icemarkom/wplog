@@ -46,8 +46,11 @@ wplog/
 │   └── workflows/
 │       └── deploy.yml  # Release-triggered deploy to gh-pages (injects version)
 ├── .agents/
+│   ├── skills/
+│   │   └── branching/
+│   │       └── SKILL.md # Branching strategy skill (agentskills.io format)
 │   └── workflows/
-│       ├── branching.md # Branching strategy for parallel v1/v2 development
+│       ├── bazinga.md   # "bazinga" = bootstrap new conversation
 │       ├── geronimo.md  # "geronimo" = one-time approval to commit/push/close
 │       └── kraken.md    # "kraken" = tag and release workflow
 ├── PRIVACY.md          # Privacy policy (Markdown, for GitHub)
@@ -69,7 +72,7 @@ Script load order matters: `sanitize.js` → `config.js` → `confirm.js` → `s
 - **v1 hotfixes**: branch off `main`, fix, merge back, release. Then rebase `v2-dev` onto updated `main`
 - **Releases** trigger the deploy Action: `gh release create v1.x.x --title "..." --notes "..."`
 - Deploy Action injects the release tag version into `config.js` via `sed`, then uses `peaceiris/actions-gh-pages@v4` to copy files to `gh-pages`
-- See `.agents/workflows/branching.md` for full branching strategy
+- See the `branching` skill (`.agents/skills/branching/SKILL.md`) for full branching strategy
 
 ---
 
@@ -105,7 +108,7 @@ These were explicitly discussed and agreed with the user:
 | **Don't commit without confirmation** | Always wait for user to confirm before committing and pushing. |
 | **"Geronimo" workflow** | When user says "geronimo", it's one-time approval to commit, push, and close the relevant issue. Branch-aware: on long-lived feature branches, skip PR/merge. See `.agents/workflows/geronimo.md`. |
 | **"Kraken" workflow** | When user says "kraken", triggers the release workflow: evaluate changes, update AGENTS.md, propose version, prepare release notes, tag and release. See `.agents/workflows/kraken.md`. |
-| **Branching strategy** | v1 hotfixes branch off `main`; v2 uses short-lived `v2/<name>` branches off `v2-dev`. After v1 fixes land, rebase `v2-dev` onto `main`. See `.agents/workflows/branching.md`. |
+| **Branching strategy** | v1 hotfixes branch off `main`; v2 uses short-lived `v2/<name>` branches off `v2-dev`. After v1 fixes land, rebase `v2-dev` onto `main`. See the `branching` skill (`.agents/skills/branching/SKILL.md`). |
 | **Auto-clear on refocus** | Tapping a filled time/cap field in the modal auto-clears it for re-entry. Only on user clicks, not auto-advance. |
 | **Custom dialogs** | All `confirm()` calls replaced with `ConfirmDialog` (overlay-based). Supports `danger` (red) and `warning` (amber) types. |
 | **Version system** | `APP_VERSION = "dev"` in `config.js`. Deploy workflow injects the release tag. In dev, runtime auto-detects latest file modification timestamp via `Last-Modified` HTTP headers → displays `dev-YYYYMMDD-HHMM`. No git or build step needed at runtime. |
@@ -172,7 +175,7 @@ Inherits from `_academic` (8-min periods). Adds:
 
 ---
 
-## Current State (as of 2026-03-15)
+## Current State (as of 2026-03-18)
 
 ### What's Done ✅
 - Complete setup screen (rules, date, time, location, Game #, team names, OT/SO toggles, timeout overrides)
@@ -222,7 +225,7 @@ Inherits from `_academic` (8-min periods). Adds:
 - Service worker: network-first in dev, cache-first in production
 - `.btn:disabled` styling matching nav tab pattern (opacity 0.3)
 - "Kraken" workflow for version tagging and release
-- Help screen: 5th nav tab with quick-reference guide (9 sections, always enabled)
+- Help screen: 5th nav tab with quick-reference guide (9 sections, always enabled), includes keyboard shortcut tip
 - Privacy policy: standalone `privacy.html` + `PRIVACY.md`, linked from footer and About dialog
 - File-per-screen architecture: `index.html` is app shell, content in `screens/*.html` loaded via async loader
 - Shared `css/standalone.css` for standalone pages (`privacy.html`, `help.html`)
@@ -249,6 +252,7 @@ Inherits from `_academic` (8-min periods). Adds:
 - Logging Mode foldable section on setup (Game Log / Stats toggles, Stats Time Entry dropdown)
 - Three logging modes: Game Log only, Stats only, Full (Game Log + Stats)
 - `statsTimeMode` handling in event modal: `"off"` = hidden, `"optional"` = shown but not required, `"on"` = required
+- Stats-only mode respects `statsTimeMode` for all events (not just `statsOnly` events)
 - Stats-only mode: all buttons shown in uniform teal
 - Full mode: log buttons in event colors, separator, stats buttons in teal
 - Stats events interleaved in live log with teal accent and colored borders
@@ -260,6 +264,8 @@ Inherits from `_academic` (8-min periods). Adds:
 - Visual separator between log and stats buttons on live screen
 - Cache-busting for dynamically loaded JS/screen assets in dev
 - Help screen updated with stats tracking section
+- Keyboard input in event modal: digits, A/B/C, W/D team, Backspace, Tab, Enter, Escape
+- Branching workflow converted to agentskills.io skill (`.agents/skills/branching/SKILL.md`)
 
 ### Known Gaps / Future Work 📋
 - No substitution tracking (user hasn't decided)
@@ -273,11 +279,10 @@ Inherits from `_academic` (8-min periods). Adds:
 ## How to Run
 
 Serve locally with any static file server. The app has no build step.
+Do NOT use Python's `http.server` — use the included `serve.go`:
 
 ```sh
-python3 -m http.server 8080
-# or
-npx serve
+go run serve.go
 ```
 
 Then open `http://localhost:8080`.
@@ -292,7 +297,7 @@ Then open `http://localhost:8080`.
 4. **The user is iterative** — expect inline comments on artifacts with specific feedback. Incorporate exactly what they say.
 5. **Don't commit/push without confirmation** — always wait for the user to say it's ready before `git commit` and `git push`. Exception: "geronimo" = one-time blanket approval.
 6. **Close issues manually** — auto-close is disabled. Use `gh issue close N -c "comment"` after pushing.
-7. **Release to publish** — stable releases from `main`. Use `gh release create` to deploy to GitHub Pages. See `.agents/workflows/branching.md` for the v1/v2 parallel development strategy.
+7. **Release to publish** — stable releases from `main`. Use `gh release create` to deploy to GitHub Pages. See the `branching` skill (`.agents/skills/branching/SKILL.md`) for the v1/v2 parallel development strategy.
 8. **Previous conversations** exist about a full water polo scoreboard/timer controller (WTTC-1) — this is a separate, simpler project.
 9. **Game clock is M:SS** — max time is capped by period length (not hardcoded 9:59). Right-to-left digit entry. Start/end times remain HH:MM.
 10. **Modal uses responsive breakpoints** — default is full-screen (mobile), `@media (min-width: 900px) and (min-height: 700px)` switches to desktop dialog.
