@@ -18,6 +18,7 @@ When the user says **"geronimo"**, they are giving one-time approval to run all 
 
 1. **Fix license headers** — run `addlicense -c "Marko Milivojevic" -l apache -ignore '.github/**' -ignore '.agents/**' -ignore 'lib/**' .` to add any missing headers.
 2. **Commit** the staged/changed files with an appropriate commit message referencing the issue number.
+   > **Signed commits:** All commits in this repo are signed. The commit command will trigger a passphrase prompt. When this happens, **pause and instruct the user to enter the passphrase in the IDE** — it is handled by an extension the agent cannot interact with. Wait for the commit to complete before proceeding.
 3. **Push** the current branch to `origin`.
 4. **Merge via GitHub** (skip on `v2-dev`) — create a PR and merge into the appropriate base branch:
    - `fix/<name>` branches → PR into `main`
