@@ -53,4 +53,4 @@ When the user says **"kraken"**, they want to prepare and publish a new release.
 
 > **Note:** The deploy workflow (`.github/workflows/deploy.yml`) will automatically trigger on release publish, injecting the version tag into `config.js` and deploying to GitHub Pages.
 
-> **Note:** Development happens on branches, never directly on `main`. All merges to `main` go through GitHub.
+> **Note:** Development happens on branches, never directly on `main`. All merges to `main` go through GitHub. See the `branching` skill (`.agents/skills/branching/SKILL.md`) for how to get changes merged to `main`.

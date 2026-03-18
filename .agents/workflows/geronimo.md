@@ -6,7 +6,7 @@ description: Commit, push, and close issue — triggered by user saying "geronim
 
 When the user says **"geronimo"**, they are giving one-time approval to run all steps below. This approval covers ONLY the current set of changes — it does NOT carry over to future work.
 
-> **Branch-aware:** Check `.agents/workflows/branching.md` for the current branching strategy. Geronimo behavior depends on the branch type — see table below.
+> **Branch-aware:** The `branching` skill (`.agents/skills/branching/SKILL.md`) documents branch creation and strategy. Geronimo handles branch *shipping* — the table below maps branch type to merge behavior.
 
 | Branch pattern | Geronimo does |
 |---|---|
