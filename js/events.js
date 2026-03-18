@@ -198,11 +198,12 @@ const Events = {
         const code = document.getElementById("modal-event-title").dataset.code;
         const rules = RULES[this.game.rules];
         const eventDef = rules.events.find((e) => e.code === code);
+        const isStatsMode = !this.game.enableLog && this.game.enableStats;
         const isStatsOnly = eventDef && eventDef.statsOnly;
         const timeMode = this.game.statsTimeMode || "off";
 
         let hasTime;
-        if (isStatsOnly && (timeMode === "off" || timeMode === "optional")) {
+        if ((isStatsOnly || isStatsMode) && (timeMode === "off" || timeMode === "optional")) {
             hasTime = true; // time not required
         } else {
             hasTime = this._timeRaw.length > 0 && this._parseTime(this._timeRaw) !== null;
@@ -283,14 +284,15 @@ const Events = {
 
         // Default target: cap for SO (time is locked), time otherwise
         // Stats events: adjust for statsTimeMode
+        const isStatsMode = !this.game.enableLog && this.game.enableStats;
         const isStatsOnly = eventDef.statsOnly;
         const timeMode = this.game.statsTimeMode || "off";
 
-        if (isStatsOnly && timeMode === "off") {
+        if ((isStatsOnly || isStatsMode) && timeMode === "off") {
             // Hide time field entirely
             timeField.style.display = "none";
             this._setNumpadTarget(eventDef.teamOnly ? "time" : "cap");
-        } else if (isStatsOnly && timeMode === "optional") {
+        } else if ((isStatsOnly || isStatsMode) && timeMode === "optional") {
             timeField.style.display = "";
             this._setNumpadTarget(eventDef.teamOnly ? "time" : "cap");
         } else {
@@ -328,11 +330,12 @@ const Events = {
         if (!eventDef) return;
 
         // Parse time (stats events may have no time)
+        const isStatsMode = !this.game.enableLog && this.game.enableStats;
         const isStatsOnly = eventDef.statsOnly;
         const timeMode = this.game.statsTimeMode || "off";
         let time;
 
-        if (isStatsOnly && (timeMode === "off" || (timeMode === "optional" && this._timeRaw.length === 0))) {
+        if ((isStatsOnly || isStatsMode) && (timeMode === "off" || (timeMode === "optional" && this._timeRaw.length === 0))) {
             time = "";
         } else {
             const parsed = this._parseTime(this._timeRaw);
