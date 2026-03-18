@@ -175,7 +175,7 @@ Inherits from `_academic` (8-min periods). Adds:
 
 ---
 
-## Current State (as of 2026-03-15)
+## Current State (as of 2026-03-18)
 
 ### What's Done ✅
 - Complete setup screen (rules, date, time, location, Game #, team names, OT/SO toggles, timeout overrides)
@@ -225,7 +225,7 @@ Inherits from `_academic` (8-min periods). Adds:
 - Service worker: network-first in dev, cache-first in production
 - `.btn:disabled` styling matching nav tab pattern (opacity 0.3)
 - "Kraken" workflow for version tagging and release
-- Help screen: 5th nav tab with quick-reference guide (9 sections, always enabled)
+- Help screen: 5th nav tab with quick-reference guide (9 sections, always enabled), includes keyboard shortcut tip
 - Privacy policy: standalone `privacy.html` + `PRIVACY.md`, linked from footer and About dialog
 - File-per-screen architecture: `index.html` is app shell, content in `screens/*.html` loaded via async loader
 - Shared `css/standalone.css` for standalone pages (`privacy.html`, `help.html`)
@@ -252,6 +252,7 @@ Inherits from `_academic` (8-min periods). Adds:
 - Logging Mode foldable section on setup (Game Log / Stats toggles, Stats Time Entry dropdown)
 - Three logging modes: Game Log only, Stats only, Full (Game Log + Stats)
 - `statsTimeMode` handling in event modal: `"off"` = hidden, `"optional"` = shown but not required, `"on"` = required
+- Stats-only mode respects `statsTimeMode` for all events (not just `statsOnly` events)
 - Stats-only mode: all buttons shown in uniform teal
 - Full mode: log buttons in event colors, separator, stats buttons in teal
 - Stats events interleaved in live log with teal accent and colored borders
@@ -263,6 +264,8 @@ Inherits from `_academic` (8-min periods). Adds:
 - Visual separator between log and stats buttons on live screen
 - Cache-busting for dynamically loaded JS/screen assets in dev
 - Help screen updated with stats tracking section
+- Keyboard input in event modal: digits, A/B/C, W/D team, Backspace, Tab, Enter, Escape
+- Branching workflow converted to agentskills.io skill (`.agents/skills/branching/SKILL.md`)
 
 ### Known Gaps / Future Work 📋
 - No substitution tracking (user hasn't decided)
