@@ -123,6 +123,72 @@ const Events = {
 
         // OK
         document.getElementById("event-modal-confirm").addEventListener("click", () => this._confirmEvent());
+
+        // Keyboard input — desktop support
+        document.addEventListener("keydown", (e) => {
+            if (!document.getElementById("event-modal").classList.contains("visible")) return;
+
+            const key = e.key;
+
+            // Digits 0-9
+            if (key >= "0" && key <= "9") {
+                e.preventDefault();
+                this._handleNumpad(key);
+                return;
+            }
+
+            // Letters A/B/C (case-insensitive)
+            const upper = key.toUpperCase();
+            if (["A", "B", "C"].includes(upper)) {
+                e.preventDefault();
+                this._handleNumpad(upper);
+                return;
+            }
+
+            // W/D for team selection (case-insensitive)
+            if (upper === "W") {
+                e.preventDefault();
+                this._selectTeam("W");
+                return;
+            }
+            if (upper === "D") {
+                e.preventDefault();
+                this._selectTeam("D");
+                return;
+            }
+
+            // Backspace = clear
+            if (key === "Backspace") {
+                e.preventDefault();
+                this._handleNumpad("clear");
+                return;
+            }
+
+            // Tab = toggle time/cap field
+            if (key === "Tab") {
+                e.preventDefault();
+                const next = this._numpadTarget === "time" ? "cap" : "time";
+                this._setNumpadTarget(next, true);
+                return;
+            }
+
+            // Enter = confirm (if OK is enabled)
+            if (key === "Enter") {
+                e.preventDefault();
+                const okBtn = document.getElementById("event-modal-confirm");
+                if (!okBtn.disabled) {
+                    this._confirmEvent();
+                }
+                return;
+            }
+
+            // Escape = cancel
+            if (key === "Escape") {
+                e.preventDefault();
+                this._closeModal();
+                return;
+            }
+        });
     },
 
     _handleNumpad(val) {

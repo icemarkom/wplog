@@ -276,10 +276,10 @@ Inherits from `_academic` (8-min periods). Adds:
 ## How to Run
 
 Serve locally with any static file server. The app has no build step.
-Do NOT use Python's `http.server` — use Go's stdlib file server:
+Do NOT use Python's `http.server` — use the included `serve.go`:
 
 ```sh
-go run <(echo 'package main; import "net/http"; func main() { http.ListenAndServe(":8080", http.FileServer(http.Dir("."))) }')
+go run serve.go
 ```
 
 Then open `http://localhost:8080`.
