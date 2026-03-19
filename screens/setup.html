@@ -17,30 +17,10 @@
 <h1 class="app-title">wplog</h1>
 <p class="app-subtitle">Water Polo Game Log</p>
 
+<!-- ── Essential fields (always visible) ── -->
 <div class="form-group">
   <label for="setup-rules">Rules</label>
   <select id="setup-rules" class="form-input"></select>
-</div>
-
-<div class="form-row">
-  <div class="form-group">
-    <label for="setup-date">Date</label>
-    <input id="setup-date" type="date" class="form-input">
-  </div>
-  <div class="form-group">
-    <label for="setup-time">Start Time</label>
-    <input id="setup-time" type="time" class="form-input">
-  </div>
-</div>
-
-<div class="form-group">
-  <label for="setup-location">Location</label>
-  <input id="setup-location" type="text" class="form-input" placeholder="Optional">
-</div>
-
-<div class="form-group">
-  <label for="setup-game-id">Game #</label>
-  <input id="setup-game-id" type="text" class="form-input" placeholder="Optional">
 </div>
 
 <div class="form-row">
@@ -54,62 +34,90 @@
   </div>
 </div>
 
-<div class="form-row toggle-row">
+<!-- ── Logging Mode (always visible) ── -->
+<div id="setup-stats-section" class="form-row toggle-row">
   <label class="toggle-label">
-    <input id="setup-overtime" type="checkbox">
-    <span>Overtime</span>
+    <input id="setup-enable-log" type="checkbox" checked>
+    <span>Game Log</span>
   </label>
   <label class="toggle-label">
-    <input id="setup-shootout" type="checkbox">
-    <span>Shootout</span>
+    <input id="setup-enable-stats" type="checkbox">
+    <span>Stats</span>
   </label>
 </div>
+<div class="form-group" id="setup-stats-time-group" style="display: none;">
+  <label for="setup-stats-time-mode">Stats Time Entry</label>
+  <select id="setup-stats-time-mode" class="form-input">
+    <option value="off">Disabled</option>
+    <option value="optional">Optional</option>
+    <option value="on">Required</option>
+  </select>
+</div>
 
-<!-- Logging Mode (foldable) -->
-<details id="setup-stats-section" class="setup-foldable">
-  <summary class="setup-foldable-header">Logging Mode</summary>
+<!-- ── Game Details (collapsed by default) ── -->
+<details id="setup-details-section" class="setup-foldable">
+  <summary class="setup-foldable-header">Game Details</summary>
   <div class="setup-foldable-content">
-    <div class="form-row toggle-row">
-      <label class="toggle-label">
-        <input id="setup-enable-log" type="checkbox" checked>
-        <span>Game Log</span>
-      </label>
-      <label class="toggle-label">
-        <input id="setup-enable-stats" type="checkbox">
-        <span>Stats</span>
-      </label>
+    <div class="form-row">
+      <div class="form-group">
+        <label for="setup-date">Date</label>
+        <input id="setup-date" type="date" class="form-input">
+      </div>
+      <div class="form-group">
+        <label for="setup-time">Start Time</label>
+        <input id="setup-time" type="time" class="form-input">
+      </div>
     </div>
-    <div class="form-group" id="setup-stats-time-group" style="display: none;">
-      <label for="setup-stats-time-mode">Stats Time Entry</label>
-      <select id="setup-stats-time-mode" class="form-input">
-        <option value="off">Disabled</option>
-        <option value="optional">Optional</option>
-        <option value="on">Required</option>
-      </select>
+
+    <div class="form-group">
+      <label for="setup-location">Location</label>
+      <input id="setup-location" type="text" class="form-input" placeholder="Optional">
+    </div>
+
+    <div class="form-group">
+      <label for="setup-game-id">Game #</label>
+      <input id="setup-game-id" type="text" class="form-input" placeholder="Optional">
     </div>
   </div>
 </details>
 
-<div class="form-row">
-  <div class="form-group">
-    <label for="setup-period-length">Quarter Length</label>
-    <select id="setup-period-length" class="form-input"></select>
-  </div>
-  <div class="form-group" id="setup-ot-length-group">
-    <label for="setup-ot-length">OT Length</label>
-    <select id="setup-ot-length" class="form-input"></select>
-  </div>
-</div>
+<!-- ── Game Setup (collapsed by default) ── -->
+<details id="setup-advanced-section" class="setup-foldable">
+  <summary class="setup-foldable-header">Game Setup (duration, timeouts)</summary>
+  <div class="setup-foldable-content">
+    <div class="form-row toggle-row">
+      <label class="toggle-label">
+        <input id="setup-overtime" type="checkbox">
+        <span>Overtime</span>
+      </label>
+      <label class="toggle-label">
+        <input id="setup-shootout" type="checkbox">
+        <span>Shootout</span>
+      </label>
+    </div>
 
-<div class="form-row">
-  <div class="form-group">
-    <label for="setup-to-full">Full TOs (per team)</label>
-    <input id="setup-to-full" type="number" class="form-input" min="0" max="9" value="3">
+    <div class="form-row">
+      <div class="form-group">
+        <label for="setup-period-length">Quarter Length</label>
+        <select id="setup-period-length" class="form-input"></select>
+      </div>
+      <div class="form-group" id="setup-ot-length-group">
+        <label for="setup-ot-length">OT Length</label>
+        <select id="setup-ot-length" class="form-input"></select>
+      </div>
+    </div>
+
+    <div class="form-row">
+      <div class="form-group">
+        <label for="setup-to-full">Full TOs (per team)</label>
+        <input id="setup-to-full" type="number" class="form-input" min="0" max="9" value="3">
+      </div>
+      <div class="form-group">
+        <label for="setup-to-30">30s TOs (per team)</label>
+        <input id="setup-to-30" type="number" class="form-input" min="0" max="9" value="1">
+      </div>
+    </div>
   </div>
-  <div class="form-group">
-    <label for="setup-to-30">30s TOs (per team)</label>
-    <input id="setup-to-30" type="number" class="form-input" min="0" max="9" value="1">
-  </div>
-</div>
+</details>
 
 <button id="setup-start-btn" class="btn btn-primary btn-large">Start Game</button>
