@@ -34,9 +34,10 @@ const Share = {
 
     printSheet() {
         if (!this.game) return;
-        // Navigate to sheet view and print
-        App.showScreen("sheet");
+        // Render sheet content (works on hidden elements) and print.
+        // print.css forces #screen-sheet visible and hides everything else,
+        // so no screen switch is needed.
         Sheet.init(this.game);
-        setTimeout(() => window.print(), 300);
+        window.print();
     },
 };
