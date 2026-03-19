@@ -104,7 +104,7 @@ These were explicitly discussed and agreed with the user:
 | **Table splitting with continued** | Oversized tables split across pages. Each continuation chunk gets the title + " - continued" suffix and the thead repeated. |
 | **Anti-orphan logic** | Tables only start on a page if there's room for title + thead + at least 1 data row. Otherwise flushed to next page. |
 | **Sections start on own pages** | Game Log, Game Summary, and Game Stats each begin on a fresh page. |
-| **Print row height = 18px** | All table cells: `height: 18px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis`. No wrapping allowed in print — ensures pagination math is exact. |
+| **Print row height = 18px** | All table cells: `height: 18px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis`. No wrapping allowed in print — ensures pagination math is exact. Log tables use auto column sizing (no `table-layout: fixed`) so headers are never truncated; summary/stats tables use `table-layout: fixed`. |
 | **USAWP + NFHS + NCAA supported** | USAWP, NFHS Varsity (7-min, OT, MAM), NFHS JV (6-min, no OT), NCAA (8-min, OT, YRC). Additional rule sets added via inheritance. |
 | **Rule set inheritance** | `inherits` key chains parent→child. `addEvents`/`removeEvents` directives for per-ruleset event list mutations. `_base` and `_academic` are internal (hidden from dropdown). `STATS_EVENTS` auto-appended to all rule sets. |
 | **Cap flags** | `allowCoach`, `allowAssistant`, `allowBench` enable C/AC/B cap values. `allowPlayer` (default true) can be set false to block digit input. `allowNoCap` allows submitting without cap. `teamOnly` (renamed from `noPlayer`) hides cap field entirely. |
