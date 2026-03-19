@@ -195,8 +195,8 @@ const Game = {
         const used = this.getTimeoutsUsed(game, team);
         const allowed = game.timeoutsAllowed || { full: 0, to30: 0 };
         return {
-            full: Math.max(0, allowed.full - used.full),
-            to30: Math.max(0, allowed.to30 - used.to30),
+            full: allowed.full === -1 ? Infinity : Math.max(0, allowed.full - used.full),
+            to30: allowed.to30 === -1 ? Infinity : Math.max(0, allowed.to30 - used.to30),
         };
     },
 

@@ -324,6 +324,65 @@ select.form-input {
 }
 
 /* ============================
+   Stepper Control
+   ============================ */
+.stepper {
+  display: flex;
+  align-items: center;
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 3px;
+  gap: 4px;
+}
+
+.stepper-btn {
+  width: 40px;
+  height: 40px;
+  border: none;
+  border-radius: calc(var(--radius-md) - 2px);
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--text-secondary);
+  font-family: var(--font);
+  font-size: 18px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--transition);
+  touch-action: manipulation;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.stepper-btn:active:not(:disabled) {
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.stepper-btn:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.stepper-value {
+  flex: 1;
+  text-align: center;
+  font-family: var(--font);
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary);
+  user-select: none;
+}
+
+.stepper.disabled {
+  opacity: 0.3;
+}
+
+.stepper.disabled .stepper-btn {
+  cursor: not-allowed;
+}
+
+/* ============================
    Foldable Setup Sections
    ============================ */
 .setup-foldable {
