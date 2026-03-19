@@ -176,8 +176,8 @@ const App = {
         const saved = Storage.load();
         if (saved && saved.rules) {
             this.game = saved;
-            this.showScreen("live");
-            Events.init(this.game);
+            const restoredScreen = sessionStorage.getItem("wplog-screen") || "live";
+            this._showScreenWithInit(restoredScreen);
         } else {
             this.showScreen("setup");
             Setup.init((game) => {
@@ -337,6 +337,7 @@ const App = {
 
     showScreen(name) {
         this.currentScreen = name;
+        sessionStorage.setItem("wplog-screen", name);
         document.querySelectorAll(".screen").forEach((el) => {
             el.classList.toggle("active", el.id === "screen-" + name);
         });
@@ -344,13 +345,67 @@ const App = {
         // Update nav active state
         document.querySelectorAll(".nav-btn").forEach((btn) => {
             btn.classList.toggle("active", btn.id === "nav-" + name);
-            // Deactivate all nav buttons when showing About (no nav button for it)
         });
 
         // Disable nav buttons that require a game
         const hasGame = !!this.game;
         document.getElementById("nav-live").disabled = !hasGame;
         document.getElementById("nav-sheet").disabled = !hasGame;
+    },
+
+    // Show a screen and initialize its module (used for restore on reload)
+    _showScreenWithInit(name) {
+        switch (name) {
+            case "setup":
+                this.showScreen("setup");
+                Setup.init((game) => {
+                    this.game = game;
+                    this.showScreen("live");
+                    Events.init(this.game);
+                });
+                if (this.game) Setup.updateForActiveGame(this.game);
+                break;
+            case "sheet":
+                if (this.game) {
+                    this.showScreen("sheet");
+                    Sheet.init(this.game);
+                } else {
+                    this.showScreen("setup");
+                }
+                break;
+            case "share":
+                this.showScreen("share");
+                Share.init(this.game);
+                break;
+            case "help":
+                this.showScreen("help");
+                // Load help content (same logic as nav-help click)
+                (async () => {
+                    const el = document.getElementById("help-content");
+                    if (!el.innerHTML) {
+                        try {
+                            const res = await fetch("help.html");
+                            const html = await res.text();
+                            const doc = new DOMParser().parseFromString(html, "text/html");
+                            el.innerHTML = doc.querySelector(".container").innerHTML;
+                            const footer = el.querySelector(".footer");
+                            if (footer) footer.remove();
+                        } catch {
+                            el.innerHTML = "<p>Could not load help content.</p>";
+                        }
+                    }
+                })();
+                break;
+            case "live":
+            default:
+                if (this.game) {
+                    this.showScreen("live");
+                    Events.init(this.game);
+                } else {
+                    this.showScreen("setup");
+                }
+                break;
+        }
     },
 };
 
