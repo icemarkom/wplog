@@ -97,7 +97,7 @@ These were explicitly discussed and agreed with the user:
 | **Timeout tracking** | Configurable limits (full + TO30) in config, overridable in setup. TOL display in live view. Warning on over-limit. |
 | **Game # replaces Rules on sheet** | Rules only relevant for setup; Game # shown on printed game sheet header. |
 | **Print = Share** | `window.print()` is the sharing mechanism. Mobile print dialogs offer Save as PDF + native share. |
-| **Paper size selector** | Share screen dropdown (US Letter / A4), defaults to US Letter. Dynamic `@page` CSS injection sets print dimensions. |
+| **Paper size selector** | Print dialog popup with US Letter / A4 segmented control. Dynamic `@page` CSS injection sets print dimensions. |
 | **Multi-column game log** | Print log uses up to 4 columns (column-first fill). Each column is its own `<table>` in a CSS grid. Column count adapts to event count. |
 | **Row-based print pagination** | All print layout uses 18px rows. Page capacity: Letter 52 rows, A4 56 rows. Header = 12 rows. Available = PAGE_ROWS - HEADER_ROWS. |
 | **Section titles in print** | Each print section has its own title in the header: "Game Log", "Game Summary", "Game Stats". Replaces generic "Game Sheet". |
@@ -131,7 +131,7 @@ These were explicitly discussed and agreed with the user:
 | **No inline scripts** | All JavaScript is in external files. `index.html` uses `js/loader.js` (app shell loader) and `js/year.js` (copyright year). Standalone pages use `js/year.js`. This enables strict CSP without `'unsafe-inline'` for `script-src`. |
 | **localStorage validation** | `Storage.load()` validates parsed data shape (`rules` is string, `log` is array) before returning. Tampered/corrupt data is silently ignored. |
 | **Stats are separate from log** | Live view: stats interleaved in recent events with teal accent. Game sheet: stats filtered from Progress of Game, shown in separate Player Stats section. |
-| **Logging mode** | Game Log + Stats checkboxes always visible on setup screen (first-class choices, not foldable). Stats Time Entry dropdown: Disabled / Optional / Required. Default time mode = Disabled for both hybrid and stats-only. |
+| **Logging mode** | Collapsible section on setup screen with mode segmented control (Game Log Only / Both / Stats Only) and Stats Time Entry (Disabled / Optional / Required). Summary shown in foldable header. |
 | **Stats code = name** | Stats events omit `code` in config — auto-derived from `name`. Normalizer runs at load time for any event missing a code. Multi-word codes (e.g. "Field Block") are supported. |
 | **Stats buttons teal** | Shot (S) and Assist (A) buttons styled with `color: "teal"` (`#2dd4bf`). Visual separator between log and stats buttons. |
 | **Player Stats on sheet** | Single `<table>` per stat type with colspan White/Dark headers. Per-period columns (Q1, Q2, etc.) + bold Total. All events with cap numbers aggregated (not just statsOnly). Proper English pluralization for section titles. |
@@ -213,14 +213,15 @@ Inherits from `_academic` (8-min periods). Adds:
 - Fractional SO scores (5.3–5.2 format, no floats — computed at render time)
 - SO events display without time (always 0:00, redundant)
 - Score column shows only on Goal events (live log + sheet)
-- Smart print layout: multi-column game log (up to 4 cols), row-based pagination, paper size selector (Letter/A4)
+- Smart print layout: multi-column game log (up to 3 cols), row-based pagination, paper size selector (Letter/A4)
+- Print dialog popup: paper size segmented control (US Letter / A4), Print + Cancel buttons
 - Print sections: Game Log, Game Summary, Game Stats — each starts on own page with section title in header
 - Table splitting with thead repeated and " - continued" suffix on continuation pages
 - Anti-orphan logic: tables only start if title + thead + 1 data row fits
 - Fixed 18px row height for all print table cells (no wrapping, ellipsis truncation)
 - Game header on every printed page (measured at 192px = 12 rows)
 - 3-row sheet header: Game#, Location, Date/Scheduled/Ended
-- Share screen with Print Game Sheet button (`window.print()`)
+- Share screen with Print Game Sheet button and Download CSV button
 - localStorage persistence
 - PWA manifest + service worker (v2, relative paths)
 - GitHub Pages deployment (release-gated via Actions)
@@ -263,7 +264,7 @@ Inherits from `_academic` (8-min periods). Adds:
 - Apple touch icon for iOS home screen
 - Full stats tracking: 11 stat event types (Shot, Assist, Offensive, Steal, Intercept, Turnover, Field Block, Save, Drawn Exclusion, Drawn Penalty, Sprint Won)
 - Stats events omit `code` in config — auto-derived from `name` at load time (applies to any event)
-- Logging Mode checkboxes always visible on setup (Game Log / Stats as first-class choices, Stats Time Entry dropdown)
+- Logging Mode as collapsible section on setup with segmented control (Game Log Only / Both / Stats Only) and Stats Time Entry
 - Three logging modes: Game Log only, Stats only, Full (Game Log + Stats)
 - `statsTimeMode` handling in event modal: `"off"` = hidden, `"optional"` = shown but not required, `"on"` = required
 - Stats-only mode respects `statsTimeMode` for all events (not just `statsOnly` events)
@@ -280,9 +281,15 @@ Inherits from `_academic` (8-min periods). Adds:
 - Help screen updated with stats tracking section
 - Keyboard input in event modal: digits, A/B/C, W/D team, Backspace, Tab, Enter, Escape
 - Branching workflow converted to agentskills.io skill (`.agents/skills/branching/SKILL.md`)
-- Setup screen progressive disclosure: essentials always visible (Rules, Teams, Logging Mode), Game Details and Game Setup as collapsible sections, Start Game at bottom
+- Setup screen progressive disclosure: essentials always visible (Rules, Teams), Game Details, Game Setup, and Logging as collapsible sections, Start Game at bottom
 - Single-track branching model (post-v2): all work off `main`, `v2-dev` retired
 - Test data: `testdata/monster-game.json` with 201 events for print pagination stress testing
+- CSV export: Download CSV button on Share screen with editable filename dialog (date + teams + time)
+- Screen persistence: active screen restored across page reloads via `sessionStorage`
+- Game Setup section uses stepper controls for period length, OT length, and timeout limits (with ∞ option)
+- Post-regulation as segmented control (None / Overtime / Shootout) in Game Setup
+- Foldable section summaries: Logging header shows current mode, Game Setup header shows period length + OT + timeout config
+- Restart App link below Start Game: clears localStorage, unregisters service workers, purges caches, and reloads
 
 ### Known Gaps / Future Work 📋
 - No substitution tracking (user hasn't decided)
