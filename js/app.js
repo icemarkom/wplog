@@ -129,6 +129,18 @@ const App = {
         document.addEventListener("keydown", (e) => {
             if (e.key !== "Escape" && e.key !== "Enter") return;
 
+            // Print dialog (Escape=cancel, Enter=print)
+            if (document.getElementById("print-overlay").classList.contains("visible")) {
+                e.preventDefault();
+                if (e.key === "Escape") {
+                    Share._closePrintDialog();
+                } else if (e.key === "Enter") {
+                    Share._closePrintDialog();
+                    Share._doPrint();
+                }
+                return;
+            }
+
             // Privacy overlay (stacked on About)
             if (document.getElementById("privacy-overlay").classList.contains("visible")) {
                 e.preventDefault();

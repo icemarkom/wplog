@@ -1605,26 +1605,40 @@ select.form-input {
   gap: 12px;
 }
 
-.print-options {
+/* Print Dialog */
+.print-card {
+  max-width: 380px;
+  text-align: center;
+}
+
+.print-title {
+  margin-bottom: 20px;
+}
+
+.print-card .form-group {
+  text-align: left;
+  margin-bottom: 20px;
+}
+
+.print-dialog-actions {
   display: flex;
-  align-items: center;
+  flex-direction: column;
   gap: 12px;
+  align-items: center;
 }
 
-.print-paper-label {
-  font-size: 12px;
-  font-weight: 600;
+.btn-link {
+  background: none;
+  border: none;
   color: var(--text-secondary);
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-  white-space: nowrap;
+  font-size: 14px;
+  cursor: pointer;
+  padding: 8px 16px;
+  transition: color 0.15s;
 }
 
-.print-paper-select {
-  flex: 1;
-  padding: 10px 14px;
-  min-height: 40px;
-  font-size: 14px;
+.btn-link:hover {
+  color: var(--text-primary);
 }
 
 .share-status {
