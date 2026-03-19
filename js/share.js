@@ -19,6 +19,7 @@
 const Share = {
     game: null,
     _bound: false,
+    _pageStyleEl: null,
 
     init(game) {
         this.game = game || null;
@@ -34,9 +35,24 @@ const Share = {
 
     printSheet() {
         if (!this.game) return;
-        // Navigate to sheet view and print
-        App.showScreen("sheet");
-        Sheet.init(this.game);
-        setTimeout(() => window.print(), 300);
+        const paperSize = document.getElementById("print-paper-size").value;
+
+        // Inject dynamic @page size
+        this._setPageSize(paperSize);
+
+        // Render sheet content (works on hidden elements) and print.
+        // print.css forces #screen-sheet visible and hides everything else,
+        // so no screen switch is needed.
+        Sheet.init(this.game, paperSize);
+        window.print();
+    },
+
+    _setPageSize(size) {
+        if (!this._pageStyleEl) {
+            this._pageStyleEl = document.createElement("style");
+            document.head.appendChild(this._pageStyleEl);
+        }
+        const cssSize = size === "a4" ? "A4 portrait" : "letter portrait";
+        this._pageStyleEl.textContent = `@page { size: ${cssSize}; margin: 0.5in; }`;
     },
 };

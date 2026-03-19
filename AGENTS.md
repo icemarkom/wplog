@@ -36,7 +36,7 @@ wplog/
 │   ├── game.js         # Core data model + game logic
 │   ├── setup.js        # Setup screen (with active-game guards)
 │   ├── events.js       # Live log screen (main UI)
-│   ├── sheet.js        # Game sheet rendering (2-page print layout)
+│   ├── sheet.js        # Game sheet rendering (multi-column log + paginated print layout)
 │   ├── share.js        # Share/Print functionality
 │   └── app.js          # App init + screen navigation + version display
 ├── help.html           # Standalone help page (uses standalone.css)
@@ -53,6 +53,8 @@ wplog/
 │       ├── bazinga.md   # "bazinga" = bootstrap new conversation
 │       ├── geronimo.md  # "geronimo" = one-time approval to commit/push/close
 │       └── kraken.md    # "kraken" = tag and release workflow
+├── testdata/
+│   └── monster-game.json  # 201-event stress test data for print pagination testing
 ├── PRIVACY.md          # Privacy policy (Markdown, for GitHub)
 ├── privacy.html        # Privacy policy (HTML, canonical for OAuth consent)
 └── lib/                # Empty (previously had vendored libs, now removed)
@@ -95,6 +97,14 @@ These were explicitly discussed and agreed with the user:
 | **Timeout tracking** | Configurable limits (full + TO30) in config, overridable in setup. TOL display in live view. Warning on over-limit. |
 | **Game # replaces Rules on sheet** | Rules only relevant for setup; Game # shown on printed game sheet header. |
 | **Print = Share** | `window.print()` is the sharing mechanism. Mobile print dialogs offer Save as PDF + native share. |
+| **Paper size selector** | Share screen dropdown (US Letter / A4), defaults to US Letter. Dynamic `@page` CSS injection sets print dimensions. |
+| **Multi-column game log** | Print log uses up to 4 columns (column-first fill). Each column is its own `<table>` in a CSS grid. Column count adapts to event count. |
+| **Row-based print pagination** | All print layout uses 18px rows. Page capacity: Letter 52 rows, A4 56 rows. Header = 12 rows. Available = PAGE_ROWS - HEADER_ROWS. |
+| **Section titles in print** | Each print section has its own title in the header: "Game Log", "Game Summary", "Game Stats". Replaces generic "Game Sheet". |
+| **Table splitting with continued** | Oversized tables split across pages. Each continuation chunk gets the title + " - continued" suffix and the thead repeated. |
+| **Anti-orphan logic** | Tables only start on a page if there's room for title + thead + at least 1 data row. Otherwise flushed to next page. |
+| **Sections start on own pages** | Game Log, Game Summary, and Game Stats each begin on a fresh page. |
+| **Print row height = 18px** | All table cells: `height: 18px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis`. No wrapping allowed in print — ensures pagination math is exact. Log tables use auto column sizing (no `table-layout: fixed`) so headers are never truncated; summary/stats tables use `table-layout: fixed`. |
 | **USAWP + NFHS + NCAA supported** | USAWP, NFHS Varsity (7-min, OT, MAM), NFHS JV (6-min, no OT), NCAA (8-min, OT, YRC). Additional rule sets added via inheritance. |
 | **Rule set inheritance** | `inherits` key chains parent→child. `addEvents`/`removeEvents` directives for per-ruleset event list mutations. `_base` and `_academic` are internal (hidden from dropdown). `STATS_EVENTS` auto-appended to all rule sets. |
 | **Cap flags** | `allowCoach`, `allowAssistant`, `allowBench` enable C/AC/B cap values. `allowPlayer` (default true) can be set false to block digit input. `allowNoCap` allows submitting without cap. `teamOnly` (renamed from `noPlayer`) hides cap field entirely. |
@@ -174,7 +184,7 @@ Inherits from `_academic` (8-min periods). Adds:
 
 ---
 
-## Current State (as of 2026-03-18)
+## Current State (as of 2026-03-19)
 
 ### What's Done ✅
 - Complete setup screen (rules, date, time, location, Game #, team names, OT/SO toggles, timeout overrides)
@@ -203,7 +213,12 @@ Inherits from `_academic` (8-min periods). Adds:
 - Fractional SO scores (5.3–5.2 format, no floats — computed at render time)
 - SO events display without time (always 0:00, redundant)
 - Score column shows only on Goal events (live log + sheet)
-- Print-friendly layout (US Letter, 2-page with page break, B&W)
+- Smart print layout: multi-column game log (up to 4 cols), row-based pagination, paper size selector (Letter/A4)
+- Print sections: Game Log, Game Summary, Game Stats — each starts on own page with section title in header
+- Table splitting with thead repeated and " - continued" suffix on continuation pages
+- Anti-orphan logic: tables only start if title + thead + 1 data row fits
+- Fixed 18px row height for all print table cells (no wrapping, ellipsis truncation)
+- Game header on every printed page (measured at 192px = 12 rows)
 - 3-row sheet header: Game#, Location, Date/Scheduled/Ended
 - Share screen with Print Game Sheet button (`window.print()`)
 - localStorage persistence
@@ -267,6 +282,7 @@ Inherits from `_academic` (8-min periods). Adds:
 - Branching workflow converted to agentskills.io skill (`.agents/skills/branching/SKILL.md`)
 - Setup screen progressive disclosure: essentials always visible (Rules, Teams, Logging Mode), Game Details and Game Setup as collapsible sections, Start Game at bottom
 - Single-track branching model (post-v2): all work off `main`, `v2-dev` retired
+- Test data: `testdata/monster-game.json` with 201 events for print pagination stress testing
 
 ### Known Gaps / Future Work 📋
 - No substitution tracking (user hasn't decided)

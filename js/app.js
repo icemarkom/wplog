@@ -125,6 +125,41 @@ const App = {
             document.getElementById("qr-overlay").classList.remove("visible");
         });
 
+        // Keyboard: Escape/Enter to close overlays (priority: innermost first)
+        document.addEventListener("keydown", (e) => {
+            if (e.key !== "Escape" && e.key !== "Enter") return;
+
+            // Privacy overlay (stacked on About)
+            if (document.getElementById("privacy-overlay").classList.contains("visible")) {
+                e.preventDefault();
+                document.getElementById("privacy-overlay").classList.remove("visible");
+                document.getElementById("about-overlay").classList.add("visible");
+                return;
+            }
+
+            // License overlay (stacked on About)
+            if (document.getElementById("license-overlay").classList.contains("visible")) {
+                e.preventDefault();
+                document.getElementById("license-overlay").classList.remove("visible");
+                document.getElementById("about-overlay").classList.add("visible");
+                return;
+            }
+
+            // About overlay
+            if (document.getElementById("about-overlay").classList.contains("visible")) {
+                e.preventDefault();
+                document.getElementById("about-overlay").classList.remove("visible");
+                return;
+            }
+
+            // QR overlay
+            if (document.getElementById("qr-overlay").classList.contains("visible")) {
+                e.preventDefault();
+                document.getElementById("qr-overlay").classList.remove("visible");
+                return;
+            }
+        });
+
         // Try to restore saved game
         const saved = Storage.load();
         if (saved && saved.rules) {

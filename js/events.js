@@ -189,6 +189,16 @@ const Events = {
                 return;
             }
         });
+
+        // Keyboard: Escape/Enter to dismiss foul-out overlay
+        document.addEventListener("keydown", (e) => {
+            if (!document.getElementById("foulout-overlay").classList.contains("visible")) return;
+            if (document.getElementById("event-modal").classList.contains("visible")) return;
+            if (e.key === "Escape" || e.key === "Enter") {
+                e.preventDefault();
+                document.getElementById("foulout-overlay").classList.remove("visible");
+            }
+        });
     },
 
     _handleNumpad(val) {
@@ -544,16 +554,12 @@ const Events = {
             }
         }
 
-        // End Period / End Game — wired to header button
+        // End Period / End Game — always visible (periods track in all modes)
         const endBtn = document.getElementById("end-period-btn");
         if (endBtn) {
-            if (showLog) {
-                endBtn.style.display = "";
-                endBtn.onclick = () => this._logPeriodEnd();
-                this._updateEndButton();
-            } else {
-                endBtn.style.display = "none";
-            }
+            endBtn.style.display = "";
+            endBtn.onclick = () => this._logPeriodEnd();
+            this._updateEndButton();
         }
     },
 
