@@ -157,7 +157,6 @@
     .sheet-log-columns > .sheet-table-log {
         min-width: 0;
         width: 100%;
-        table-layout: fixed;
     }
 
     /* Fixed row height for ALL tables — makes pagination math exact.
