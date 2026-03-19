@@ -283,6 +283,47 @@ select.form-input {
 }
 
 /* ============================
+   Segmented Control
+   ============================ */
+.segment-control {
+  display: flex;
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 3px;
+  gap: 3px;
+}
+
+.segment-btn {
+  flex: 1;
+  padding: 10px 8px;
+  border: none;
+  border-radius: calc(var(--radius-md) - 2px);
+  background: transparent;
+  color: var(--text-secondary);
+  font-family: var(--font);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--transition);
+  touch-action: manipulation;
+}
+
+.segment-btn.active {
+  background: linear-gradient(135deg, var(--accent-blue) 0%, #6366f1 100%);
+  color: white;
+  box-shadow: 0 1px 4px rgba(59, 130, 246, 0.3);
+}
+
+.segment-btn:disabled {
+  cursor: not-allowed;
+}
+
+.segment-control.disabled {
+  opacity: 0.3;
+}
+
+/* ============================
    Foldable Setup Sections
    ============================ */
 .setup-foldable {
