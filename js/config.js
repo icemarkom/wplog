@@ -16,7 +16,7 @@
 
 // wplog — Application Version
 // Default is "dev"; deploy workflow injects the release tag.
-const APP_VERSION = "2.0.1";
+const APP_VERSION = "2.1.0";
 
 // wplog — Rules Configuration
 //
@@ -47,6 +47,7 @@ const APP_VERSION = "2.0.1";
 const STATS_EVENTS = [
     { name: "Shot", color: "teal", statsOnly: true },
     { name: "Assist", color: "teal", statsOnly: true },
+    { name: "Offensive", color: "teal", statsOnly: true },
     { name: "Steal", color: "teal", statsOnly: true },
     { name: "Intercept", color: "teal", statsOnly: true },
     { name: "Turnover", color: "teal", statsOnly: true },

@@ -148,9 +148,14 @@ const Setup = {
         document.getElementById("setup-enable-stats").checked = game.enableStats;
         document.getElementById("setup-stats-time-mode").value = game.statsTimeMode || "off";
         this._updateStatsTimeVisibility();
-        if (game.enableStats) {
-            document.getElementById("setup-stats-section").open = true;
+
+        // Auto-open foldable sections during active game
+        // Game Details: open if any metadata fields are filled
+        if (game.date || game.startTime || game.location || game.gameId) {
+            document.getElementById("setup-details-section").open = true;
         }
+        // Advanced: always open during active game (settings are visible/locked)
+        document.getElementById("setup-advanced-section").open = true;
     },
 
     _populateRules() {

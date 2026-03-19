@@ -67,10 +67,8 @@ Script load order matters: `sanitize.js` → `config.js` → `confirm.js` → `s
 - **GitHub Pages** serves from `gh-pages` branch (not `main`)
 - **Production domain**: `https://log.wpref.org/` (via CNAME)
 - **Stable releases** are on `main` — pushes do NOT affect the live site
-- **v2 development** happens on `v2-dev` — a long-lived integration branch
-- **v2 feature work**: branch off `v2-dev` as `v2/<name>`, merge back via PR
-- **v1 hotfixes**: branch off `main`, fix, merge back, release. Then rebase `v2-dev` onto updated `main`
-- **Releases** trigger the deploy Action: `gh release create v1.x.x --title "..." --notes "..."`
+- **All work** uses short-lived branches off `main`: `fix/<name>` for bugs, `feature/<name>` for enhancements
+- **Releases** trigger the deploy Action: `gh release create vX.Y.Z --title "..." --notes "..."`
 - Deploy Action injects the release tag version into `config.js` via `sed`, then uses `peaceiris/actions-gh-pages@v4` to copy files to `gh-pages`
 - See the `branching` skill (`.agents/skills/branching/SKILL.md`) for full branching strategy
 
@@ -108,7 +106,7 @@ These were explicitly discussed and agreed with the user:
 | **Don't commit without confirmation** | Always wait for user to confirm before committing and pushing. |
 | **"Geronimo" workflow** | When user says "geronimo", it's one-time approval to commit, push, and close the relevant issue. Branch-aware: on long-lived feature branches, skip PR/merge. See `.agents/workflows/geronimo.md`. |
 | **"Kraken" workflow** | When user says "kraken", triggers the release workflow: evaluate changes, update AGENTS.md, propose version, prepare release notes, tag and release. See `.agents/workflows/kraken.md`. |
-| **Branching strategy** | v1 hotfixes branch off `main`; v2 uses short-lived `v2/<name>` branches off `v2-dev`. After v1 fixes land, rebase `v2-dev` onto `main`. See the `branching` skill (`.agents/skills/branching/SKILL.md`). |
+| **Branching strategy** | Single-track: all work uses short-lived `fix/<name>` or `feature/<name>` branches off `main`. No parallel development branches. See the `branching` skill (`.agents/skills/branching/SKILL.md`). |
 | **Auto-clear on refocus** | Tapping a filled time/cap field in the modal auto-clears it for re-entry. Only on user clicks, not auto-advance. |
 | **Custom dialogs** | All `confirm()` calls replaced with `ConfirmDialog` (overlay-based). Supports `danger` (red) and `warning` (amber) types. |
 | **Version system** | `APP_VERSION = "dev"` in `config.js`. Deploy workflow injects the release tag. In dev, runtime auto-detects latest file modification timestamp via `Last-Modified` HTTP headers → displays `dev-YYYYMMDD-HHMM`. No git or build step needed at runtime. |
@@ -123,7 +121,7 @@ These were explicitly discussed and agreed with the user:
 | **No inline scripts** | All JavaScript is in external files. `index.html` uses `js/loader.js` (app shell loader) and `js/year.js` (copyright year). Standalone pages use `js/year.js`. This enables strict CSP without `'unsafe-inline'` for `script-src`. |
 | **localStorage validation** | `Storage.load()` validates parsed data shape (`rules` is string, `log` is array) before returning. Tampered/corrupt data is silently ignored. |
 | **Stats are separate from log** | Live view: stats interleaved in recent events with teal accent. Game sheet: stats filtered from Progress of Game, shown in separate Player Stats section. |
-| **Logging mode** | Foldable "Logging Mode" section on setup. Game Log + Stats checkboxes (mutual exclusion enforced). Stats Time Entry dropdown: Disabled / Optional / Required. Default time mode = Disabled for both hybrid and stats-only. |
+| **Logging mode** | Game Log + Stats checkboxes always visible on setup screen (first-class choices, not foldable). Stats Time Entry dropdown: Disabled / Optional / Required. Default time mode = Disabled for both hybrid and stats-only. |
 | **Stats code = name** | Stats events omit `code` in config — auto-derived from `name`. Normalizer runs at load time for any event missing a code. Multi-word codes (e.g. "Field Block") are supported. |
 | **Stats buttons teal** | Shot (S) and Assist (A) buttons styled with `color: "teal"` (`#2dd4bf`). Visual separator between log and stats buttons. |
 | **Player Stats on sheet** | Single `<table>` per stat type with colspan White/Dark headers. Per-period columns (Q1, Q2, etc.) + bold Total. All events with cap numbers aggregated (not just statsOnly). Proper English pluralization for section titles. |
@@ -147,6 +145,7 @@ These were explicitly discussed and agreed with the user:
 | Game Exclusion | `E-Game` | `autoFoulOut: 1, color: "red"` |
 | Shot | `S` | `statsOnly: true, color: "teal"` |
 | Assist | `A` | `statsOnly: true, color: "teal"` |
+| Offensive | — | `statsOnly: true, color: "teal"` |
 | Steal | — | `statsOnly: true, color: "teal"` |
 | Intercept | — | `statsOnly: true, color: "teal"` |
 | Turnover | — | `statsOnly: true, color: "teal"` |
@@ -247,9 +246,9 @@ Inherits from `_academic` (8-min periods). Adds:
 - `Referrer-Policy: strict-origin-when-cross-origin` meta tag on all HTML pages
 - Favicon: water polo wave-splash W icon in 32px, 192px, 512px sizes (browser tab, PWA install, splash screen)
 - Apple touch icon for iOS home screen
-- Full stats tracking: 10 stat event types (Shot, Assist, Steal, Intercept, Turnover, Field Block, Save, Drawn Exclusion, Drawn Penalty, Sprint Won)
+- Full stats tracking: 11 stat event types (Shot, Assist, Offensive, Steal, Intercept, Turnover, Field Block, Save, Drawn Exclusion, Drawn Penalty, Sprint Won)
 - Stats events omit `code` in config — auto-derived from `name` at load time (applies to any event)
-- Logging Mode foldable section on setup (Game Log / Stats toggles, Stats Time Entry dropdown)
+- Logging Mode checkboxes always visible on setup (Game Log / Stats as first-class choices, Stats Time Entry dropdown)
 - Three logging modes: Game Log only, Stats only, Full (Game Log + Stats)
 - `statsTimeMode` handling in event modal: `"off"` = hidden, `"optional"` = shown but not required, `"on"` = required
 - Stats-only mode respects `statsTimeMode` for all events (not just `statsOnly` events)
@@ -266,6 +265,8 @@ Inherits from `_academic` (8-min periods). Adds:
 - Help screen updated with stats tracking section
 - Keyboard input in event modal: digits, A/B/C, W/D team, Backspace, Tab, Enter, Escape
 - Branching workflow converted to agentskills.io skill (`.agents/skills/branching/SKILL.md`)
+- Setup screen progressive disclosure: essentials always visible (Rules, Teams, Logging Mode), Game Details and Game Setup as collapsible sections, Start Game at bottom
+- Single-track branching model (post-v2): all work off `main`, `v2-dev` retired
 
 ### Known Gaps / Future Work 📋
 - No substitution tracking (user hasn't decided)
@@ -297,7 +298,7 @@ Then open `http://localhost:8080`.
 4. **The user is iterative** — expect inline comments on artifacts with specific feedback. Incorporate exactly what they say.
 5. **Don't commit/push without confirmation** — always wait for the user to say it's ready before `git commit` and `git push`. Exception: "geronimo" = one-time blanket approval.
 6. **Close issues manually** — auto-close is disabled. Use `gh issue close N -c "comment"` after pushing.
-7. **Release to publish** — stable releases from `main`. Use `gh release create` to deploy to GitHub Pages. See the `branching` skill (`.agents/skills/branching/SKILL.md`) for the v1/v2 parallel development strategy.
+7. **Release to publish** — stable releases from `main`. Use `gh release create` to deploy to GitHub Pages. See the `branching` skill (`.agents/skills/branching/SKILL.md`) for the branching strategy.
 8. **Previous conversations** exist about a full water polo scoreboard/timer controller (WTTC-1) — this is a separate, simpler project.
 9. **Game clock is M:SS** — max time is capped by period length (not hardcoded 9:59). Right-to-left digit entry. Start/end times remain HH:MM.
 10. **Modal uses responsive breakpoints** — default is full-screen (mobile), `@media (min-width: 900px) and (min-height: 700px)` switches to desktop dialog.
