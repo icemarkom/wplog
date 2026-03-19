@@ -1611,6 +1611,19 @@ select.form-input {
   text-align: center;
 }
 
+.csv-filename {
+  font-family: "Source Code Pro", monospace;
+  font-size: 13px;
+  color: var(--text-primary);
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 10px 12px;
+  margin-bottom: 20px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
 .print-title {
   margin-bottom: 20px;
 }

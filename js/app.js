@@ -141,6 +141,18 @@ const App = {
                 return;
             }
 
+            // CSV export overlay
+            if (document.getElementById("csv-overlay").classList.contains("visible")) {
+                e.preventDefault();
+                if (e.key === "Escape") {
+                    Share._closeCSVDialog();
+                } else if (e.key === "Enter") {
+                    Share._closeCSVDialog();
+                    Share._doExport();
+                }
+                return;
+            }
+
             // Privacy overlay (stacked on About)
             if (document.getElementById("privacy-overlay").classList.contains("visible")) {
                 e.preventDefault();
