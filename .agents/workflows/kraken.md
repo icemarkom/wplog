@@ -8,21 +8,23 @@ When the user says **"kraken"**, they want to prepare and publish a new release.
 
 ## Steps
 
-1. **Evaluate changes since last release** — run `git log $(git describe --tags --abbrev=0)..HEAD --oneline` to see all commits since the last tag. Summarize the changes by category (features, fixes, improvements).
+1. **Fetch all tags** — run `git fetch --tags origin` to ensure local tags are up to date with the remote. Without this, `git describe` may report a stale version.
 
-2. **Determine version bump** — based on the changes, propose a version number following semver:
+2. **Evaluate changes since last release** — run `git log $(git describe --tags --abbrev=0)..HEAD --oneline` to see all commits since the last tag. Summarize the changes by category (features, fixes, improvements).
+
+3. **Determine version bump** — based on the changes, propose a version number following semver:
    - **Patch** (x.x.+1): bug fixes, minor tweaks, styling changes
    - **Minor** (x.+1.0): new features, new event types, new screens
    - **Major** (+1.0.0): breaking changes, data model changes (unlikely for this project)
    Present the proposed version to the user with justification.
 
-3. **Update `AGENTS.md`** — review and update the "Current State" section:
+4. **Update `AGENTS.md`** — review and update the "Current State" section:
    - Move newly completed items to the "What's Done ✅" list
    - Remove completed items from "Known Gaps / Future Work 📋"
    - Update the date in the section header
    - Add any new design decisions to the table if applicable
 
-4. **Prepare release notes** — create an implementation plan artifact with:
+5. **Prepare release notes** — create an implementation plan artifact with:
    - Proposed version number (e.g., `v1.4.0`)
    - Release title
    - Categorized changelog
@@ -30,9 +32,9 @@ When the user says **"kraken"**, they want to prepare and publish a new release.
 
    > **Release notes must be user-facing and user-centric.** Only changes that affect end users belong under "Features" or "Fixes." Code refactoring, CSS consolidation, internal architecture changes, dependency updates, license headers, workflow changes, etc., go under "Internal" (with subsections if needed). When evaluating the version bump, only count user-visible changes — internal-only changes are patch-level regardless of scope.
 
-5. **Request review** — present the release notes and `AGENTS.md` changes to the user via `notify_user`. Iterate on feedback until the user approves.
+6. **Request review** — present the release notes and `AGENTS.md` changes to the user via `notify_user`. Iterate on feedback until the user approves.
 
-6. **Tag and release** — once approved:
+7. **Tag and release** — once approved:
 
 // turbo-all
 
@@ -49,7 +51,7 @@ When the user says **"kraken"**, they want to prepare and publish a new release.
    f. Push the tag: `git push origin vX.Y.Z`
    g. Create the GitHub release: `gh release create vX.Y.Z --title "vX.Y.Z — <title>" --notes "<release notes>"`
 
-> **Important:** Steps 6a–6g are only executed AFTER the user explicitly approves the release notes. The `// turbo-all` annotation applies only to step 6 sub-steps. Steps 1–5 require normal interaction and review.
+> **Important:** Steps 7a–7g are only executed AFTER the user explicitly approves the release notes. The `// turbo-all` annotation applies only to step 7 sub-steps. Steps 1–6 require normal interaction and review.
 
 > **Note:** The deploy workflow (`.github/workflows/deploy.yml`) will automatically trigger on release publish, injecting the version tag into `config.js` and deploying to GitHub Pages.
 
