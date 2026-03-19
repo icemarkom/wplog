@@ -567,6 +567,11 @@ const Events = {
     _updateEndButton() {
         const btn = document.getElementById("end-period-btn");
         if (!btn) return;
+        if (this.game.endTime) {
+            btn.textContent = "Game Over";
+            btn.disabled = true;
+            return;
+        }
         const next = Game.getNextPeriod(this.game);
         if (next === "TIED") {
             btn.textContent = "Score Tied";
