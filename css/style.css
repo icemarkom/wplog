@@ -493,6 +493,22 @@ select.form-input {
   margin-top: 8px;
 }
 
+.hard-reset-link {
+  display: block;
+  text-align: center;
+  font-size: 12px;
+  color: var(--text-secondary);
+  text-decoration: none;
+  margin-top: 12px;
+  padding: 4px;
+  cursor: pointer;
+  transition: color 0.15s;
+}
+
+.hard-reset-link:hover {
+  color: var(--danger);
+}
+
 .btn-small {
   padding: 8px 16px;
   font-size: 12px;

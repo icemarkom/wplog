@@ -188,6 +188,25 @@ const App = {
             }
         });
 
+        // Hard Reset — uses native confirm() so it works even when custom code is broken
+        document.getElementById("setup-hard-reset").addEventListener("click", (e) => {
+            e.preventDefault();
+            // eslint-disable-next-line no-restricted-globals
+            if (!confirm("Restart wplog?\n\nThis will erase all game data, clear the cache, and reload the app. This cannot be undone.")) return;
+            localStorage.clear();
+            if ("serviceWorker" in navigator) {
+                navigator.serviceWorker.getRegistrations().then((regs) => {
+                    regs.forEach((r) => r.unregister());
+                });
+            }
+            if ("caches" in window) {
+                caches.keys().then((names) => {
+                    names.forEach((name) => caches.delete(name));
+                });
+            }
+            location.reload();
+        });
+
         document.getElementById("nav-live").addEventListener("click", () => {
             if (this.game) {
                 this.showScreen("live");

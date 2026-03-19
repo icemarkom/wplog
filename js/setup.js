@@ -74,14 +74,6 @@ const Setup = {
         timeEl.classList.toggle("has-value", !!timeEl.value);
         document.getElementById("setup-location").value = game.location || "";
         document.getElementById("setup-game-id").value = game.gameId || "";
-        document.getElementById("setup-overtime").checked = game.overtime;
-        document.getElementById("setup-shootout").checked = game.shootout;
-        document.getElementById("setup-period-length").value = game.periodLength || 8;
-        document.getElementById("setup-ot-length").value = game.otPeriodLength || 3;
-        this._updateOTLengthVisibility();
-        const ta = game.timeoutsAllowed || { full: 0, to30: 0 };
-        document.getElementById("setup-to-full").value = ta.full;
-        document.getElementById("setup-to-30").value = ta.to30;
         document.getElementById("setup-white-name").value = game.white.name === "White" ? "" : game.white.name;
         document.getElementById("setup-dark-name").value = game.dark.name === "Dark" ? "" : game.dark.name;
 
