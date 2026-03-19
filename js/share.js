@@ -20,6 +20,7 @@ const Share = {
     game: null,
     _bound: false,
     _pageStyleEl: null,
+    _paperSize: "letter",
 
     init(game) {
         this.game = game || null;
@@ -27,23 +28,57 @@ const Share = {
         btn.disabled = !this.game;
         if (!this._bound) {
             btn.addEventListener("click", () => {
-                this.printSheet();
+                this._showPrintDialog();
             });
+
+            // Paper size segmented control
+            const control = document.getElementById("print-paper-size");
+            control.addEventListener("click", (e) => {
+                const btn = e.target.closest(".segment-btn");
+                if (!btn) return;
+                control.querySelectorAll(".segment-btn").forEach((b) => b.classList.remove("active"));
+                btn.classList.add("active");
+                this._paperSize = btn.dataset.value;
+            });
+
+            // Print confirm
+            document.getElementById("print-confirm").addEventListener("click", () => {
+                this._closePrintDialog();
+                this._doPrint();
+            });
+
+            // Cancel
+            document.getElementById("print-cancel").addEventListener("click", () => {
+                this._closePrintDialog();
+            });
+
+            // Backdrop click = cancel
+            document.getElementById("print-overlay").addEventListener("click", (e) => {
+                if (e.target === e.currentTarget) this._closePrintDialog();
+            });
+
             this._bound = true;
         }
     },
 
-    printSheet() {
+    _showPrintDialog() {
         if (!this.game) return;
-        const paperSize = document.getElementById("print-paper-size").value;
+        // Sync segmented control to current selection
+        const control = document.getElementById("print-paper-size");
+        control.querySelectorAll(".segment-btn").forEach((btn) => {
+            btn.classList.toggle("active", btn.dataset.value === this._paperSize);
+        });
+        document.getElementById("print-overlay").classList.add("visible");
+    },
 
-        // Inject dynamic @page size
-        this._setPageSize(paperSize);
+    _closePrintDialog() {
+        document.getElementById("print-overlay").classList.remove("visible");
+    },
 
-        // Render sheet content (works on hidden elements) and print.
-        // print.css forces #screen-sheet visible and hides everything else,
-        // so no screen switch is needed.
-        Sheet.init(this.game, paperSize);
+    _doPrint() {
+        if (!this.game) return;
+        this._setPageSize(this._paperSize);
+        Sheet.init(this.game, this._paperSize);
         window.print();
     },
 
