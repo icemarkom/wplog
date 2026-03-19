@@ -189,6 +189,16 @@ const Events = {
                 return;
             }
         });
+
+        // Keyboard: Escape/Enter to dismiss foul-out overlay
+        document.addEventListener("keydown", (e) => {
+            if (!document.getElementById("foulout-overlay").classList.contains("visible")) return;
+            if (document.getElementById("event-modal").classList.contains("visible")) return;
+            if (e.key === "Escape" || e.key === "Enter") {
+                e.preventDefault();
+                document.getElementById("foulout-overlay").classList.remove("visible");
+            }
+        });
     },
 
     _handleNumpad(val) {
