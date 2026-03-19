@@ -290,6 +290,7 @@ Inherits from `_academic` (8-min periods). Adds:
 - Post-regulation as segmented control (None / Overtime / Shootout) in Game Setup
 - Foldable section summaries: Logging header shows current mode, Game Setup header shows period length + OT + timeout config
 - Restart App link below Start Game: clears localStorage, unregisters service workers, purges caches, and reloads
+- End Period button moved from score bar to event grid: same size as event buttons, `grid-column: 3` pins it to rightmost column
 
 ### Known Gaps / Future Work 📋
 - No substitution tracking (user hasn't decided)

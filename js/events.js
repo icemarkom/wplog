@@ -555,12 +555,13 @@ const Events = {
         }
 
         // End Period / End Game — always visible (periods track in all modes)
-        const endBtn = document.getElementById("end-period-btn");
-        if (endBtn) {
-            endBtn.style.display = "";
-            endBtn.onclick = () => this._logPeriodEnd();
-            this._updateEndButton();
-        }
+        const endBtn = document.createElement("button");
+        endBtn.id = "end-period-btn";
+        endBtn.className = "event-btn event-end-period";
+        endBtn.textContent = "End Period";
+        endBtn.onclick = () => this._logPeriodEnd();
+        container.appendChild(endBtn);
+        this._updateEndButton();
     },
 
     _updateEndButton() {
