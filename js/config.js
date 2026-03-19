@@ -47,6 +47,7 @@ const APP_VERSION = "dev";
 const STATS_EVENTS = [
     { name: "Shot", color: "teal", statsOnly: true },
     { name: "Assist", color: "teal", statsOnly: true },
+    { name: "Offensive", color: "teal", statsOnly: true },
     { name: "Steal", color: "teal", statsOnly: true },
     { name: "Intercept", color: "teal", statsOnly: true },
     { name: "Turnover", color: "teal", statsOnly: true },
