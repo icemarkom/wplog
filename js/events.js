@@ -486,9 +486,9 @@ const Events = {
             const used = Game.getTimeoutsUsed(this.game, this.selectedTeam);
             const allowed = this.game.timeoutsAllowed || { full: 0, to30: 0 };
             const teamLabel = this.selectedTeam === "W" ? "White" : "Dark";
-            if (eventDef.code === "TO" && used.full > allowed.full) {
+            if (eventDef.code === "TO" && allowed.full !== -1 && used.full > allowed.full) {
                 this._showToast(`⚠️ ${teamLabel} exceeded full timeout limit (${allowed.full})`, "warning");
-            } else if (eventDef.code === "TO30" && used.to30 > allowed.to30) {
+            } else if (eventDef.code === "TO30" && allowed.to30 !== -1 && used.to30 > allowed.to30) {
                 this._showToast(`⚠️ ${teamLabel} exceeded 30s timeout limit (${allowed.to30})`, "warning");
             }
         }
@@ -607,11 +607,12 @@ const Events = {
         const el = document.getElementById(elementId);
         const left = Game.getTimeoutsLeft(this.game, team);
         const allowed = this.game.timeoutsAllowed || { full: 0, to30: 0 };
+        const fmtVal = (v) => v === Infinity ? "\u221e" : v;
         let text;
-        if (allowed.to30 > 0) {
-            text = `TOL ${left.full}/${left.to30}`;
+        if (allowed.to30 !== 0) {
+            text = `TOL ${fmtVal(left.full)}/${fmtVal(left.to30)}`;
         } else {
-            text = `TOL ${left.full}`;
+            text = `TOL ${fmtVal(left.full)}`;
         }
         el.textContent = text;
         el.classList.toggle("tol-warning", left.full === 0 && left.to30 === 0);
