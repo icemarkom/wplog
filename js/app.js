@@ -129,6 +129,30 @@ const App = {
         document.addEventListener("keydown", (e) => {
             if (e.key !== "Escape" && e.key !== "Enter") return;
 
+            // Print dialog (Escape=cancel, Enter=print)
+            if (document.getElementById("print-overlay").classList.contains("visible")) {
+                e.preventDefault();
+                if (e.key === "Escape") {
+                    Share._closePrintDialog();
+                } else if (e.key === "Enter") {
+                    Share._closePrintDialog();
+                    Share._doPrint();
+                }
+                return;
+            }
+
+            // CSV export overlay
+            if (document.getElementById("csv-overlay").classList.contains("visible")) {
+                e.preventDefault();
+                if (e.key === "Escape") {
+                    Share._closeCSVDialog();
+                } else if (e.key === "Enter") {
+                    Share._closeCSVDialog();
+                    Share._doExport();
+                }
+                return;
+            }
+
             // Privacy overlay (stacked on About)
             if (document.getElementById("privacy-overlay").classList.contains("visible")) {
                 e.preventDefault();
@@ -164,8 +188,8 @@ const App = {
         const saved = Storage.load();
         if (saved && saved.rules) {
             this.game = saved;
-            this.showScreen("live");
-            Events.init(this.game);
+            const restoredScreen = sessionStorage.getItem("wplog-screen") || "live";
+            this._showScreenWithInit(restoredScreen);
         } else {
             this.showScreen("setup");
             Setup.init((game) => {
@@ -186,6 +210,25 @@ const App = {
             if (this.game) {
                 Setup.updateForActiveGame(this.game);
             }
+        });
+
+        // Hard Reset — uses native confirm() so it works even when custom code is broken
+        document.getElementById("setup-hard-reset").addEventListener("click", (e) => {
+            e.preventDefault();
+            // eslint-disable-next-line no-restricted-globals
+            if (!confirm("Restart wplog?\n\nThis will erase all game data, clear the cache, and reload the app. This cannot be undone.")) return;
+            localStorage.clear();
+            if ("serviceWorker" in navigator) {
+                navigator.serviceWorker.getRegistrations().then((regs) => {
+                    regs.forEach((r) => r.unregister());
+                });
+            }
+            if ("caches" in window) {
+                caches.keys().then((names) => {
+                    names.forEach((name) => caches.delete(name));
+                });
+            }
+            location.reload();
         });
 
         document.getElementById("nav-live").addEventListener("click", () => {
@@ -306,6 +349,7 @@ const App = {
 
     showScreen(name) {
         this.currentScreen = name;
+        sessionStorage.setItem("wplog-screen", name);
         document.querySelectorAll(".screen").forEach((el) => {
             el.classList.toggle("active", el.id === "screen-" + name);
         });
@@ -313,13 +357,67 @@ const App = {
         // Update nav active state
         document.querySelectorAll(".nav-btn").forEach((btn) => {
             btn.classList.toggle("active", btn.id === "nav-" + name);
-            // Deactivate all nav buttons when showing About (no nav button for it)
         });
 
         // Disable nav buttons that require a game
         const hasGame = !!this.game;
         document.getElementById("nav-live").disabled = !hasGame;
         document.getElementById("nav-sheet").disabled = !hasGame;
+    },
+
+    // Show a screen and initialize its module (used for restore on reload)
+    _showScreenWithInit(name) {
+        switch (name) {
+            case "setup":
+                this.showScreen("setup");
+                Setup.init((game) => {
+                    this.game = game;
+                    this.showScreen("live");
+                    Events.init(this.game);
+                });
+                if (this.game) Setup.updateForActiveGame(this.game);
+                break;
+            case "sheet":
+                if (this.game) {
+                    this.showScreen("sheet");
+                    Sheet.init(this.game);
+                } else {
+                    this.showScreen("setup");
+                }
+                break;
+            case "share":
+                this.showScreen("share");
+                Share.init(this.game);
+                break;
+            case "help":
+                this.showScreen("help");
+                // Load help content (same logic as nav-help click)
+                (async () => {
+                    const el = document.getElementById("help-content");
+                    if (!el.innerHTML) {
+                        try {
+                            const res = await fetch("help.html");
+                            const html = await res.text();
+                            const doc = new DOMParser().parseFromString(html, "text/html");
+                            el.innerHTML = doc.querySelector(".container").innerHTML;
+                            const footer = el.querySelector(".footer");
+                            if (footer) footer.remove();
+                        } catch {
+                            el.innerHTML = "<p>Could not load help content.</p>";
+                        }
+                    }
+                })();
+                break;
+            case "live":
+            default:
+                if (this.game) {
+                    this.showScreen("live");
+                    Events.init(this.game);
+                } else {
+                    this.showScreen("setup");
+                }
+                break;
+        }
     },
 };
 

@@ -283,6 +283,106 @@ select.form-input {
 }
 
 /* ============================
+   Segmented Control
+   ============================ */
+.segment-control {
+  display: flex;
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 3px;
+  gap: 3px;
+}
+
+.segment-btn {
+  flex: 1;
+  padding: 10px 8px;
+  border: none;
+  border-radius: calc(var(--radius-md) - 2px);
+  background: transparent;
+  color: var(--text-secondary);
+  font-family: var(--font);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--transition);
+  touch-action: manipulation;
+}
+
+.segment-btn.active {
+  background: linear-gradient(135deg, var(--accent-blue) 0%, #6366f1 100%);
+  color: white;
+  box-shadow: 0 1px 4px rgba(59, 130, 246, 0.3);
+}
+
+.segment-btn:disabled {
+  cursor: not-allowed;
+}
+
+.segment-control.disabled {
+  opacity: 0.3;
+}
+
+/* ============================
+   Stepper Control
+   ============================ */
+.stepper {
+  display: flex;
+  align-items: center;
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 3px;
+  gap: 4px;
+}
+
+.stepper-btn {
+  width: 40px;
+  height: 40px;
+  border: none;
+  border-radius: calc(var(--radius-md) - 2px);
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--text-secondary);
+  font-family: var(--font);
+  font-size: 18px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--transition);
+  touch-action: manipulation;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.stepper-btn:active:not(:disabled) {
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.stepper-btn:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.stepper-value {
+  flex: 1;
+  text-align: center;
+  font-family: var(--font);
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary);
+  user-select: none;
+}
+
+.stepper.disabled {
+  opacity: 0.3;
+}
+
+.stepper.disabled .stepper-btn {
+  cursor: not-allowed;
+}
+
+/* ============================
    Foldable Setup Sections
    ============================ */
 .setup-foldable {
@@ -391,6 +491,22 @@ select.form-input {
   font-size: 16px;
   border-radius: var(--radius-lg);
   margin-top: 8px;
+}
+
+.hard-reset-link {
+  display: block;
+  text-align: center;
+  font-size: 12px;
+  color: var(--text-secondary);
+  text-decoration: none;
+  margin-top: 12px;
+  padding: 4px;
+  cursor: pointer;
+  transition: color 0.15s;
+}
+
+.hard-reset-link:hover {
+  color: var(--danger);
 }
 
 .btn-small {
@@ -1489,26 +1605,53 @@ select.form-input {
   gap: 12px;
 }
 
-.print-options {
+/* Print Dialog */
+.print-card {
+  max-width: 380px;
+  text-align: center;
+}
+
+.csv-filename {
+  font-family: "Source Code Pro", monospace;
+  font-size: 13px;
+  color: var(--text-primary);
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 10px 12px;
+  margin-bottom: 20px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.print-title {
+  margin-bottom: 20px;
+}
+
+.print-card .form-group {
+  text-align: left;
+  margin-bottom: 20px;
+}
+
+.print-dialog-actions {
   display: flex;
-  align-items: center;
+  flex-direction: column;
   gap: 12px;
+  align-items: center;
 }
 
-.print-paper-label {
-  font-size: 12px;
-  font-weight: 600;
+.btn-link {
+  background: none;
+  border: none;
   color: var(--text-secondary);
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-  white-space: nowrap;
+  font-size: 14px;
+  cursor: pointer;
+  padding: 8px 16px;
+  transition: color 0.15s;
 }
 
-.print-paper-select {
-  flex: 1;
-  padding: 10px 14px;
-  min-height: 40px;
-  font-size: 14px;
+.btn-link:hover {
+  color: var(--text-primary);
 }
 
 .share-status {

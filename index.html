@@ -112,6 +112,36 @@
     </div>
   </div>
 
+  <!-- Print Dialog -->
+  <div id="print-overlay" class="overlay">
+    <div class="overlay-content print-card">
+      <div class="overlay-title print-title">Print Game Sheet</div>
+      <div class="form-group">
+        <label>Paper Size</label>
+        <div id="print-paper-size" class="segment-control">
+          <button type="button" class="segment-btn active" data-value="letter">US Letter</button>
+          <button type="button" class="segment-btn" data-value="a4">A4</button>
+        </div>
+      </div>
+      <div class="print-dialog-actions">
+        <button id="print-confirm" class="btn btn-primary btn-large">Print</button>
+        <button id="print-cancel" class="btn-link">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- CSV Export Dialog -->
+  <div id="csv-overlay" class="overlay">
+    <div class="overlay-content print-card">
+      <div class="overlay-title print-title">Export CSV</div>
+      <input type="text" id="csv-filename" class="csv-filename" spellcheck="false" autocomplete="off">
+      <div class="print-dialog-actions">
+        <button id="csv-confirm" class="btn btn-primary btn-large">Download</button>
+        <button id="csv-cancel" class="btn-link">Cancel</button>
+      </div>
+    </div>
+  </div>
+
   <!-- QR Code Full-Screen Overlay -->
   <div id="qr-overlay" class="overlay qr-overlay">
     <div class="qr-fullscreen-wrap">

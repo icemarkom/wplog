@@ -30,6 +30,7 @@ When the user says **"geronimo"**, they are giving one-time approval to run all 
    git checkout main && git pull origin main
    ```
 6. **Comment on and close** the relevant GitHub issue using `gh issue close <N> -c "<comment>"`. Skip if the issue is still in progress.
+7. **Prune stale branches** — run `git fetch --prune origin` to clean up any stale remote tracking references.
 
 > **Important:** Outside of the "geronimo" trigger, NEVER commit, push, or close issues without explicit user confirmation.
 

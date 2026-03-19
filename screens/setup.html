@@ -34,25 +34,28 @@
   </div>
 </div>
 
-<!-- ── Logging Mode (always visible) ── -->
-<div id="setup-stats-section" class="form-row toggle-row">
-  <label class="toggle-label">
-    <input id="setup-enable-log" type="checkbox" checked>
-    <span>Game Log</span>
-  </label>
-  <label class="toggle-label">
-    <input id="setup-enable-stats" type="checkbox">
-    <span>Stats</span>
-  </label>
-</div>
-<div class="form-group" id="setup-stats-time-group" style="display: none;">
-  <label for="setup-stats-time-mode">Stats Time Entry</label>
-  <select id="setup-stats-time-mode" class="form-input">
-    <option value="off">Disabled</option>
-    <option value="optional">Optional</option>
-    <option value="on">Required</option>
-  </select>
-</div>
+<!-- ── Logging (collapsed by default) ── -->
+<details id="setup-logging-section" class="setup-foldable">
+  <summary class="setup-foldable-header">Logging: <span id="setup-logging-summary">Game Log Only</span></summary>
+  <div class="setup-foldable-content">
+    <div class="form-group">
+      <label>Mode</label>
+      <div id="setup-logging-mode" class="segment-control">
+        <button type="button" class="segment-btn active" data-mode="log">Game Log Only</button>
+        <button type="button" class="segment-btn" data-mode="full">Both</button>
+        <button type="button" class="segment-btn" data-mode="stats">Stats Only</button>
+      </div>
+    </div>
+    <div class="form-group" id="setup-stats-time-group">
+      <label>Stats Time Entry</label>
+      <div id="setup-stats-time-mode" class="segment-control disabled">
+        <button type="button" class="segment-btn active" data-value="off" disabled>Disabled</button>
+        <button type="button" class="segment-btn" data-value="optional" disabled>Optional</button>
+        <button type="button" class="segment-btn" data-value="on" disabled>Required</button>
+      </div>
+    </div>
+  </div>
+</details>
 
 <!-- ── Game Details (collapsed by default) ── -->
 <details id="setup-details-section" class="setup-foldable">
@@ -83,41 +86,58 @@
 
 <!-- ── Game Setup (collapsed by default) ── -->
 <details id="setup-advanced-section" class="setup-foldable">
-  <summary class="setup-foldable-header">Game Setup (duration, timeouts)</summary>
+  <summary class="setup-foldable-header">Game Setup: <span id="setup-game-summary">8 min · Overtime</span></summary>
   <div class="setup-foldable-content">
-    <div class="form-row toggle-row">
-      <label class="toggle-label">
-        <input id="setup-overtime" type="checkbox">
-        <span>Overtime</span>
-      </label>
-      <label class="toggle-label">
-        <input id="setup-shootout" type="checkbox">
-        <span>Shootout</span>
-      </label>
+    <div class="form-group">
+      <label>Post-Regulation</label>
+      <div id="setup-post-regulation" class="segment-control">
+        <button type="button" class="segment-btn" data-value="none">None</button>
+        <button type="button" class="segment-btn active" data-value="overtime">Overtime</button>
+        <button type="button" class="segment-btn" data-value="shootout">Shootout</button>
+      </div>
     </div>
 
     <div class="form-row">
       <div class="form-group">
-        <label for="setup-period-length">Quarter Length</label>
-        <select id="setup-period-length" class="form-input"></select>
+        <label>Quarter Length</label>
+        <div id="setup-period-length" class="stepper" data-min="1" data-max="9" data-value="8" data-suffix=" min">
+          <button type="button" class="stepper-btn stepper-dec" aria-label="Decrease">−</button>
+          <span class="stepper-value">8 min</span>
+          <button type="button" class="stepper-btn stepper-inc" aria-label="Increase">+</button>
+        </div>
       </div>
       <div class="form-group" id="setup-ot-length-group">
-        <label for="setup-ot-length">OT Length</label>
-        <select id="setup-ot-length" class="form-input"></select>
+        <label>OT Length</label>
+        <div id="setup-ot-length" class="stepper" data-min="1" data-max="9" data-value="3" data-suffix=" min">
+          <button type="button" class="stepper-btn stepper-dec" aria-label="Decrease">−</button>
+          <span class="stepper-value">3 min</span>
+          <button type="button" class="stepper-btn stepper-inc" aria-label="Increase">+</button>
+        </div>
       </div>
     </div>
 
     <div class="form-row">
       <div class="form-group">
-        <label for="setup-to-full">Full TOs (per team)</label>
-        <input id="setup-to-full" type="number" class="form-input" min="0" max="9" value="3">
+        <label>Full TOs (per team)</label>
+        <div id="setup-to-full" class="stepper" data-min="0" data-max="3" data-value="3" data-unlimited="true">
+          <button type="button" class="stepper-btn stepper-dec" aria-label="Decrease">−</button>
+          <span class="stepper-value">3</span>
+          <button type="button" class="stepper-btn stepper-inc" aria-label="Increase">+</button>
+          <button type="button" class="stepper-btn stepper-set" data-set="-1" aria-label="Unlimited">∞</button>
+        </div>
       </div>
       <div class="form-group">
-        <label for="setup-to-30">30s TOs (per team)</label>
-        <input id="setup-to-30" type="number" class="form-input" min="0" max="9" value="1">
+        <label>30s TOs (per team)</label>
+        <div id="setup-to-30" class="stepper" data-min="0" data-max="3" data-value="1" data-unlimited="true">
+          <button type="button" class="stepper-btn stepper-dec" aria-label="Decrease">−</button>
+          <span class="stepper-value">1</span>
+          <button type="button" class="stepper-btn stepper-inc" aria-label="Increase">+</button>
+          <button type="button" class="stepper-btn stepper-set" data-set="-1" aria-label="Unlimited">∞</button>
+        </div>
       </div>
     </div>
   </div>
 </details>
 
 <button id="setup-start-btn" class="btn btn-primary btn-large">Start Game</button>
+<a id="setup-hard-reset" class="hard-reset-link" href="#">Restart App</a>

@@ -16,7 +16,7 @@
 
 // wplog — Application Version
 // Default is "dev"; deploy workflow injects the release tag.
-const APP_VERSION = "2.2.0";
+const APP_VERSION = "2.3.0";
 
 // wplog — Rules Configuration
 //
