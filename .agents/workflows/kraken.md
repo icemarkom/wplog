@@ -50,8 +50,9 @@ When the user says **"kraken"**, they want to prepare and publish a new release.
    e. Create the annotated tag: `git tag -a vX.Y.Z -m "<release notes>"`
    f. Push the tag: `git push origin vX.Y.Z`
    g. Create the GitHub release: `gh release create vX.Y.Z --title "vX.Y.Z — <title>" --notes "<release notes>"`
+   h. Prune stale branches: `git fetch --prune origin`
 
-> **Important:** Steps 7a–7g are only executed AFTER the user explicitly approves the release notes. The `// turbo-all` annotation applies only to step 7 sub-steps. Steps 1–6 require normal interaction and review.
+> **Important:** Steps 7a–7h are only executed AFTER the user explicitly approves the release notes. The `// turbo-all` annotation applies only to step 7 sub-steps. Steps 1–6 require normal interaction and review.
 
 > **Note:** The deploy workflow (`.github/workflows/deploy.yml`) will automatically trigger on release publish, injecting the version tag into `config.js` and deploying to GitHub Pages.
 
