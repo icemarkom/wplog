@@ -544,16 +544,12 @@ const Events = {
             }
         }
 
-        // End Period / End Game — wired to header button
+        // End Period / End Game — always visible (periods track in all modes)
         const endBtn = document.getElementById("end-period-btn");
         if (endBtn) {
-            if (showLog) {
-                endBtn.style.display = "";
-                endBtn.onclick = () => this._logPeriodEnd();
-                this._updateEndButton();
-            } else {
-                endBtn.style.display = "none";
-            }
+            endBtn.style.display = "";
+            endBtn.onclick = () => this._logPeriodEnd();
+            this._updateEndButton();
         }
     },
 
