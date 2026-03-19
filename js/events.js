@@ -555,17 +555,23 @@ const Events = {
         }
 
         // End Period / End Game — always visible (periods track in all modes)
-        const endBtn = document.getElementById("end-period-btn");
-        if (endBtn) {
-            endBtn.style.display = "";
-            endBtn.onclick = () => this._logPeriodEnd();
-            this._updateEndButton();
-        }
+        const endBtn = document.createElement("button");
+        endBtn.id = "end-period-btn";
+        endBtn.className = "event-btn event-end-period";
+        endBtn.textContent = "End Period";
+        endBtn.onclick = () => this._logPeriodEnd();
+        container.appendChild(endBtn);
+        this._updateEndButton();
     },
 
     _updateEndButton() {
         const btn = document.getElementById("end-period-btn");
         if (!btn) return;
+        if (this.game.endTime) {
+            btn.textContent = "Game Over";
+            btn.disabled = true;
+            return;
+        }
         const next = Game.getNextPeriod(this.game);
         if (next === "TIED") {
             btn.textContent = "Score Tied";

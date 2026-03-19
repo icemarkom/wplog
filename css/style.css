@@ -594,31 +594,12 @@ select.form-input {
   border-radius: var(--radius-sm);
 }
 
-.end-period-header-btn {
-  margin-top: 6px;
-  padding: 4px 12px;
-  font-size: 11px;
-  font-weight: 700;
-  font-family: var(--font);
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
+/* End Period grid button */
+.event-end-period {
+  grid-column: 3;
+  background: var(--bg-card);
+  border-color: var(--border);
   color: var(--text-secondary);
-  background: var(--bg-secondary);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  cursor: pointer;
-  transition: all var(--transition);
-  white-space: nowrap;
-}
-
-.end-period-header-btn:hover {
-  color: var(--text-primary);
-  border-color: var(--text-secondary);
-}
-
-.end-period-header-btn:disabled {
-  opacity: 0.3;
-  cursor: not-allowed;
 }
 
 /* ============================
