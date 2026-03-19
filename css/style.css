@@ -1175,12 +1175,26 @@ select.form-input {
   display: none;
 }
 
+.sheet-title-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 16px;
+}
+
 .sheet-title {
   font-size: 22px;
   font-weight: 800;
-  text-align: center;
-  margin-bottom: 16px;
   letter-spacing: -0.02em;
+}
+
+.sheet-page-number {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-muted);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  white-space: nowrap;
 }
 
 .sheet-meta {
@@ -1269,6 +1283,7 @@ select.form-input {
   border-bottom: 2px solid var(--accent-blue);
   padding-bottom: 6px;
   margin-bottom: 8px;
+  text-align: left;
 }
 
 .sheet-section-subtitle {
@@ -1278,6 +1293,7 @@ select.form-input {
   letter-spacing: 0.04em;
   color: var(--text-secondary);
   margin: 8px 0 4px;
+  text-align: left;
 }
 
 .sheet-stats-row {
@@ -1318,6 +1334,16 @@ select.form-input {
 
 .sheet-table-stats {
   table-layout: fixed;
+}
+
+.sheet-log-columns {
+  display: grid;
+  gap: 8px;
+  align-items: start;
+}
+
+.sheet-table-log {
+  font-size: 12px;
 }
 
 .sheet-table {
@@ -1461,6 +1487,28 @@ select.form-input {
   display: flex;
   flex-direction: column;
   gap: 12px;
+}
+
+.print-options {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.print-paper-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+}
+
+.print-paper-select {
+  flex: 1;
+  padding: 10px 14px;
+  min-height: 40px;
+  font-size: 14px;
 }
 
 .share-status {
