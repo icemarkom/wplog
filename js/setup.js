@@ -24,7 +24,7 @@ const Setup = {
         this._populateRules();
         this._setDefaultDate();
         this._resetForm();
-        this._bindStatsToggles();
+        this._bindLoggingMode();
     },
 
     _resetForm() {
@@ -34,6 +34,23 @@ const Setup = {
         document.getElementById("setup-rules").disabled = false;
         document.getElementById("setup-overtime").disabled = false;
         document.getElementById("setup-shootout").disabled = false;
+
+        // Reset logging mode segmented control
+        const modeControl = document.getElementById("setup-logging-mode");
+        modeControl.classList.remove("disabled");
+        modeControl.querySelectorAll(".segment-btn").forEach((btn) => {
+            btn.disabled = false;
+            btn.classList.toggle("active", btn.dataset.mode === "log");
+        });
+
+        // Reset stats time segmented control
+        const timeControl = document.getElementById("setup-stats-time-mode");
+        timeControl.querySelectorAll(".segment-btn").forEach((btn) => {
+            btn.classList.toggle("active", btn.dataset.value === "off");
+        });
+
+        this._updateLoggingHeader();
+        this._updateStatsTimeState();
     },
 
     updateForActiveGame(game) {
@@ -140,16 +157,30 @@ const Setup = {
             game.timeoutsAllowed.to30 = parseInt(document.getElementById("setup-to-30").value) || 0;
         });
 
-        // Stats toggles during active game — disable changing mode
-        document.getElementById("setup-enable-log").disabled = true;
-        document.getElementById("setup-enable-stats").disabled = true;
-        document.getElementById("setup-stats-time-mode").disabled = true;
-        document.getElementById("setup-enable-log").checked = game.enableLog;
-        document.getElementById("setup-enable-stats").checked = game.enableStats;
-        document.getElementById("setup-stats-time-mode").value = game.statsTimeMode || "off";
-        this._updateStatsTimeVisibility();
+        // Logging mode — set active buttons and disable during active game
+        const mode = game.enableLog && game.enableStats ? "full"
+            : game.enableStats ? "stats"
+            : "log";
+        const modeControl = document.getElementById("setup-logging-mode");
+        modeControl.classList.add("disabled");
+        modeControl.querySelectorAll(".segment-btn").forEach((btn) => {
+            btn.classList.toggle("active", btn.dataset.mode === mode);
+            btn.disabled = true;
+        });
+
+        // Stats time mode
+        const timeControl = document.getElementById("setup-stats-time-mode");
+        const stm = game.statsTimeMode || "off";
+        timeControl.classList.add("disabled");
+        timeControl.querySelectorAll(".segment-btn").forEach((btn) => {
+            btn.classList.toggle("active", btn.dataset.value === stm);
+            btn.disabled = true;
+        });
+
+        this._updateLoggingHeader();
 
         // Auto-open foldable sections during active game
+        document.getElementById("setup-logging-section").open = true;
         // Game Details: open if any metadata fields are filled
         if (game.date || game.startTime || game.location || game.gameId) {
             document.getElementById("setup-details-section").open = true;
@@ -235,39 +266,55 @@ const Setup = {
         });
     },
 
-    _bindStatsToggles() {
-        const logToggle = document.getElementById("setup-enable-log");
-        const statsToggle = document.getElementById("setup-enable-stats");
+    _getSelectedMode() {
+        const active = document.querySelector("#setup-logging-mode .segment-btn.active");
+        return active ? active.dataset.mode : "log";
+    },
 
-        // Mutual exclusion: can't deselect the last one
-        logToggle.addEventListener("change", () => {
-            if (!logToggle.checked && !statsToggle.checked) {
-                logToggle.checked = true;
-                return;
-            }
-            this._updateStatsTimeDefault();
+    _bindLoggingMode() {
+        // Mode segment control
+        const modeControl = document.getElementById("setup-logging-mode");
+        modeControl.addEventListener("click", (e) => {
+            const btn = e.target.closest(".segment-btn");
+            if (!btn || btn.disabled) return;
+
+            modeControl.querySelectorAll(".segment-btn").forEach((b) => b.classList.remove("active"));
+            btn.classList.add("active");
+
+            this._updateLoggingHeader();
+            this._updateStatsTimeState();
         });
-        statsToggle.addEventListener("change", () => {
-            if (!statsToggle.checked && !logToggle.checked) {
-                statsToggle.checked = true;
-                return;
-            }
-            this._updateStatsTimeVisibility();
-            this._updateStatsTimeDefault();
+
+        // Stats time segment control
+        const timeControl = document.getElementById("setup-stats-time-mode");
+        timeControl.addEventListener("click", (e) => {
+            const btn = e.target.closest(".segment-btn");
+            if (!btn || btn.disabled) return;
+
+            timeControl.querySelectorAll(".segment-btn").forEach((b) => b.classList.remove("active"));
+            btn.classList.add("active");
         });
     },
 
-    _updateStatsTimeVisibility() {
-        const statsOn = document.getElementById("setup-enable-stats").checked;
-        document.getElementById("setup-stats-time-group").style.display = statsOn ? "" : "none";
+    _updateLoggingHeader() {
+        const active = document.querySelector("#setup-logging-mode .segment-btn.active");
+        const label = active ? active.textContent : "Game Log Only";
+        document.getElementById("setup-logging-summary").textContent = label;
     },
 
-    _updateStatsTimeDefault() {
-        const logOn = document.getElementById("setup-enable-log").checked;
-        const statsOn = document.getElementById("setup-enable-stats").checked;
-        if (!statsOn) return;
-        // Default: OFF for both hybrid and stats-only
-        document.getElementById("setup-stats-time-mode").value = "off";
+    _updateStatsTimeState() {
+        const mode = this._getSelectedMode();
+        const statsOn = mode === "full" || mode === "stats";
+        const timeControl = document.getElementById("setup-stats-time-mode");
+        timeControl.classList.toggle("disabled", !statsOn);
+        timeControl.querySelectorAll(".segment-btn").forEach((btn) => {
+            btn.disabled = !statsOn;
+        });
+    },
+
+    _getStatsTimeMode() {
+        const active = document.querySelector("#setup-stats-time-mode .segment-btn.active");
+        return active ? active.dataset.value : "off";
     },
 
     _startGame() {
@@ -289,10 +336,11 @@ const Setup = {
             to30: parseInt(document.getElementById("setup-to-30").value) || 0,
         };
 
-        // Stats settings
-        game.enableLog = document.getElementById("setup-enable-log").checked;
-        game.enableStats = document.getElementById("setup-enable-stats").checked;
-        game.statsTimeMode = document.getElementById("setup-stats-time-mode").value;
+        // Logging mode from segmented control
+        const mode = this._getSelectedMode();
+        game.enableLog = mode === "log" || mode === "full";
+        game.enableStats = mode === "full" || mode === "stats";
+        game.statsTimeMode = this._getStatsTimeMode();
 
         const whiteName = document.getElementById("setup-white-name").value.trim();
         const darkName = document.getElementById("setup-dark-name").value.trim();

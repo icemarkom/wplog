@@ -34,25 +34,28 @@
   </div>
 </div>
 
-<!-- ── Logging Mode (always visible) ── -->
-<div id="setup-stats-section" class="form-row toggle-row">
-  <label class="toggle-label">
-    <input id="setup-enable-log" type="checkbox" checked>
-    <span>Game Log</span>
-  </label>
-  <label class="toggle-label">
-    <input id="setup-enable-stats" type="checkbox">
-    <span>Stats</span>
-  </label>
-</div>
-<div class="form-group" id="setup-stats-time-group" style="display: none;">
-  <label for="setup-stats-time-mode">Stats Time Entry</label>
-  <select id="setup-stats-time-mode" class="form-input">
-    <option value="off">Disabled</option>
-    <option value="optional">Optional</option>
-    <option value="on">Required</option>
-  </select>
-</div>
+<!-- ── Logging (collapsed by default) ── -->
+<details id="setup-logging-section" class="setup-foldable">
+  <summary class="setup-foldable-header">Logging: <span id="setup-logging-summary">Game Log Only</span></summary>
+  <div class="setup-foldable-content">
+    <div class="form-group">
+      <label>Mode</label>
+      <div id="setup-logging-mode" class="segment-control">
+        <button type="button" class="segment-btn active" data-mode="log">Game Log Only</button>
+        <button type="button" class="segment-btn" data-mode="full">Both</button>
+        <button type="button" class="segment-btn" data-mode="stats">Stats Only</button>
+      </div>
+    </div>
+    <div class="form-group" id="setup-stats-time-group">
+      <label>Stats Time Entry</label>
+      <div id="setup-stats-time-mode" class="segment-control disabled">
+        <button type="button" class="segment-btn active" data-value="off" disabled>Disabled</button>
+        <button type="button" class="segment-btn" data-value="optional" disabled>Optional</button>
+        <button type="button" class="segment-btn" data-value="on" disabled>Required</button>
+      </div>
+    </div>
+  </div>
+</details>
 
 <!-- ── Game Details (collapsed by default) ── -->
 <details id="setup-details-section" class="setup-foldable">
