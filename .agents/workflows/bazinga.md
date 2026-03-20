@@ -21,7 +21,10 @@ When the user says **"bazinga"**, they want you to bootstrap your context for a 
    chmod +x .git/hooks/pre-commit
    ```
 6. **Start dev server** — run `go run tools/serve.go &` in the background. Do NOT use Python's `http.server` — it doesn't serve ES modules correctly.
-7. **Report readiness** — summarize what you've learned (project state, open issues, any observations) and let the user know you're ready to work.
+7. **Run all tests** — verify the test baseline before starting work.
+   a. **Node tests**: `./tools/test.sh` — note any failures or todos.
+   b. **Browser tests**: navigate to `http://localhost:8080/tests/browser/` and verify all tests pass (use browser subagent to capture screenshot).
+8. **Report readiness** — summarize what you've learned (project state, open issues, test results, any observations) and let the user know you're ready to work.
 
 > **Important:** Do NOT start making any code changes until the user gives a specific task after you report readiness.
 

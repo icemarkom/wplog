@@ -39,21 +39,24 @@ When the user says **"kraken"**, they want to prepare and publish a new release.
 
 // turbo-all
 
-   a. Fix license headers: `addlicense -c "Marko Milivojevic" -l apache -ignore '.github/**' -ignore '.agents/**' -ignore 'lib/**' .`
-   b. Commit the `AGENTS.md` update on the current branch: `git add AGENTS.md && git commit -m "docs: update AGENTS.md for vX.Y.Z release"`
-   c. Push and merge to main via GitHub:
+   a. **Run all tests** — this is a gate; if any tests fail, stop and fix before proceeding.
+      - **Node tests**: `./tools/test.sh` — all must pass (todo is OK, fail is not).
+      - **Browser tests**: navigate to `http://localhost:8080/tests/browser/` and verify all tests pass (use browser subagent to capture screenshot). Dev server must be running.
+   b. Fix license headers: `addlicense -c "Marko Milivojevic" -l apache -ignore '.github/**' -ignore '.agents/**' -ignore 'lib/**' .`
+   c. Commit the `AGENTS.md` update on the current branch: `git add AGENTS.md && git commit -m "docs: update AGENTS.md for vX.Y.Z release"`
+   d. Push and merge to main via GitHub:
       ```sh
       git push origin HEAD
       gh pr create --fill --base main
       gh pr merge --merge --delete-branch
       ```
-   d. Pull main locally: `git pull origin main`
-   e. Create the annotated tag: `git tag -a vX.Y.Z -m "<release notes>"`
-   f. Push the tag: `git push origin vX.Y.Z`
-   g. Create the GitHub release: `gh release create vX.Y.Z --title "vX.Y.Z — <title>" --notes "<release notes>"`
-   h. Prune stale branches: `git fetch --prune origin`
+   e. Pull main locally: `git pull origin main`
+   f. Create the annotated tag: `git tag -a vX.Y.Z -m "<release notes>"`
+   g. Push the tag: `git push origin vX.Y.Z`
+   h. Create the GitHub release: `gh release create vX.Y.Z --title "vX.Y.Z — <title>" --notes "<release notes>"`
+   i. Prune stale branches: `git fetch --prune origin`
 
-> **Important:** Steps 7a–7h are only executed AFTER the user explicitly approves the release notes. The `// turbo-all` annotation applies only to step 7 sub-steps. Steps 1–6 require normal interaction and review.
+> **Important:** Steps 7a–7i are only executed AFTER the user explicitly approves the release notes. The `// turbo-all` annotation applies only to step 7 sub-steps. Steps 1–6 require normal interaction and review.
 
 > **Note:** The deploy workflow (`.github/workflows/deploy.yml`) will automatically trigger on release publish, injecting the version tag into `config.js` and deploying to GitHub Pages.
 
