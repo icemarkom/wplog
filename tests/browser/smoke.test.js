@@ -42,9 +42,6 @@ describe("Harness", () => {
         strictEqual(value, 42);
     });
 
-    it("todo tests are skipped", { todo: "harness demo" }, () => {
-        throw new Error("this should not run");
-    });
 });
 
 // ── DOM Access ───────────────────────────────────────────────

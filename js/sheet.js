@@ -19,53 +19,57 @@ import { Game } from './game.js';
 import { escapeHTML } from './sanitize.js';
 import { buildPeriodScores, buildPersonalFoulTable, buildTimeoutSummary, buildCardSummary, buildPlayerStats } from './sheet-data.js';
 import { renderScreen } from './sheet-screen.js';
-import { buildLogPages, buildSummaryItems, buildStatsItems, paginateItems } from './sheet-print.js';
+import {
+    availableRows,
+    filterLogEvents,
+    buildLogPagePlan,
+    buildSummaryDescriptors,
+    buildStatsDescriptors,
+    paginateItems,
+} from './pagination.js';
+import { renderLogPages, renderSummaryPages, renderStatsPages } from './sheet-print.js';
 
-// wplog — Game Sheet (Orchestrator + Shared Helpers)
+// wplog — Game Sheet (Stateless Orchestrator + Shared Render Helpers)
+//
+// Sheet does not hold game state. All methods receive `game` as a parameter.
+// Pure pagination logic lives in pagination.js; DOM rendering in sheet-print.js.
 
 export const Sheet = {
-    game: null,
 
-    // Row-based print constants (all measurements in 18px rows).
-    _ROW_HEIGHT: 18,
-    // Measured header: title(26) + meta(94) + teams(40) + gaps(32) = 192px
-    // 192/18 = 10.67 → round up to 11.
-    _PAGE_ROWS: { letter: 52, a4: 56 },
-    _HEADER_ROWS: 12,
+    // ── Main entry point ─────────────────────────────────────────
 
-    init(game, paperSize) {
-        this.game = game;
-        this.render(paperSize || null);
-    },
-
-    // ── Main render ──────────────────────────────────────────────
-
-    render(paperSize) {
+    render(game, paperSize) {
         const container = document.getElementById("sheet-content");
         container.innerHTML = "";
 
-        const rules = RULES[this.game.rules];
         const isPrint = !!paperSize;
 
         if (!isPrint) {
-            renderScreen(this, container);
+            renderScreen(game, this, container);
             return;
         }
 
         // Print mode: paginated, multi-column log, sections on own pages
-        const availRows = this._PAGE_ROWS[paperSize] - this._HEADER_ROWS;
+        const avail = availableRows(paperSize);
+        const rules = RULES[game.rules];
 
         // === Section 1: Game Log ===
-        const logPages = buildLogPages(this, availRows);
+        const filteredLog = filterLogEvents(game.log, rules);
+        const logPlan = buildLogPagePlan(filteredLog.length, avail);
+        const logPages = renderLogPages(logPlan, filteredLog, game, rules, avail);
+
         // === Section 2: Game Summary ===
-        const summaryItems = buildSummaryItems(this);
-        const summaryPages = paginateItems(summaryItems, availRows);
+        const summaryDescriptors = buildSummaryDescriptors(game);
+        const summaryPlan = paginateItems(summaryDescriptors, avail);
+        const summaryPages = renderSummaryPages(summaryPlan, summaryDescriptors, game);
+
         // === Section 3: Game Stats (optional) ===
         let statsPages = [];
-        if (this.game.enableStats) {
-            const statsItems = buildStatsItems(this);
-            if (statsItems.length > 0) {
-                statsPages = paginateItems(statsItems, availRows);
+        if (game.enableStats) {
+            const statsDescriptors = buildStatsDescriptors(game);
+            if (statsDescriptors.length > 0) {
+                const statsPlan = paginateItems(statsDescriptors, avail);
+                statsPages = renderStatsPages(statsPlan, statsDescriptors, game);
             }
         }
 
@@ -88,7 +92,7 @@ export const Sheet = {
                 pageNum++;
                 const pageDiv = document.createElement("div");
                 pageDiv.className = "sheet-page" + (pageNum > 1 ? " sheet-page-break" : "");
-                pageDiv.appendChild(this._renderHeader(section.title, pageNum, totalPages));
+                pageDiv.appendChild(this._renderHeader(game, section.title, pageNum, totalPages));
                 for (const el of page.elements) {
                     pageDiv.appendChild(el);
                 }
@@ -99,8 +103,7 @@ export const Sheet = {
 
     // ── Header ───────────────────────────────────────────────────
 
-    _renderHeader(title, pageNum, totalPages) {
-        const game = this.game;
+    _renderHeader(game, title, pageNum, totalPages) {
         const header = document.createElement("div");
         header.className = "sheet-header";
 
@@ -147,7 +150,7 @@ export const Sheet = {
 
     // ── Existing render helpers (used by both screen + print) ────
 
-    _renderProgressOfGame() {
+    _renderProgressOfGame(game) {
         const section = document.createElement("div");
         section.className = "sheet-section";
 
@@ -172,13 +175,9 @@ export const Sheet = {
         table.appendChild(thead);
 
         const tbody = document.createElement("tbody");
-        const rules = RULES[this.game.rules];
+        const rules = RULES[game.rules];
 
-        const logEntries = this.game.log.filter((entry) => {
-            if (entry.event === "---") return true;
-            const eventDef = rules.events.find((e) => e.code === entry.event);
-            return !eventDef || !eventDef.statsOnly;
-        });
+        const logEntries = filterLogEvents(game.log, rules);
 
         for (const entry of logEntries) {
             const tr = document.createElement("tr");
@@ -194,7 +193,7 @@ export const Sheet = {
           <td>${escapeHTML(entry.cap || "—")}</td>
           <td>${escapeHTML(entry.team || "—")}</td>
           <td style="text-align:${align}">${escapeHTML(entry.event)}</td>
-          <td>${escapeHTML(Game.formatEntryScore(entry, this.game))}</td>
+          <td>${escapeHTML(Game.formatEntryScore(entry, game))}</td>
         `;
             }
             tbody.appendChild(tr);
@@ -205,8 +204,8 @@ export const Sheet = {
         return section;
     },
 
-    _renderPeriodScores() {
-        const data = buildPeriodScores(this.game);
+    _renderPeriodScores(game) {
+        const data = buildPeriodScores(game);
         const section = document.createElement("div");
         section.className = "sheet-section";
 
@@ -242,8 +241,8 @@ export const Sheet = {
         return section;
     },
 
-    _renderFoulSummary() {
-        const data = buildPersonalFoulTable(this.game);
+    _renderFoulSummary(game) {
+        const data = buildPersonalFoulTable(game);
         const section = document.createElement("div");
         section.className = "sheet-section";
 
@@ -292,8 +291,8 @@ export const Sheet = {
         return section;
     },
 
-    _renderTimeoutSummary() {
-        const data = buildTimeoutSummary(this.game);
+    _renderTimeoutSummary(game) {
+        const data = buildTimeoutSummary(game);
         const section = document.createElement("div");
         section.className = "sheet-section";
 
@@ -335,8 +334,8 @@ export const Sheet = {
         return section;
     },
 
-    _renderCardSummary() {
-        const data = buildCardSummary(this.game);
+    _renderCardSummary(game) {
+        const data = buildCardSummary(game);
         const section = document.createElement("div");
         section.className = "sheet-section";
         section.innerHTML = `<div class="sheet-section-title">Cards</div>`;
@@ -375,8 +374,8 @@ export const Sheet = {
         return section;
     },
 
-    _renderPlayerStats() {
-        const data = buildPlayerStats(this.game);
+    _renderPlayerStats(game) {
+        const data = buildPlayerStats(game);
         const section = document.createElement("div");
         section.className = "sheet-section";
 

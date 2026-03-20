@@ -111,7 +111,7 @@ export const Share = {
     _doPrint() {
         if (!this.game) return;
         this._setPageSize(this._paperSize);
-        Sheet.init(this.game, this._paperSize);
+        Sheet.render(this.game, this._paperSize);
         window.print();
     },
 
