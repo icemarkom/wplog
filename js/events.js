@@ -19,6 +19,7 @@ import { ConfirmDialog } from './confirm.js';
 import { Game } from './game.js';
 import { escapeHTML } from './sanitize.js';
 import { Storage } from './storage.js';
+import { getMaxMinutes, parseTime, formatTimeDisplay } from './time.js';
 
 // wplog — Live Log Screen (Event Logging)
 // Event-first workflow: tap event button → modal opens → enter details → OK
@@ -47,60 +48,21 @@ export const Events = {
     },
 
     // ── Time Parsing ────────────────────────────────────────
-    // Water polo game clock: M:SS format
-    // Digits fill right-to-left: S2, S1, M
-    // "4"   → 0:04  (4 seconds)
-    // "45"  → 0:45  (45 seconds)
-    // "453" → 4:53  (4 min 53 sec)
-    // Max time is capped by the current period's length.
+    // Delegated to pure functions in time.js:
+    //   getMaxMinutes(period, periodLength, otPeriodLength)
+    //   parseTime(digits, maxMinutes)
+    //   formatTimeDisplay(digits)
 
     _getMaxMinutes() {
-        const period = this.game.currentPeriod;
-        if (period === "SO") return 0;
-        if (typeof period === "string" && period.startsWith("OT")) {
-            return this.game.otPeriodLength || 3;
-        }
-        return this.game.periodLength || 8;
+        return getMaxMinutes(this.game.currentPeriod, this.game.periodLength, this.game.otPeriodLength);
     },
 
     _parseTime(digits) {
-        if (digits.length === 0) return null;
-
-        // Right-justify into 3 positions: M S1 S2
-        const padded = digits.padStart(3, "0");
-        const minutes = parseInt(padded[0]);
-        const seconds = parseInt(padded.slice(1));
-
-        if (seconds > 59 || minutes > 9) return null;
-
-        // Cap at period length
-        const maxMin = this._getMaxMinutes();
-        if (minutes > maxMin || (minutes === maxMin && seconds > 0)) return null;
-
-        return {
-            display: minutes + ":" + String(seconds).padStart(2, "0"),
-            stored: minutes + ":" + String(seconds).padStart(2, "0"),
-        };
+        return parseTime(digits, this._getMaxMinutes());
     },
 
     _formatTimeDisplay(digits) {
-        // Right-to-left fill into M:S1S2 — placeholder is -:--
-        const padded = digits.padStart(3, "\0"); // pad with nulls
-        const parts = [];
-
-        for (let i = 0; i < 3; i++) {
-            if (padded[i] === "\0") {
-                parts.push(`<span class="time-placeholder">-</span>`);
-            } else {
-                parts.push(padded[i]);
-            }
-        }
-
-        // Colon is dim only when no digits entered
-        const colonClass = digits.length > 0 ? "" : ' class="time-placeholder"';
-
-        // Minutes placeholder shows for 0-2 digits, hidden when 3 digits (minutes filled)
-        return `<span class="time-formatted">${parts[0]}<span${colonClass}>:</span>${parts[1]}${parts[2]}</span>`;
+        return formatTimeDisplay(digits);
     },
 
     // ── Modal Controls ──────────────────────────────────────

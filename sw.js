@@ -31,6 +31,7 @@ const ASSETS = [
     "./js/config.js",
     "./js/confirm.js",
     "./js/storage.js",
+    "./js/time.js",
     "./js/game.js",
     "./js/setup.js",
     "./js/events.js",
