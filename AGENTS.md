@@ -293,6 +293,7 @@ Inherits from `_academic` (8-min periods). Adds:
 - CSV export: Download CSV button on Share screen with editable filename dialog (date + teams + time)
 - Screen persistence: active screen restored across page reloads via `sessionStorage`
 - Game Setup section uses stepper controls for period length, OT length, and timeout limits (with ∞ option)
+- Stepper boundary protection: dec disabled at min, inc disabled at max (non-unlimited), defensive min/max guards in click handlers, init ordering ensures disable states aren't overwritten
 - Post-regulation as segmented control (None / Overtime / Shootout) in Game Setup
 - Foldable section summaries: Logging header shows current mode, Game Setup header shows period length + OT + timeout config
 - Restart App link below Start Game: clears localStorage, unregisters service workers, purges caches, and reloads
