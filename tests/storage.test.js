@@ -404,7 +404,7 @@ describe("validateGameData — cap number validation", () => {
     }
 
     for (const cap of ["100", "0", "1D", "ABC", "1a", "-1"]) {
-        it(`rejects cap "${cap}"`, { todo: "see issue" }, () => {
+        it(`rejects cap "${cap}"`, () => {
             const result = validateGameData(validGame({
                 log: [validGoalEntry({ cap })],
             }));
