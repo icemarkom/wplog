@@ -265,6 +265,7 @@ Inherits from `_academic` (8-min periods). Adds:
 - Externalized all inline scripts: `js/loader.js` (app shell), `js/year.js` (copyright year) — CSP `script-src 'self'` only (no `'unsafe-inline'`)
 - `localStorage` schema validation in `Storage.load()`
 - `Referrer-Policy: strict-origin-when-cross-origin` meta tag on all HTML pages
+- Form label associations: all `<input>`/`<select>` use `for`/`id`; custom widgets (segment controls, steppers) use `aria-labelledby`; `.sr-only` utility class for visually-hidden labels
 - Favicon: water polo wave-splash W icon in 32px, 192px, 512px sizes (browser tab, PWA install, splash screen)
 - Apple touch icon for iOS home screen
 - Full stats tracking: 11 stat event types (Shot, Assist, Offensive, Steal, Intercept, Turnover, Field Block, Save, Drawn Exclusion, Drawn Penalty, Sprint Won)
