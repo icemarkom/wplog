@@ -26,7 +26,7 @@
 //   });
 //   if (ok) { ... }
 
-const ConfirmDialog = {
+export const ConfirmDialog = {
     _resolve: null,
 
     init() {

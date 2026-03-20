@@ -27,9 +27,9 @@ wplog/
 │   ├── print.css       # Print-only B&W styles for game sheet
 │   └── standalone.css  # Shared styles for standalone pages (privacy, help)
 ├── js/
-│   ├── sanitize.js    # escapeHTML() utility — loaded first, used by sheet.js + events.js
-│   ├── loader.js      # App shell loader — fetches screens, loads JS deps, inits app
-│   ├── year.js        # Copyright year display (shared by all pages)
+│   ├── sanitize.js    # escapeHTML() utility (ES module)
+│   ├── loader.js      # App shell loader — fetches screens, imports app module, inits app
+│   ├── year.js        # Copyright year display (standalone script, shared by all pages)
 │   ├── config.js       # APP_VERSION + RULES definitions (USAWP, NFHS Varsity, NFHS JV, NCAA)
 │   ├── confirm.js      # Custom confirmation dialog (replaces native confirm())
 │   ├── storage.js      # localStorage wrapper (with schema validation)
@@ -60,7 +60,7 @@ wplog/
 └── lib/                # Empty (previously had vendored libs, now removed)
 ```
 
-Script load order matters: `sanitize.js` → `config.js` → `confirm.js` → `storage.js` → `game.js` → `setup.js` → `events.js` → `sheet.js` → `share.js` → `app.js`
+All JS files (except `year.js`) use native ES modules with `import`/`export`. The browser resolves the dependency tree automatically from the entry point (`loader.js` → `app.js` → all other modules). `year.js` is a standalone `<script defer>` for copyright year display on all pages.
 
 ---
 
@@ -137,6 +137,7 @@ These were explicitly discussed and agreed with the user:
 | **Player Stats on sheet** | Single `<table>` per stat type with colspan White/Dark headers. Per-period columns (Q1, Q2, etc.) + bold Total. All events with cap numbers aggregated (not just statsOnly). Proper English pluralization for section titles. |
 | **`statsOnly` flag** | Events with `statsOnly: true` skip foul-out checks, allow blank time, and are filtered from Progress of Game on sheet. |
 | **`statsTimeMode`** | Controls time field in modal: `"off"` = hidden, `"optional"` = shown but not required, `"on"` = required. Stored in game data model. |
+| **ES modules** | All JS files use native `import`/`export` (except `year.js` which is a standalone `<script defer>`). `loader.js` is loaded as `<script type="module">` and imports `app.js`, which imports all other modules. The browser resolves the dependency tree automatically — no manual load ordering. Service worker also uses `import` for `APP_VERSION` from `config.js`. |
 
 ### USAWP Events
 
@@ -292,6 +293,7 @@ Inherits from `_academic` (8-min periods). Adds:
 - Restart App link below Start Game: clears localStorage, unregisters service workers, purges caches, and reloads
 - End Period button moved from score bar to event grid: same size as event buttons, `grid-column: 3` pins it to rightmost column
 - End Game button disables after press: shows "Game Over" and prevents duplicate end-of-game events
+- Native ES modules: all JS files use `import`/`export` (except `year.js`). `loader.js` loaded as `<script type="module">`, browser resolves dependency tree automatically. Service worker uses `import` for `APP_VERSION`.
 
 ### Known Gaps / Future Work 📋
 - No substitution tracking (user hasn't decided)

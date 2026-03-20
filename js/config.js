@@ -16,7 +16,7 @@
 
 // wplog — Application Version
 // Default is "dev"; deploy workflow injects the release tag.
-const APP_VERSION = "dev";
+export const APP_VERSION = "dev";
 
 // wplog — Rules Configuration
 //
@@ -44,7 +44,7 @@ const APP_VERSION = "dev";
 //
 // Stats events are defined once in STATS_EVENTS and auto-appended to all rule sets.
 
-const STATS_EVENTS = [
+export const STATS_EVENTS = [
     { name: "Shot", color: "teal", statsOnly: true },
     { name: "Assist", color: "teal", statsOnly: true },
     { name: "Offensive", color: "teal", statsOnly: true },
@@ -58,7 +58,7 @@ const STATS_EVENTS = [
     { name: "Sprint Won", color: "teal", statsOnly: true },
 ];
 
-const RULES = {
+export const RULES = {
     _base: {
         periods: 4,
         foulOutLimit: 3,

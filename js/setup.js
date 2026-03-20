@@ -14,9 +14,14 @@
  * limitations under the License.
  */
 
+import { RULES } from './config.js';
+import { ConfirmDialog } from './confirm.js';
+import { Storage } from './storage.js';
+import { Game } from './game.js';
+
 // wplog — Setup Screen Logic
 
-const Setup = {
+export const Setup = {
     init(onStart) {
         this.onStart = onStart;
         this._bindEvents();

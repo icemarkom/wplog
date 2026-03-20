@@ -14,9 +14,11 @@
  * limitations under the License.
  */
 
+import { Sheet } from './sheet.js';
+
 // wplog — Share / Print / Export
 
-const Share = {
+export const Share = {
     game: null,
     _bound: false,
     _pageStyleEl: null,
