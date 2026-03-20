@@ -14,9 +14,12 @@
  * limitations under the License.
  */
 
+import { RULES } from './config.js';
+import { Storage } from './storage.js';
+
 // wplog — Game State Management
 
-const Game = {
+export const Game = {
     // Create a new game with defaults from rules
     create(rulesKey = "USAWP") {
         const rules = RULES[rulesKey];

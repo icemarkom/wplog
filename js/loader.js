@@ -15,7 +15,10 @@
  */
 
 // wplog — App Shell Loader
-// Loads screen fragments and JS dependencies, then initializes the app.
+// Loads screen HTML fragments, then initializes the app.
+// JS dependencies are resolved automatically via ES module imports.
+
+import { App } from './app.js';
 
 (async function () {
     const _cb = "?v=" + Date.now();
@@ -30,21 +33,6 @@
         const res = await fetch(url);
         document.getElementById(target).innerHTML = await res.text();
     }));
-
-    // Load JS files in order (dependencies first)
-    const scripts = [
-        "js/sanitize.js", "js/config.js", "js/confirm.js", "js/storage.js", "js/game.js",
-        "js/setup.js", "js/events.js", "js/sheet.js", "js/share.js", "js/app.js",
-    ];
-    for (const src of scripts) {
-        await new Promise((resolve, reject) => {
-            const s = document.createElement("script");
-            s.src = src + _cb;
-            s.onload = resolve;
-            s.onerror = reject;
-            document.body.appendChild(s);
-        });
-    }
 
     // DOMContentLoaded already fired, so manually init the app
     App.init();

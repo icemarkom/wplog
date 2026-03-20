@@ -14,9 +14,13 @@
  * limitations under the License.
  */
 
+import { RULES } from './config.js';
+import { Game } from './game.js';
+import { escapeHTML } from './sanitize.js';
+
 // wplog — Game Sheet Rendering
 
-const Sheet = {
+export const Sheet = {
     game: null,
 
     // Row-based print constants (all measurements in 18px rows).

@@ -16,7 +16,7 @@
 
 // wplog — localStorage Persistence
 
-const Storage = {
+export const Storage = {
     KEY: "wplog_game",
 
     save(game) {

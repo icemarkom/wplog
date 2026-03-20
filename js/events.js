@@ -14,11 +14,16 @@
  * limitations under the License.
  */
 
+import { RULES } from './config.js';
+import { ConfirmDialog } from './confirm.js';
+import { Game } from './game.js';
+import { escapeHTML } from './sanitize.js';
+
 // wplog — Live Log Screen (Event Logging)
 // Event-first workflow: tap event button → modal opens → enter details → OK
 // Shared numpad targets either Time or Cap field.
 
-const Events = {
+export const Events = {
     game: null,
     selectedTeam: null,
     _pendingEvent: null,
