@@ -36,6 +36,8 @@ All new work — including work started in a bazinga-bootstrapped thread — **m
 
 > **CAUTION:** Never skip the planning and discussion phase for anything beyond the simplest, most obvious tasks (e.g., a trivial typo fix). When in doubt, plan first.
 
+> **IMPORTANT:** User-facing documentation (`help.html`) is an integral part of feature delivery. Implementation plans for user-facing changes must include help content updates.
+
 ## Security Checklist
 
 When making changes that render user-supplied data (team names, cap numbers, Game #, location, etc.) into the DOM via `innerHTML`:
