@@ -137,7 +137,7 @@ export function validateGameData(parsed) {
         }
 
         // currentPeriod
-        if (!_isValidPeriod(parsed.currentPeriod)) {
+        if (!_isValidPeriod(parsed.currentPeriod, resolvedRules.periods)) {
             return _fail("Invalid current period.");
         }
 
@@ -172,7 +172,7 @@ export function validateGameData(parsed) {
             }
 
             // period
-            if (!_isValidPeriod(entry.period)) {
+            if (!_isValidPeriod(entry.period, resolvedRules.periods)) {
                 return _fail(`Log entry ${i + 1}: invalid period.`);
             }
 
@@ -302,8 +302,8 @@ function _isTeamObject(val) {
         _isString(val.name) && val.name.length <= MAX_TEAM_NAME;
 }
 
-function _isValidPeriod(val) {
-    if (_isIntInRange(val, 1, 20)) return true;
+function _isValidPeriod(val, maxPeriod) {
+    if (_isIntInRange(val, 1, maxPeriod)) return true;
     if (_isString(val)) {
         if (val === "SO") return true;
         if (RE_PERIOD_OT.test(val)) return true;

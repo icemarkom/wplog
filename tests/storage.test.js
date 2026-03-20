@@ -449,7 +449,7 @@ describe("validateGameData — period validation", () => {
     }
 
     for (const period of [0, 5, -1, "Q1", "OT", "OT0", "SO1", "overtime"]) {
-        it(`rejects period ${period}`, { todo: "see issue" }, () => {
+        it(`rejects period ${period}`, () => {
             const result = validateGameData(validGame({
                 currentPeriod: period,
             }));
