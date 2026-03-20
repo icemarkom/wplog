@@ -362,8 +362,9 @@ export const Sheet = {
             const tr = document.createElement("tr");
             const rules = RULES[this.game.rules];
             const eventDef = rules.events.find((e) => e.code === entry.event);
+            const teamDisplay = entry.team === "W" ? "White" : (entry.team === "D" ? "Dark" : (entry.team === "" ? "Official" : "—"));
             tr.innerHTML = `
-        <td>${entry.team === "W" ? "White" : (entry.team === "D" ? "Dark" : "—")}</td>
+        <td>${teamDisplay}</td>
         <td>${Game.getPeriodLabel(entry.period)}</td>
         <td>${entry.time.replace(/^0(\d:)/, '$1')}</td>
         <td>${eventDef ? eventDef.name : entry.event}</td>

@@ -713,6 +713,16 @@ select.form-input {
   box-shadow: 0 0 16px rgba(245, 158, 11, 0.1);
 }
 
+.team-btn-official {
+  color: var(--text-secondary);
+}
+
+.team-btn-official.active {
+  background: rgba(136, 146, 168, 0.12);
+  border-color: var(--text-secondary);
+  box-shadow: 0 0 16px rgba(136, 146, 168, 0.1);
+}
+
 /* ============================
    Numpad
    ============================ */

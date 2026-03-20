@@ -34,6 +34,7 @@ export const APP_VERSION = "dev";
 //   allowBench    — (optional) true to allow "B" (bench) as cap value
 //   allowPlayer   — (optional, default: true) false to block digit cap input (non-player events)
 //   allowNoCap    — (optional) true to allow submitting without a cap number
+//   allowOfficial — (optional) true to allow "Official" team selection (team-neutral; teamOnly events only)
 //
 // Rule sets support inheritance via the `inherits` key:
 //   inherits     — (optional) key of parent rule set; child overrides only what differs
@@ -73,7 +74,7 @@ export const RULES = {
             { name: "Goal", code: "G", color: "green", align: "left" },
             { name: "Exclusion", code: "E", color: "amber", align: "right", isPersonalFoul: true },
             { name: "Penalty", code: "P", color: "amber", align: "right", isPersonalFoul: true },
-            { name: "Timeout", code: "TO", color: "blue", teamOnly: true, align: "center" },
+            { name: "Timeout", code: "TO", color: "blue", teamOnly: true, allowOfficial: true, align: "center" },
             { name: "Timeout 30", code: "TO30", color: "blue", align: "center", teamOnly: true },
             { name: "Yellow Card", code: "YC", color: "yellow", align: "center", allowCoach: true, allowAssistant: false, allowBench: true },
             { name: "Penalty-Exclusion", code: "P-E", color: "amber", align: "right", isPersonalFoul: true },
@@ -107,7 +108,7 @@ export const RULES = {
             { name: "Minor Act", code: "MAM", color: "amber", align: "right", isPersonalFoul: true, autoFoulOut: 2 },
             { name: "Penalty-Exclusion", code: "P-E", color: "amber", align: "right", isPersonalFoul: true },
             { name: "Yellow Card", code: "YC", color: "yellow", align: "center", allowCoach: true, allowAssistant: false, allowBench: true },
-            { name: "Timeout", code: "TO", color: "blue", teamOnly: true, align: "center" },
+            { name: "Timeout", code: "TO", color: "blue", teamOnly: true, allowOfficial: true, align: "center" },
             { name: "Timeout 30", code: "TO30", color: "blue", align: "center", teamOnly: true },
             { name: "Misconduct", code: "MC", color: "red", align: "right", autoFoulOut: 1 },
             { name: "Game Exclusion", code: "E-Game", color: "red", align: "right", autoFoulOut: 1 },
