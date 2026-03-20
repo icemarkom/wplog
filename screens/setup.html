@@ -39,16 +39,16 @@
   <summary class="setup-foldable-header">Logging: <span id="setup-logging-summary">Game Log Only</span></summary>
   <div class="setup-foldable-content">
     <div class="form-group">
-      <label>Mode</label>
-      <div id="setup-logging-mode" class="segment-control">
+      <label id="label-logging-mode">Mode</label>
+      <div id="setup-logging-mode" class="segment-control" aria-labelledby="label-logging-mode">
         <button type="button" class="segment-btn active" data-mode="log">Game Log Only</button>
         <button type="button" class="segment-btn" data-mode="full">Both</button>
         <button type="button" class="segment-btn" data-mode="stats">Stats Only</button>
       </div>
     </div>
     <div class="form-group" id="setup-stats-time-group">
-      <label>Stats Time Entry</label>
-      <div id="setup-stats-time-mode" class="segment-control disabled">
+      <label id="label-stats-time-mode">Stats Time Entry</label>
+      <div id="setup-stats-time-mode" class="segment-control disabled" aria-labelledby="label-stats-time-mode">
         <button type="button" class="segment-btn active" data-value="off" disabled>Disabled</button>
         <button type="button" class="segment-btn" data-value="optional" disabled>Optional</button>
         <button type="button" class="segment-btn" data-value="on" disabled>Required</button>
@@ -89,8 +89,8 @@
   <summary class="setup-foldable-header">Game Setup: <span id="setup-game-summary">8 min · Overtime</span></summary>
   <div class="setup-foldable-content">
     <div class="form-group">
-      <label>Post-Regulation</label>
-      <div id="setup-post-regulation" class="segment-control">
+      <label id="label-post-regulation">Post-Regulation</label>
+      <div id="setup-post-regulation" class="segment-control" aria-labelledby="label-post-regulation">
         <button type="button" class="segment-btn" data-value="none">None</button>
         <button type="button" class="segment-btn active" data-value="overtime">Overtime</button>
         <button type="button" class="segment-btn" data-value="shootout">Shootout</button>
@@ -99,16 +99,16 @@
 
     <div class="form-row">
       <div class="form-group">
-        <label>Quarter Length</label>
-        <div id="setup-period-length" class="stepper" data-min="1" data-max="9" data-value="8" data-suffix=" min">
+        <label id="label-period-length">Quarter Length</label>
+        <div id="setup-period-length" class="stepper" data-min="1" data-max="9" data-value="8" data-suffix=" min" aria-labelledby="label-period-length">
           <button type="button" class="stepper-btn stepper-dec" aria-label="Decrease">−</button>
           <span class="stepper-value">8 min</span>
           <button type="button" class="stepper-btn stepper-inc" aria-label="Increase">+</button>
         </div>
       </div>
       <div class="form-group" id="setup-ot-length-group">
-        <label>OT Length</label>
-        <div id="setup-ot-length" class="stepper" data-min="1" data-max="9" data-value="3" data-suffix=" min">
+        <label id="label-ot-length">OT Length</label>
+        <div id="setup-ot-length" class="stepper" data-min="1" data-max="9" data-value="3" data-suffix=" min" aria-labelledby="label-ot-length">
           <button type="button" class="stepper-btn stepper-dec" aria-label="Decrease">−</button>
           <span class="stepper-value">3 min</span>
           <button type="button" class="stepper-btn stepper-inc" aria-label="Increase">+</button>
@@ -118,8 +118,8 @@
 
     <div class="form-row">
       <div class="form-group">
-        <label>Full TOs (per team)</label>
-        <div id="setup-to-full" class="stepper" data-min="0" data-max="3" data-value="3" data-unlimited="true">
+        <label id="label-to-full">Full TOs (per team)</label>
+        <div id="setup-to-full" class="stepper" data-min="0" data-max="3" data-value="3" data-unlimited="true" aria-labelledby="label-to-full">
           <button type="button" class="stepper-btn stepper-dec" aria-label="Decrease">−</button>
           <span class="stepper-value">3</span>
           <button type="button" class="stepper-btn stepper-inc" aria-label="Increase">+</button>
@@ -127,8 +127,8 @@
         </div>
       </div>
       <div class="form-group">
-        <label>30s TOs (per team)</label>
-        <div id="setup-to-30" class="stepper" data-min="0" data-max="3" data-value="1" data-unlimited="true">
+        <label id="label-to-30">30s TOs (per team)</label>
+        <div id="setup-to-30" class="stepper" data-min="0" data-max="3" data-value="1" data-unlimited="true" aria-labelledby="label-to-30">
           <button type="button" class="stepper-btn stepper-dec" aria-label="Decrease">−</button>
           <span class="stepper-value">1</span>
           <button type="button" class="stepper-btn stepper-inc" aria-label="Increase">+</button>
