@@ -58,8 +58,7 @@ wplog/
 ├── testdata/
 │   └── monster-game.json  # 201-event stress test data for print pagination testing
 ├── PRIVACY.md          # Privacy policy (Markdown, for GitHub)
-├── privacy.html        # Privacy policy (HTML, canonical for OAuth consent)
-└── lib/                # Empty (previously had vendored libs, now removed)
+└── privacy.html        # Privacy policy (HTML, canonical for OAuth consent)
 ```
 
 All JS files (except `year.js`) use native ES modules with `import`/`export`. The browser resolves the dependency tree automatically from the entry point (`loader.js` → `app.js` → all other modules). `year.js` is a standalone `<script defer>` for copyright year display on all pages.
@@ -300,12 +299,12 @@ Inherits from `_academic` (8-min periods). Adds:
 - End Game button disables after press: shows "Game Over" and prevents duplicate end-of-game events
 - Native ES modules: all JS files use `import`/`export` (except `year.js`). `loader.js` loaded as `<script type="module">`, browser resolves dependency tree automatically. Service worker uses `import` for `APP_VERSION`.
 - Sheet split: `sheet.js` (orchestrator + shared helpers), `sheet-screen.js` (screen rendering), `sheet-print.js` (print pagination) — isolates print debugging to one file
+- Service worker registration in `loader.js` with `{ type: 'module' }` — enables offline caching, cache busting via `APP_VERSION`
+- Restart App handler awaits async cleanup (SW unregistration + cache deletion) before reload — fixes race condition
 
 ### Known Gaps / Future Work 📋
 - No substitution tracking (user hasn't decided)
 - Multi-game management not implemented (save/load multiple games)
-- Service worker hasn't been tested offline
-- `lib/` directory is empty and could be removed
 
 
 ---

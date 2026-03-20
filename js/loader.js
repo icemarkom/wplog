@@ -36,4 +36,10 @@ import { App } from './app.js';
 
     // DOMContentLoaded already fired, so manually init the app
     App.init();
+
+    // Register service worker for offline caching.
+    // type: 'module' is required because sw.js uses ES module imports.
+    if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('sw.js', { type: 'module' });
+    }
 })();
