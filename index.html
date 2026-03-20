@@ -117,8 +117,8 @@
     <div class="overlay-content print-card">
       <div class="overlay-title print-title">Print Game Sheet</div>
       <div class="form-group">
-        <label>Paper Size</label>
-        <div id="print-paper-size" class="segment-control">
+        <label id="label-paper-size">Paper Size</label>
+        <div id="print-paper-size" class="segment-control" aria-labelledby="label-paper-size">
           <button type="button" class="segment-btn active" data-value="letter">US Letter</button>
           <button type="button" class="segment-btn" data-value="a4">A4</button>
         </div>
@@ -134,6 +134,7 @@
   <div id="csv-overlay" class="overlay">
     <div class="overlay-content print-card">
       <div class="overlay-title print-title">Export CSV</div>
+      <label for="csv-filename" class="sr-only">Filename</label>
       <input type="text" id="csv-filename" class="csv-filename" spellcheck="false" autocomplete="off">
       <div class="print-dialog-actions">
         <button id="csv-confirm" class="btn btn-primary btn-large">Download</button>
@@ -199,7 +200,7 @@
   <script src="js/year.js" defer></script>
 
   <!-- Screen Loader + Scripts -->
-  <script src="js/loader.js"></script>
+  <script type="module" src="js/loader.js"></script>
 </body>
 
 </html>

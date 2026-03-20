@@ -84,6 +84,21 @@
 }
 
 /* ============================
+   Accessibility Utilities
+   ============================ */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* ============================
    Reset + Base
    ============================ */
 *, *::before, *::after {
@@ -711,6 +726,16 @@ select.form-input {
   background: var(--dark-team-bg);
   border-color: var(--dark-team);
   box-shadow: 0 0 16px rgba(245, 158, 11, 0.1);
+}
+
+.team-btn-official {
+  color: var(--text-secondary);
+}
+
+.team-btn-official.active {
+  background: rgba(136, 146, 168, 0.12);
+  border-color: var(--text-secondary);
+  box-shadow: 0 0 16px rgba(136, 146, 168, 0.1);
 }
 
 /* ============================

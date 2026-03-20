@@ -14,9 +14,17 @@
  * limitations under the License.
  */
 
+import { APP_VERSION } from './config.js';
+import { ConfirmDialog } from './confirm.js';
+import { Storage } from './storage.js';
+import { Setup } from './setup.js';
+import { Events } from './events.js';
+import { Sheet } from './sheet.js';
+import { Share } from './share.js';
+
 // wplog — App Initialization + Screen Navigation
 
-const App = {
+export const App = {
     currentScreen: "setup",
     game: null,
 
@@ -421,5 +429,6 @@ const App = {
     },
 };
 
-// Boot
-document.addEventListener("DOMContentLoaded", () => App.init());
+// Boot (modules are deferred by default, so DOMContentLoaded may have already fired)
+// The loader calls App.init() after screen HTML is loaded, so this listener
+// is kept as a safety net but is no longer the primary init path.

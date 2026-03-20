@@ -16,7 +16,7 @@
 
 // wplog — Application Version
 // Default is "dev"; deploy workflow injects the release tag.
-const APP_VERSION = "2.3.1";
+export const APP_VERSION = "2.4.0";
 
 // wplog — Rules Configuration
 //
@@ -34,6 +34,7 @@ const APP_VERSION = "2.3.1";
 //   allowBench    — (optional) true to allow "B" (bench) as cap value
 //   allowPlayer   — (optional, default: true) false to block digit cap input (non-player events)
 //   allowNoCap    — (optional) true to allow submitting without a cap number
+//   allowOfficial — (optional) true to allow "Official" team selection (team-neutral; teamOnly events only)
 //
 // Rule sets support inheritance via the `inherits` key:
 //   inherits     — (optional) key of parent rule set; child overrides only what differs
@@ -44,7 +45,7 @@ const APP_VERSION = "2.3.1";
 //
 // Stats events are defined once in STATS_EVENTS and auto-appended to all rule sets.
 
-const STATS_EVENTS = [
+export const STATS_EVENTS = [
     { name: "Shot", color: "teal", statsOnly: true },
     { name: "Assist", color: "teal", statsOnly: true },
     { name: "Offensive", color: "teal", statsOnly: true },
@@ -58,7 +59,7 @@ const STATS_EVENTS = [
     { name: "Sprint Won", color: "teal", statsOnly: true },
 ];
 
-const RULES = {
+export const RULES = {
     _base: {
         periods: 4,
         foulOutLimit: 3,
@@ -73,7 +74,7 @@ const RULES = {
             { name: "Goal", code: "G", color: "green", align: "left" },
             { name: "Exclusion", code: "E", color: "amber", align: "right", isPersonalFoul: true },
             { name: "Penalty", code: "P", color: "amber", align: "right", isPersonalFoul: true },
-            { name: "Timeout", code: "TO", color: "blue", teamOnly: true, align: "center" },
+            { name: "Timeout", code: "TO", color: "blue", teamOnly: true, allowOfficial: true, align: "center" },
             { name: "Timeout 30", code: "TO30", color: "blue", align: "center", teamOnly: true },
             { name: "Yellow Card", code: "YC", color: "yellow", align: "center", allowCoach: true, allowAssistant: false, allowBench: true },
             { name: "Penalty-Exclusion", code: "P-E", color: "amber", align: "right", isPersonalFoul: true },
@@ -83,6 +84,16 @@ const RULES = {
             { name: "Game Exclusion", code: "E-Game", color: "red", align: "right", autoFoulOut: 1 },
         ],
         timeouts: { full: 2, to30: 0 },
+    },
+    USAWP7: {
+        inherits: "USAWP",
+        name: "USA Water Polo (7 min)",
+        periodLength: 7,
+    },
+    USAWP6: {
+        inherits: "USAWP",
+        name: "USA Water Polo (6 min)",
+        periodLength: 6,
     },
     _academic: {
         inherits: "_base",
@@ -97,7 +108,7 @@ const RULES = {
             { name: "Minor Act", code: "MAM", color: "amber", align: "right", isPersonalFoul: true, autoFoulOut: 2 },
             { name: "Penalty-Exclusion", code: "P-E", color: "amber", align: "right", isPersonalFoul: true },
             { name: "Yellow Card", code: "YC", color: "yellow", align: "center", allowCoach: true, allowAssistant: false, allowBench: true },
-            { name: "Timeout", code: "TO", color: "blue", teamOnly: true, align: "center" },
+            { name: "Timeout", code: "TO", color: "blue", teamOnly: true, allowOfficial: true, align: "center" },
             { name: "Timeout 30", code: "TO30", color: "blue", align: "center", teamOnly: true },
             { name: "Misconduct", code: "MC", color: "red", align: "right", autoFoulOut: 1 },
             { name: "Game Exclusion", code: "E-Game", color: "red", align: "right", autoFoulOut: 1 },

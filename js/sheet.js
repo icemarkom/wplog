@@ -14,9 +14,15 @@
  * limitations under the License.
  */
 
-// wplog — Game Sheet Rendering
+import { RULES } from './config.js';
+import { Game } from './game.js';
+import { escapeHTML } from './sanitize.js';
+import { renderScreen } from './sheet-screen.js';
+import { buildLogPages, buildSummaryItems, buildStatsItems, paginateItems } from './sheet-print.js';
 
-const Sheet = {
+// wplog — Game Sheet (Orchestrator + Shared Helpers)
+
+export const Sheet = {
     game: null,
 
     // Row-based print constants (all measurements in 18px rows).
@@ -41,8 +47,7 @@ const Sheet = {
         const isPrint = !!paperSize;
 
         if (!isPrint) {
-            // Screen mode: original 2-page layout, unchanged
-            this._renderScreen(container);
+            renderScreen(this, container);
             return;
         }
 
@@ -50,16 +55,16 @@ const Sheet = {
         const availRows = this._PAGE_ROWS[paperSize] - this._HEADER_ROWS;
 
         // === Section 1: Game Log ===
-        const logPages = this._buildLogPages(availRows);
+        const logPages = buildLogPages(this, availRows);
         // === Section 2: Game Summary ===
-        const summaryItems = this._buildSummaryItems();
-        const summaryPages = this._paginateItems(summaryItems, availRows);
+        const summaryItems = buildSummaryItems(this);
+        const summaryPages = paginateItems(summaryItems, availRows);
         // === Section 3: Game Stats (optional) ===
         let statsPages = [];
         if (this.game.enableStats) {
-            const statsItems = this._buildStatsItems();
+            const statsItems = buildStatsItems(this);
             if (statsItems.length > 0) {
-                statsPages = this._paginateItems(statsItems, availRows);
+                statsPages = paginateItems(statsItems, availRows);
             }
         }
 
@@ -89,351 +94,6 @@ const Sheet = {
                 container.appendChild(pageDiv);
             }
         }
-    },
-
-    // ── Screen mode (unchanged from original) ────────────────────
-
-    _renderScreen(container) {
-        // Page 1: Header + Progress of Game
-        const page1 = document.createElement("div");
-        page1.className = "sheet-page";
-        page1.appendChild(this._renderHeader("Game Sheet"));
-        page1.appendChild(this._renderProgressOfGame());
-        container.appendChild(page1);
-
-        // Page 2: Header (repeated) + Period Scores + Fouls + Timeouts + Player Stats
-        const page2 = document.createElement("div");
-        page2.className = "sheet-page sheet-page-break";
-        page2.appendChild(this._renderHeader("Game Sheet"));
-        page2.appendChild(this._renderPeriodScores());
-        page2.appendChild(this._renderFoulSummary());
-        page2.appendChild(this._renderTimeoutSummary());
-        page2.appendChild(this._renderCardSummary());
-        if (this.game.enableStats) {
-            page2.appendChild(this._renderPlayerStats());
-        }
-        container.appendChild(page2);
-    },
-
-    // ── Game Log pagination (multi-column) ───────────────────────
-
-    _buildLogPages(availRows) {
-        const rules = RULES[this.game.rules];
-
-        // Filter out statsOnly events from the official game log
-        const logEntries = this.game.log.filter((entry) => {
-            if (entry.event === "---") return true;
-            const eventDef = rules.events.find((e) => e.code === entry.event);
-            return !eventDef || !eventDef.statsOnly;
-        });
-
-        if (logEntries.length === 0) {
-            const empty = document.createElement("p");
-            empty.className = "sheet-empty";
-            empty.textContent = "No events recorded.";
-            return [{ elements: [empty] }];
-        }
-
-        // Each column needs 1 row for thead
-        const rowsPerColumn = availRows - 1;
-        if (rowsPerColumn <= 0) return [{ elements: [] }];
-
-        // Up to 3 columns per page; grid always uses 3 for consistent widths
-        const maxCols = 3;
-        const slotsPerPage = rowsPerColumn * maxCols;
-
-        // Split events into page-sized chunks
-        const pages = [];
-        for (let i = 0; i < logEntries.length; i += slotsPerPage) {
-            const chunk = logEntries.slice(i, i + slotsPerPage);
-            const colCount = Math.min(Math.ceil(chunk.length / rowsPerColumn), maxCols);
-            pages.push({
-                elements: [this._renderMultiColumnLog(chunk, rowsPerColumn, colCount, maxCols)],
-            });
-        }
-        return pages;
-    },
-
-    _renderMultiColumnLog(events, rowsPerColumn, colCount, gridCols) {
-        const rules = RULES[this.game.rules];
-        const wrapper = document.createElement("div");
-        wrapper.className = "sheet-log-columns";
-        wrapper.style.gridTemplateColumns = `repeat(${gridCols}, 1fr)`;
-
-        // Column-first fill: first rowsPerColumn events → col 1, etc.
-        for (let c = 0; c < colCount; c++) {
-            const start = c * rowsPerColumn;
-            const colEvents = events.slice(start, start + rowsPerColumn);
-            if (colEvents.length === 0) continue;
-
-            const table = document.createElement("table");
-            table.className = "sheet-table sheet-table-log";
-
-            const colgroup = document.createElement("colgroup");
-            colgroup.innerHTML = `
-                <col style="width:16%">
-                <col style="width:14%">
-                <col style="width:14%">
-                <col style="width:30%">
-                <col style="width:26%">
-            `;
-            table.appendChild(colgroup);
-
-            const thead = document.createElement("thead");
-            thead.innerHTML = `<tr>
-                <th>Time</th><th>Cap</th><th>TM</th><th>Remarks</th><th>Score</th>
-            </tr>`;
-            table.appendChild(thead);
-
-            const tbody = document.createElement("tbody");
-            for (const entry of colEvents) {
-                const tr = document.createElement("tr");
-                if (entry.event === "---") {
-                    tr.className = "sheet-period-end";
-                    tr.innerHTML = `<td colspan="5">——— End of ${Game.getPeriodLabel(entry.period)} ———</td>`;
-                } else {
-                    const eventDef = rules.events.find((e) => e.code === entry.event);
-                    const align = eventDef && eventDef.align ? eventDef.align : "center";
-                    tr.innerHTML = `
-                        <td>${entry.period === "SO" ? "" : escapeHTML(entry.time.replace(/^0(\d:)/, '$1'))}</td>
-                        <td>${escapeHTML(entry.cap || "—")}</td>
-                        <td>${escapeHTML(entry.team || "—")}</td>
-                        <td style="text-align:${align}">${escapeHTML(entry.event)}</td>
-                        <td>${escapeHTML(Game.formatEntryScore(entry, this.game))}</td>
-                    `;
-                }
-                tbody.appendChild(tr);
-            }
-            table.appendChild(tbody);
-            wrapper.appendChild(table);
-        }
-
-        return wrapper;
-    },
-
-    // ── Summary / Stats pagination ───────────────────────────────
-
-    _buildSummaryItems() {
-        const rules = RULES[this.game.rules];
-        const items = [];
-
-        // Period Scores: title(1) + thead(2) + 2 data rows = 5
-        const periodScoresEl = this._renderPeriodScores();
-        const periodScoresRows = 1 + 2 + 2; // title + thead + data
-        items.push({ el: periodScoresEl, rows: periodScoresRows });
-
-        // Personal Fouls: title(1) + thead(1) + data
-        const foulEl = this._renderFoulSummary();
-        const foulTable = foulEl.querySelector("table");
-        if (foulTable) {
-            const foulDataRows = foulTable.querySelector("tbody").children.length;
-            items.push({ el: foulEl, rows: 1 + 1 + foulDataRows }); // title + thead + data
-        } else {
-            items.push({ el: foulEl, rows: 2 }); // title + empty message
-        }
-
-        // Timeouts: title(1) + thead(1) + data
-        const toEl = this._renderTimeoutSummary();
-        const toTable = toEl.querySelector("table");
-        if (toTable) {
-            const toDataRows = toTable.querySelector("tbody").children.length;
-            items.push({ el: toEl, rows: 1 + 1 + toDataRows }); // title + thead + data
-        } else {
-            items.push({ el: toEl, rows: 2 });
-        }
-
-        // Cards: title(1) + thead(1) + data
-        const cardEl = this._renderCardSummary();
-        const cardTable = cardEl.querySelector("table");
-        if (cardTable) {
-            const cardDataRows = cardTable.querySelector("tbody").children.length;
-            items.push({ el: cardEl, rows: 1 + 1 + cardDataRows }); // title + thead + data
-        } else {
-            items.push({ el: cardEl, rows: 2 });
-        }
-
-        return items;
-    },
-
-    _buildStatsItems() {
-        const rules = RULES[this.game.rules];
-        const items = [];
-
-        const statTypes = rules.events
-            .filter((e) => !e.teamOnly)
-            .map((e) => {
-                const n = e.name;
-                const plural = n.endsWith("y") ? n.slice(0, -1) + "ies" : n + "s";
-                return { code: e.code, name: plural };
-            });
-
-        // Get ordered periods
-        const periodOrder = [];
-        const periodSeen = new Set();
-        for (const entry of this.game.log) {
-            if (entry.event === "---") continue;
-            if (!periodSeen.has(entry.period)) {
-                periodSeen.add(entry.period);
-                periodOrder.push(entry.period);
-            }
-        }
-
-        // Collect counts: counts[code][team][cap][period] = count
-        const counts = {};
-        for (const st of statTypes) {
-            counts[st.code] = { W: {}, D: {} };
-        }
-        for (const entry of this.game.log) {
-            if (!entry.cap || !entry.team) continue;
-            if (!counts[entry.event]) continue;
-            const teamData = counts[entry.event][entry.team];
-            if (!teamData[entry.cap]) teamData[entry.cap] = {};
-            teamData[entry.cap][entry.period] = (teamData[entry.cap][entry.period] || 0) + 1;
-        }
-
-        const periodHeaders = periodOrder.map((p) => Game.getPeriodLabel(p));
-        const colsPerTeam = 1 + periodHeaders.length + 1; // Cap + periods + Tot
-
-        for (const st of statTypes) {
-            const wCaps = Object.keys(counts[st.code].W).sort((a, b) => (parseInt(a) || 0) - (parseInt(b) || 0));
-            const dCaps = Object.keys(counts[st.code].D).sort((a, b) => (parseInt(a) || 0) - (parseInt(b) || 0));
-            if (wCaps.length === 0 && dCaps.length === 0) continue;
-
-            const tableEl = this._renderStatTypeTable(st, wCaps, dCaps, counts[st.code], periodOrder, periodHeaders, colsPerTeam);
-            const maxRows = Math.max(wCaps.length, dCaps.length);
-            // h3 title(1) + thead has 2 rows (team headers + column headers) + data rows
-            items.push({ el: tableEl, rows: 1 + 2 + maxRows });
-        }
-
-        if (items.length === 0) {
-            const empty = document.createElement("div");
-            empty.className = "sheet-section";
-            const p = document.createElement("p");
-            p.className = "sheet-empty";
-            p.textContent = "No stats recorded.";
-            empty.appendChild(p);
-            items.push({ el: empty, rows: 1 });
-        }
-
-        return items;
-    },
-
-    _paginateItems(items, availRows) {
-        const pages = [];
-        let currentElements = [];
-        let usedRows = 0;
-
-        const flushPage = () => {
-            if (currentElements.length > 0) {
-                pages.push({ elements: currentElements });
-                currentElements = [];
-                usedRows = 0;
-            }
-        };
-
-        for (const item of items) {
-            const section = item.el;
-            const table = section.querySelector("table");
-
-            // 1-row spacing between items on the same page
-            const spacing = currentElements.length > 0 ? 1 : 0;
-
-            if (!table) {
-                // Non-table item (empty message etc.)
-                if (usedRows + spacing + item.rows > availRows) flushPage();
-                else usedRows += spacing;
-                currentElements.push(section);
-                usedRows += item.rows;
-                continue;
-            }
-
-            const thead = table.querySelector("thead");
-            const tbody = table.querySelector("tbody");
-            if (!tbody) {
-                if (usedRows + spacing + item.rows > availRows) flushPage();
-                else usedRows += spacing;
-                currentElements.push(section);
-                usedRows += item.rows;
-                continue;
-            }
-
-            // Count title element (h3 or div.sheet-section-title) above the table
-            const titleEl = section.querySelector(".sheet-section-title, h3");
-            const titleRows = titleEl ? 1 : 0;
-            const theadRowCount = thead ? thead.querySelectorAll("tr").length : 0;
-            const allRows = Array.from(tbody.children);
-
-            // Total for this item including spacing
-            const totalItemRows = spacing + titleRows + theadRowCount + allRows.length;
-
-            // Does it fit entirely on current page?
-            if (usedRows + totalItemRows <= availRows) {
-                usedRows += spacing;
-                currentElements.push(section);
-                usedRows += titleRows + theadRowCount + allRows.length;
-                continue;
-            }
-
-            // Anti-orphan: need at least title + thead + 1 data row to start
-            const minToStart = spacing + titleRows + theadRowCount + 1;
-            if (availRows - usedRows < minToStart) {
-                flushPage();
-            } else {
-                usedRows += spacing;
-            }
-
-            // Split table across pages
-            let rowIdx = 0;
-            let isFirstChunk = true;
-            while (rowIdx < allRows.length) {
-                const space = availRows - usedRows;
-                // Always count title row — first chunk gets original, continuations get "- continued"
-                const overhead = theadRowCount + titleRows;
-
-                // Anti-orphan: need overhead + at least 1 data row
-                if (space < overhead + 1) {
-                    flushPage();
-                    continue;
-                }
-
-                const dataFit = space - overhead;
-                const end = Math.min(rowIdx + dataFit, allRows.length);
-
-                const chunkSection = document.createElement("div");
-                chunkSection.className = section.className;
-                if (titleEl) {
-                    const titleClone = titleEl.cloneNode(true);
-                    if (!isFirstChunk) {
-                        titleClone.textContent = titleEl.textContent + " - continued";
-                    }
-                    chunkSection.appendChild(titleClone);
-                }
-                const chunkTable = document.createElement("table");
-                chunkTable.className = table.className;
-                if (thead) chunkTable.appendChild(thead.cloneNode(true));
-                const chunkTbody = document.createElement("tbody");
-                for (let i = rowIdx; i < end; i++) {
-                    chunkTbody.appendChild(allRows[i].cloneNode(true));
-                }
-                chunkTable.appendChild(chunkTbody);
-                chunkSection.appendChild(chunkTable);
-
-                currentElements.push(chunkSection);
-                usedRows += overhead + (end - rowIdx);
-                rowIdx = end;
-                isFirstChunk = false;
-
-                if (rowIdx < allRows.length) {
-                    flushPage();
-                }
-            }
-        }
-
-        if (currentElements.length > 0) {
-            pages.push({ elements: currentElements });
-        }
-        if (pages.length === 0) pages.push({ elements: [] });
-        return pages;
     },
 
     // ── Header ───────────────────────────────────────────────────
@@ -702,8 +362,9 @@ const Sheet = {
             const tr = document.createElement("tr");
             const rules = RULES[this.game.rules];
             const eventDef = rules.events.find((e) => e.code === entry.event);
+            const teamDisplay = entry.team === "W" ? "White" : (entry.team === "D" ? "Dark" : (entry.team === "" ? "Official" : "—"));
             tr.innerHTML = `
-        <td>${entry.team === "W" ? "White" : (entry.team === "D" ? "Dark" : "—")}</td>
+        <td>${teamDisplay}</td>
         <td>${Game.getPeriodLabel(entry.period)}</td>
         <td>${entry.time.replace(/^0(\d:)/, '$1')}</td>
         <td>${eventDef ? eventDef.name : entry.event}</td>

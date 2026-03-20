@@ -14,9 +14,14 @@
  * limitations under the License.
  */
 
+import { RULES } from './config.js';
+import { ConfirmDialog } from './confirm.js';
+import { Storage } from './storage.js';
+import { Game } from './game.js';
+
 // wplog — Setup Screen Logic
 
-const Setup = {
+export const Setup = {
     init(onStart) {
         this.onStart = onStart;
         this._bindEvents();
@@ -105,10 +110,6 @@ const Setup = {
         // Disable rules change during game
         document.getElementById("setup-rules").disabled = true;
 
-        // Disable OT/SO if that phase has started
-        const hasOT = game.log.some((e) => typeof e.period === "string" && e.period.startsWith("OT"));
-        const hasSO = game.log.some((e) => e.period === "SO");
-
         // Live-save editable fields back to the active game
         const saveField = (id, setter) => {
             document.getElementById(id).addEventListener("change", () => {
@@ -152,15 +153,13 @@ const Setup = {
 
         this._updateLoggingHeader();
 
-        // Post-regulation — set active and disable
+        // Post-regulation — set active and always disable during active game
         const prValue = game.overtime ? "overtime" : game.shootout ? "shootout" : "none";
         const prControl = document.getElementById("setup-post-regulation");
-        if (hasOT || hasSO) {
-            prControl.classList.add("disabled");
-        }
+        prControl.classList.add("disabled");
         prControl.querySelectorAll(".segment-btn").forEach((btn) => {
             btn.classList.toggle("active", btn.dataset.value === prValue);
-            if (hasOT || hasSO) btn.disabled = true;
+            btn.disabled = true;
         });
 
         // Steppers — set values and disable

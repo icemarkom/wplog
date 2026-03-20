@@ -14,11 +14,16 @@
  * limitations under the License.
  */
 
+import { RULES } from './config.js';
+import { ConfirmDialog } from './confirm.js';
+import { Game } from './game.js';
+import { escapeHTML } from './sanitize.js';
+
 // wplog — Live Log Screen (Event Logging)
 // Event-first workflow: tap event button → modal opens → enter details → OK
 // Shared numpad targets either Time or Cap field.
 
-const Events = {
+export const Events = {
     game: null,
     selectedTeam: null,
     _pendingEvent: null,
@@ -111,6 +116,7 @@ const Events = {
         // Team toggle
         document.getElementById("team-white-btn").addEventListener("click", () => this._selectTeam("W"));
         document.getElementById("team-dark-btn").addEventListener("click", () => this._selectTeam("D"));
+        document.getElementById("team-official-btn").addEventListener("click", () => this._selectTeam("official"));
 
         // Field selection — tap to switch numpad target
         document.getElementById("field-time").addEventListener("click", () => this._setNumpadTarget("time", true));
@@ -145,7 +151,7 @@ const Events = {
                 return;
             }
 
-            // W/D for team selection (case-insensitive)
+            // W/D/O for team selection (case-insensitive)
             if (upper === "W") {
                 e.preventDefault();
                 this._selectTeam("W");
@@ -155,6 +161,17 @@ const Events = {
                 e.preventDefault();
                 this._selectTeam("D");
                 return;
+            }
+            if (upper === "O") {
+                // Only if allowOfficial is set on this event
+                const oCode = document.getElementById("modal-event-title").dataset.code;
+                const oRules = RULES[this.game.rules];
+                const oEventDef = oRules.events.find((ev) => ev.code === oCode);
+                if (oEventDef && oEventDef.allowOfficial) {
+                    e.preventDefault();
+                    this._selectTeam("official");
+                    return;
+                }
             }
 
             // Backspace = clear
@@ -327,6 +344,13 @@ const Events = {
         } else {
             capField.style.display = "";
         }
+
+        // Show/hide Official team button
+        const officialBtn = document.getElementById("team-official-btn");
+        if (officialBtn) {
+            officialBtn.style.display = (eventDef && eventDef.allowOfficial) ? "" : "none";
+        }
+
         this._updateOkButton();
     },
 
@@ -379,6 +403,8 @@ const Events = {
         this.selectedTeam = null;
         document.getElementById("team-white-btn").classList.remove("active");
         document.getElementById("team-dark-btn").classList.remove("active");
+        const officialBtn = document.getElementById("team-official-btn");
+        if (officialBtn) officialBtn.classList.remove("active");
 
         // Update OK state
         this._updateOkButton();
@@ -396,6 +422,8 @@ const Events = {
         this.selectedTeam = team;
         document.getElementById("team-white-btn").classList.toggle("active", team === "W");
         document.getElementById("team-dark-btn").classList.toggle("active", team === "D");
+        const officialBtn = document.getElementById("team-official-btn");
+        if (officialBtn) officialBtn.classList.toggle("active", team === "official");
         this._updateOkButton();
     },
 
@@ -456,7 +484,7 @@ const Events = {
         Game.addEvent(this.game, {
             period,
             time,
-            team: this.selectedTeam,
+            team: this.selectedTeam === "official" ? "" : this.selectedTeam,
             cap: eventDef.teamOnly ? "" : cap,
             event: eventDef.code,
             note: "",

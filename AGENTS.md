@@ -27,16 +27,18 @@ wplog/
 │   ├── print.css       # Print-only B&W styles for game sheet
 │   └── standalone.css  # Shared styles for standalone pages (privacy, help)
 ├── js/
-│   ├── sanitize.js    # escapeHTML() utility — loaded first, used by sheet.js + events.js
-│   ├── loader.js      # App shell loader — fetches screens, loads JS deps, inits app
-│   ├── year.js        # Copyright year display (shared by all pages)
+│   ├── sanitize.js    # escapeHTML() utility (ES module)
+│   ├── loader.js      # App shell loader — fetches screens, imports app module, inits app
+│   ├── year.js        # Copyright year display (standalone script, shared by all pages)
 │   ├── config.js       # APP_VERSION + RULES definitions (USAWP, NFHS Varsity, NFHS JV, NCAA)
 │   ├── confirm.js      # Custom confirmation dialog (replaces native confirm())
 │   ├── storage.js      # localStorage wrapper (with schema validation)
 │   ├── game.js         # Core data model + game logic
 │   ├── setup.js        # Setup screen (with active-game guards)
 │   ├── events.js       # Live log screen (main UI)
-│   ├── sheet.js        # Game sheet rendering (multi-column log + paginated print layout)
+│   ├── sheet.js        # Game sheet orchestrator + shared render helpers
+│   ├── sheet-screen.js # Game sheet screen rendering (2-page DOM layout)
+│   ├── sheet-print.js  # Game sheet print pagination (multi-column, table splitting)
 │   ├── share.js        # Share/Print functionality
 │   └── app.js          # App init + screen navigation + version display
 ├── help.html           # Standalone help page (uses standalone.css)
@@ -60,7 +62,7 @@ wplog/
 └── lib/                # Empty (previously had vendored libs, now removed)
 ```
 
-Script load order matters: `sanitize.js` → `config.js` → `confirm.js` → `storage.js` → `game.js` → `setup.js` → `events.js` → `sheet.js` → `share.js` → `app.js`
+All JS files (except `year.js`) use native ES modules with `import`/`export`. The browser resolves the dependency tree automatically from the entry point (`loader.js` → `app.js` → all other modules). `year.js` is a standalone `<script defer>` for copyright year display on all pages.
 
 ---
 
@@ -105,9 +107,10 @@ These were explicitly discussed and agreed with the user:
 | **Anti-orphan logic** | Tables only start on a page if there's room for title + thead + at least 1 data row. Otherwise flushed to next page. |
 | **Sections start on own pages** | Game Log, Game Summary, and Game Stats each begin on a fresh page. |
 | **Print row height = 18px** | All table cells: `height: 18px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis`. No wrapping allowed in print — ensures pagination math is exact. Log tables use auto column sizing (no `table-layout: fixed`) so headers are never truncated; summary/stats tables use `table-layout: fixed`. |
-| **USAWP + NFHS + NCAA supported** | USAWP, NFHS Varsity (7-min, OT, MAM), NFHS JV (6-min, no OT), NCAA (8-min, OT, YRC). Additional rule sets added via inheritance. |
+| **USAWP + NFHS + NCAA supported** | USAWP (8-min default, 7-min, 6-min variants), NFHS Varsity (7-min, OT, MAM), NFHS JV (6-min, no OT), NCAA (8-min, OT, YRC). Additional rule sets added via inheritance. |
 | **Rule set inheritance** | `inherits` key chains parent→child. `addEvents`/`removeEvents` directives for per-ruleset event list mutations. `_base` and `_academic` are internal (hidden from dropdown). `STATS_EVENTS` auto-appended to all rule sets. |
 | **Cap flags** | `allowCoach`, `allowAssistant`, `allowBench` enable C/AC/B cap values. `allowPlayer` (default true) can be set false to block digit input. `allowNoCap` allows submitting without cap. `teamOnly` (renamed from `noPlayer`) hides cap field entirely. |
+| **`allowOfficial` flag** | Config-driven flag (valid on `teamOnly` events only). Shows a third "OFFICIAL" team toggle button in the modal. Selecting it stores `team: ""` — no new team code. TOL counting naturally excludes official timeouts. `O` keyboard shortcut. Button order: WHITE → OFFICIAL → DARK (Dark stays rightmost for muscle memory). |
 | **No `#` in Cap display** | Cap numbers shown without `#` prefix everywhere (modal, live log, sheet tables). |
 | **Score on Goals only** | Score column in game log (live + sheet) only shows on Goal events. Other events leave it empty. |
 | **Responsive modal** | Full-screen on mobile (default), fixed centered dialog on desktop (`@media min-width:900px and min-height:700px`). |
@@ -137,6 +140,7 @@ These were explicitly discussed and agreed with the user:
 | **Player Stats on sheet** | Single `<table>` per stat type with colspan White/Dark headers. Per-period columns (Q1, Q2, etc.) + bold Total. All events with cap numbers aggregated (not just statsOnly). Proper English pluralization for section titles. |
 | **`statsOnly` flag** | Events with `statsOnly: true` skip foul-out checks, allow blank time, and are filtered from Progress of Game on sheet. |
 | **`statsTimeMode`** | Controls time field in modal: `"off"` = hidden, `"optional"` = shown but not required, `"on"` = required. Stored in game data model. |
+| **ES modules** | All JS files use native `import`/`export` (except `year.js` which is a standalone `<script defer>`). `loader.js` is loaded as `<script type="module">` and imports `app.js`, which imports all other modules. The browser resolves the dependency tree automatically — no manual load ordering. Service worker also uses `import` for `APP_VERSION` from `config.js`. |
 
 ### USAWP Events
 
@@ -184,11 +188,11 @@ Inherits from `_academic` (8-min periods). Adds:
 
 ---
 
-## Current State (as of 2026-03-19)
+## Current State (as of 2026-03-20)
 
 ### What's Done ✅
 - Complete setup screen (rules, date, time, location, Game #, team names, OT/SO toggles, timeout overrides)
-- Setup guards during active game (disable Start/rules, lock OT/SO if started, red END GAME button)
+- Setup guards during active game (disable Start/rules, lock OT/SO/period config/timeouts/logging mode, red END GAME button)
 - Live-save of editable setup fields during active game
 - Four rule sets: USAWP, NFHS Varsity, NFHS JV, NCAA (via inheritance-based config system)
 - Rule set inheritance: `_base`/`_academic` internal bases, `inherits`, `addEvents`/`removeEvents` directives
@@ -204,6 +208,7 @@ Inherits from `_academic` (8-min periods). Adds:
 - Auto-clear time/cap on refocus (user click only, not auto-advance)
 - Event alignment framework (left/right/center per event in config)
 - Cap flags: `allowCoach`, `allowAssistant`, `allowBench`, `allowPlayer` (default true), `allowNoCap`
+- `allowOfficial` flag: third "OFFICIAL" team toggle for team-neutral events (e.g., referee/media timeouts), stores `team: ""`
 - `teamOnly` flag (renamed from `noPlayer`) hides cap field entirely for team-level events
 - Period End / End Game logic (OT/SO aware, score-tie checks)
 - Timeout tracking with configurable limits, TOL display, over-limit warnings
@@ -260,6 +265,7 @@ Inherits from `_academic` (8-min periods). Adds:
 - Externalized all inline scripts: `js/loader.js` (app shell), `js/year.js` (copyright year) — CSP `script-src 'self'` only (no `'unsafe-inline'`)
 - `localStorage` schema validation in `Storage.load()`
 - `Referrer-Policy: strict-origin-when-cross-origin` meta tag on all HTML pages
+- Form label associations: all `<input>`/`<select>` use `for`/`id`; custom widgets (segment controls, steppers) use `aria-labelledby`; `.sr-only` utility class for visually-hidden labels
 - Favicon: water polo wave-splash W icon in 32px, 192px, 512px sizes (browser tab, PWA install, splash screen)
 - Apple touch icon for iOS home screen
 - Full stats tracking: 11 stat event types (Shot, Assist, Offensive, Steal, Intercept, Turnover, Field Block, Save, Drawn Exclusion, Drawn Penalty, Sprint Won)
@@ -292,6 +298,8 @@ Inherits from `_academic` (8-min periods). Adds:
 - Restart App link below Start Game: clears localStorage, unregisters service workers, purges caches, and reloads
 - End Period button moved from score bar to event grid: same size as event buttons, `grid-column: 3` pins it to rightmost column
 - End Game button disables after press: shows "Game Over" and prevents duplicate end-of-game events
+- Native ES modules: all JS files use `import`/`export` (except `year.js`). `loader.js` loaded as `<script type="module">`, browser resolves dependency tree automatically. Service worker uses `import` for `APP_VERSION`.
+- Sheet split: `sheet.js` (orchestrator + shared helpers), `sheet-screen.js` (screen rendering), `sheet-print.js` (print pagination) — isolates print debugging to one file
 
 ### Known Gaps / Future Work 📋
 - No substitution tracking (user hasn't decided)
