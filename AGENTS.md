@@ -36,7 +36,9 @@ wplog/
 │   ├── game.js         # Core data model + game logic
 │   ├── setup.js        # Setup screen (with active-game guards)
 │   ├── events.js       # Live log screen (main UI)
-│   ├── sheet.js        # Game sheet rendering (multi-column log + paginated print layout)
+│   ├── sheet.js        # Game sheet orchestrator + shared render helpers
+│   ├── sheet-screen.js # Game sheet screen rendering (2-page DOM layout)
+│   ├── sheet-print.js  # Game sheet print pagination (multi-column, table splitting)
 │   ├── share.js        # Share/Print functionality
 │   └── app.js          # App init + screen navigation + version display
 ├── help.html           # Standalone help page (uses standalone.css)
@@ -294,6 +296,7 @@ Inherits from `_academic` (8-min periods). Adds:
 - End Period button moved from score bar to event grid: same size as event buttons, `grid-column: 3` pins it to rightmost column
 - End Game button disables after press: shows "Game Over" and prevents duplicate end-of-game events
 - Native ES modules: all JS files use `import`/`export` (except `year.js`). `loader.js` loaded as `<script type="module">`, browser resolves dependency tree automatically. Service worker uses `import` for `APP_VERSION`.
+- Sheet split: `sheet.js` (orchestrator + shared helpers), `sheet-screen.js` (screen rendering), `sheet-print.js` (print pagination) — isolates print debugging to one file
 
 ### Known Gaps / Future Work 📋
 - No substitution tracking (user hasn't decided)
