@@ -17,6 +17,7 @@
 import { RULES } from './config.js';
 import { Game } from './game.js';
 import { escapeHTML } from './sanitize.js';
+import { buildPeriodScores, buildPersonalFoulTable, buildTimeoutSummary, buildCardSummary, buildPlayerStats } from './sheet-data.js';
 import { renderScreen } from './sheet-screen.js';
 import { buildLogPages, buildSummaryItems, buildStatsItems, paginateItems } from './sheet-print.js';
 
@@ -205,6 +206,7 @@ export const Sheet = {
     },
 
     _renderPeriodScores() {
+        const data = buildPeriodScores(this.game);
         const section = document.createElement("div");
         section.className = "sheet-section";
 
@@ -216,8 +218,7 @@ export const Sheet = {
         const table = document.createElement("table");
         table.className = "sheet-table sheet-table-compact";
 
-        const periods = Game.getAllPeriods(this.game);
-        const headerCells = periods.map((p) => `<th>${Game.getPeriodLabel(p)}</th>`).join("");
+        const headerCells = data.periods.map((p) => `<th>${p}</th>`).join("");
 
         const thead = document.createElement("thead");
         thead.innerHTML = `<tr><th>Team</th>${headerCells}<th>Total</th></tr>`;
@@ -225,22 +226,13 @@ export const Sheet = {
 
         const tbody = document.createElement("tbody");
 
-        for (const team of ["W", "D"]) {
+        for (const [label, scores, total] of [["White", data.white, data.totalWhite], ["Dark", data.dark, data.totalDark]]) {
             const tr = document.createElement("tr");
-            const teamLabel = team === "W" ? "White" : "Dark";
-            let total = 0;
-            let cells = `<td class="sheet-team-cell">${teamLabel}</td>`;
-
-            for (const period of periods) {
-                const goals = this.game.log.filter(
-                    (e) => e.event === "G" && e.team === team && e.period === period
-                ).length;
-                total += goals;
-                cells += `<td>${String(goals)}</td>`;
+            let cells = `<td class="sheet-team-cell">${label}</td>`;
+            for (const count of scores) {
+                cells += `<td>${String(count)}</td>`;
             }
-            const displayScore = Game.getDisplayScore(this.game);
-            const totalDisplay = team === "W" ? displayScore.white : displayScore.dark;
-            cells += `<td class="sheet-total"><strong>${totalDisplay}</strong></td>`;
+            cells += `<td class="sheet-total"><strong>${total}</strong></td>`;
             tr.innerHTML = cells;
             tbody.appendChild(tr);
         }
@@ -251,6 +243,7 @@ export const Sheet = {
     },
 
     _renderFoulSummary() {
+        const data = buildPersonalFoulTable(this.game);
         const section = document.createElement("div");
         section.className = "sheet-section";
 
@@ -259,29 +252,7 @@ export const Sheet = {
         title.textContent = "Personal Fouls";
         section.appendChild(title);
 
-        const rules = RULES[this.game.rules];
-        const foulCodes = rules.events
-            .filter(e => e.isPersonalFoul || e.autoFoulOut)
-            .map(e => e.code);
-        const playerFouls = {};
-
-        for (const entry of this.game.log) {
-            if (foulCodes.includes(entry.event) && entry.cap) {
-                const key = entry.team + "#" + entry.cap;
-                if (!playerFouls[key]) {
-                    playerFouls[key] = { team: entry.team, cap: entry.cap, fouls: [] };
-                }
-                const eventDef = rules.events.find((e) => e.code === entry.event);
-                playerFouls[key].fouls.push({
-                    period: entry.period,
-                    time: entry.time,
-                    event: eventDef ? eventDef.name : entry.event,
-                    code: entry.event,
-                });
-            }
-        }
-
-        if (Object.keys(playerFouls).length === 0) {
+        if (data.length === 0) {
             const empty = document.createElement("p");
             empty.className = "sheet-empty";
             empty.textContent = "No personal fouls recorded.";
@@ -299,27 +270,18 @@ export const Sheet = {
 
         const tbody = document.createElement("tbody");
 
-        for (const [, player] of Object.entries(playerFouls)) {
+        for (const player of data) {
             const tr = document.createElement("tr");
-            const personalFoulCount = player.fouls.filter(f => {
-                const def = rules.events.find(e => e.name === f.event);
-                return def && def.isPersonalFoul;
-            }).length;
-            const hasAutoFoulOut = player.fouls.some(f => {
-                const def = rules.events.find(e => e.name === f.event);
-                return def && def.autoFoulOut;
-            });
-            const isFouledOut = personalFoulCount >= rules.foulOutLimit || hasAutoFoulOut;
-            if (isFouledOut) tr.classList.add("sheet-fouled-out");
+            if (player.fouledOut) tr.classList.add("sheet-fouled-out");
 
-            const details = player.fouls
+            const details = player.details
                 .map((f) => `${Game.getPeriodLabel(f.period)} ${f.time} ${f.event}`)
                 .join("; ");
 
             tr.innerHTML = `
         <td>${player.team === "W" ? "White" : "Dark"}</td>
         <td>${escapeHTML(player.cap)}</td>
-        <td>${player.fouls.length}</td>
+        <td>${player.count}</td>
         <td class="sheet-foul-details">${escapeHTML(details)}</td>
       `;
             tbody.appendChild(tr);
@@ -331,6 +293,7 @@ export const Sheet = {
     },
 
     _renderTimeoutSummary() {
+        const data = buildTimeoutSummary(this.game);
         const section = document.createElement("div");
         section.className = "sheet-section";
 
@@ -339,9 +302,7 @@ export const Sheet = {
         title.textContent = "Timeouts";
         section.appendChild(title);
 
-        const timeouts = this.game.log.filter((e) => e.event === "TO" || e.event === "TO30");
-
-        if (timeouts.length === 0) {
+        if (data.length === 0) {
             const empty = document.createElement("p");
             empty.className = "sheet-empty";
             empty.textContent = "No timeouts recorded.";
@@ -358,16 +319,13 @@ export const Sheet = {
     `;
 
         const tbody = document.createElement("tbody");
-        for (const entry of timeouts) {
+        for (const entry of data) {
             const tr = document.createElement("tr");
-            const rules = RULES[this.game.rules];
-            const eventDef = rules.events.find((e) => e.code === entry.event);
-            const teamDisplay = entry.team === "W" ? "White" : (entry.team === "D" ? "Dark" : (entry.team === "" ? "Official" : "—"));
             tr.innerHTML = `
-        <td>${teamDisplay}</td>
-        <td>${Game.getPeriodLabel(entry.period)}</td>
-        <td>${entry.time.replace(/^0(\d:)/, '$1')}</td>
-        <td>${eventDef ? eventDef.name : entry.event}</td>
+        <td>${entry.team}</td>
+        <td>${entry.period}</td>
+        <td>${entry.time}</td>
+        <td>${entry.type}</td>
       `;
             tbody.appendChild(tr);
         }
@@ -378,13 +336,12 @@ export const Sheet = {
     },
 
     _renderCardSummary() {
+        const data = buildCardSummary(this.game);
         const section = document.createElement("div");
         section.className = "sheet-section";
         section.innerHTML = `<div class="sheet-section-title">Cards</div>`;
 
-        const cards = this.game.log.filter((e) => e.event === "YC" || e.event === "RC");
-
-        if (cards.length === 0) {
+        if (data.length === 0) {
             const empty = document.createElement("p");
             empty.className = "sheet-empty";
             empty.textContent = "No cards issued.";
@@ -401,16 +358,14 @@ export const Sheet = {
     `;
 
         const tbody = document.createElement("tbody");
-        for (const entry of cards) {
+        for (const entry of data) {
             const tr = document.createElement("tr");
-            const rules = RULES[this.game.rules];
-            const eventDef = rules.events.find((e) => e.code === entry.event);
             tr.innerHTML = `
-        <td>${entry.team === "W" ? "White" : (entry.team === "D" ? "Dark" : "—")}</td>
-        <td>${escapeHTML(entry.cap || "—")}</td>
-        <td>${Game.getPeriodLabel(entry.period)}</td>
-        <td>${escapeHTML(entry.time.replace(/^0(\d:)/, '$1'))}</td>
-        <td>${eventDef ? eventDef.name : escapeHTML(entry.event)}</td>
+        <td>${entry.team}</td>
+        <td>${escapeHTML(entry.cap)}</td>
+        <td>${entry.period}</td>
+        <td>${escapeHTML(entry.time)}</td>
+        <td>${entry.type}</td>
       `;
             tbody.appendChild(tr);
         }
@@ -421,6 +376,7 @@ export const Sheet = {
     },
 
     _renderPlayerStats() {
+        const data = buildPlayerStats(this.game);
         const section = document.createElement("div");
         section.className = "sheet-section";
 
@@ -429,45 +385,7 @@ export const Sheet = {
         title.textContent = "Player Stats";
         section.appendChild(title);
 
-        const rules = RULES[this.game.rules];
-        const statTypes = rules.events
-            .filter((e) => !e.teamOnly)
-            .map((e) => {
-                const n = e.name;
-                const plural = n.endsWith("y") ? n.slice(0, -1) + "ies" : n + "s";
-                return { code: e.code, name: plural };
-            });
-
-        const periodOrder = [];
-        const periodSeen = new Set();
-        for (const entry of this.game.log) {
-            if (entry.event === "---") continue;
-            if (!periodSeen.has(entry.period)) {
-                periodSeen.add(entry.period);
-                periodOrder.push(entry.period);
-            }
-        }
-
-        const counts = {};
-        for (const st of statTypes) {
-            counts[st.code] = { W: {}, D: {} };
-        }
-        for (const entry of this.game.log) {
-            if (!entry.cap || !entry.team) continue;
-            if (!counts[entry.event]) continue;
-            const teamData = counts[entry.event][entry.team];
-            if (!teamData[entry.cap]) teamData[entry.cap] = {};
-            teamData[entry.cap][entry.period] = (teamData[entry.cap][entry.period] || 0) + 1;
-        }
-
-        let anyStats = false;
-        for (const st of statTypes) {
-            if (Object.keys(counts[st.code].W).length > 0 || Object.keys(counts[st.code].D).length > 0) {
-                anyStats = true;
-                break;
-            }
-        }
-        if (!anyStats) {
+        if (!data) {
             const empty = document.createElement("p");
             empty.className = "sheet-empty";
             empty.textContent = "No stats recorded.";
@@ -475,16 +393,14 @@ export const Sheet = {
             return section;
         }
 
-        const periodHeaders = periodOrder.map((p) => Game.getPeriodLabel(p));
-        const colsPerTeam = 1 + periodHeaders.length + 1;
+        const colsPerTeam = 1 + data.periodLabels.length + 1;
 
-        for (const st of statTypes) {
-            const wCaps = Object.keys(counts[st.code].W).sort((a, b) => (parseInt(a) || 0) - (parseInt(b) || 0));
-            const dCaps = Object.keys(counts[st.code].D).sort((a, b) => (parseInt(a) || 0) - (parseInt(b) || 0));
+        for (const st of data.statTypes) {
+            const wCaps = Object.keys(data.stats[st.code].W).sort((a, b) => (parseInt(a) || 0) - (parseInt(b) || 0));
+            const dCaps = Object.keys(data.stats[st.code].D).sort((a, b) => (parseInt(a) || 0) - (parseInt(b) || 0));
             if (wCaps.length === 0 && dCaps.length === 0) continue;
 
-            const tableWrapper = this._renderStatTypeTable(st, wCaps, dCaps, counts[st.code], periodOrder, periodHeaders, colsPerTeam);
-            // Append the table directly (unwrap from the wrapper div)
+            const tableWrapper = this._renderStatTypeTable(st, wCaps, dCaps, data.stats[st.code], data.periods, data.periodLabels, colsPerTeam);
             section.appendChild(tableWrapper);
         }
 
