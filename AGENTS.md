@@ -57,6 +57,8 @@ wplog/
 │       └── kraken.md    # "kraken" = tag and release workflow
 ├── testdata/
 │   └── monster-game.json  # 201-event stress test data for print pagination testing
+├── tools/
+│   └── serve.go           # Dev server (Go stdlib) — correct MIME types for ES modules
 ├── PRIVACY.md          # Privacy policy (Markdown, for GitHub)
 └── privacy.html        # Privacy policy (HTML, canonical for OAuth consent)
 ```
@@ -315,10 +317,10 @@ Inherits from `_academic` (8-min periods). Adds:
 ## How to Run
 
 Serve locally with any static file server. The app has no build step.
-Do NOT use Python's `http.server` — use the included `serve.go`:
+Do NOT use Python's `http.server` — use the included dev server:
 
 ```sh
-go run serve.go
+go run tools/serve.go
 ```
 
 Then open `http://localhost:8080`.
