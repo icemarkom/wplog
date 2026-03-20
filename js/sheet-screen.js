@@ -17,24 +17,24 @@
 // wplog — Game Sheet Screen Rendering
 // Simple 2-page DOM layout for on-screen viewing.
 
-export function renderScreen(sheet, container) {
+export function renderScreen(game, sheet, container) {
     // Page 1: Header + Progress of Game
     const page1 = document.createElement("div");
     page1.className = "sheet-page";
-    page1.appendChild(sheet._renderHeader("Game Sheet"));
-    page1.appendChild(sheet._renderProgressOfGame());
+    page1.appendChild(sheet._renderHeader(game, "Game Sheet"));
+    page1.appendChild(sheet._renderProgressOfGame(game));
     container.appendChild(page1);
 
     // Page 2: Header (repeated) + Period Scores + Fouls + Timeouts + Cards + Player Stats
     const page2 = document.createElement("div");
     page2.className = "sheet-page sheet-page-break";
-    page2.appendChild(sheet._renderHeader("Game Sheet"));
-    page2.appendChild(sheet._renderPeriodScores());
-    page2.appendChild(sheet._renderFoulSummary());
-    page2.appendChild(sheet._renderTimeoutSummary());
-    page2.appendChild(sheet._renderCardSummary());
-    if (sheet.game.enableStats) {
-        page2.appendChild(sheet._renderPlayerStats());
+    page2.appendChild(sheet._renderHeader(game, "Game Sheet"));
+    page2.appendChild(sheet._renderPeriodScores(game));
+    page2.appendChild(sheet._renderFoulSummary(game));
+    page2.appendChild(sheet._renderTimeoutSummary(game));
+    page2.appendChild(sheet._renderCardSummary(game));
+    if (game.enableStats) {
+        page2.appendChild(sheet._renderPlayerStats(game));
     }
     container.appendChild(page2);
 }

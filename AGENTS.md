@@ -36,10 +36,11 @@ wplog/
 │   ├── game.js         # Core data model + game logic (pure — no Storage dependency)
 │   ├── setup.js        # Setup screen (with active-game guards)
 │   ├── events.js       # Live log screen (main UI, owns Storage.save after mutations)
-│   ├── sheet.js        # Game sheet orchestrator + shared render helpers
+│   ├── sheet.js        # Game sheet orchestrator + shared render helpers (stateless — no stored game)
 │   ├── sheet-data.js   # Sheet data builders (pure — no DOM)
 │   ├── sheet-screen.js # Game sheet screen rendering (2-page DOM layout)
-│   ├── sheet-print.js  # Game sheet print pagination (multi-column, table splitting)
+│   ├── sheet-print.js  # Game sheet print rendering (DOM only — renders from pagination plans)
+│   ├── pagination.js   # Print pagination engine (pure — no DOM)
 │   ├── share.js        # Share/Print functionality
 │   ├── export.js       # Export utilities — filename, CSV builders (pure — no DOM)
 │   └── app.js          # App init + screen navigation + version display
@@ -317,6 +318,9 @@ Inherits from `_academic` (8-min periods). Adds:
 - `Game` decoupled from `Storage`: mutation methods (`addEvent`, `deleteEvent`, `editEvent`, `advancePeriod`) no longer call `Storage.save()` — UI layer (`events.js`) owns persistence
 - Score formatting extracted: `formatFractionalScore()` exported from `game.js` as a pure utility
 - Sheet data builders extracted: `sheet-data.js` exports pure functions (`buildPeriodScores`, `buildPersonalFoulTable`, `buildTimeoutSummary`, `buildCardSummary`, `buildPlayerStats`) — `sheet.js` render methods are thin DOM wrappers
+- Pagination engine extracted: `pagination.js` exports pure functions (`filterLogEvents`, `buildLogPagePlan`, `buildSummaryDescriptors`, `buildStatsDescriptors`, `paginateItems`, `availableRows`) — all print layout math with zero DOM dependency
+- Stateless Sheet: `Sheet.game` removed, `Sheet.init()` replaced with `Sheet.render(game, paperSize)` — all render methods accept `game` as parameter
+- `sheet-print.js` refactored to DOM-only rendering layer — consumes pagination plans from `pagination.js`, no pagination arithmetic
 
 ### Known Gaps / Future Work 📋
 - No substitution tracking (user hasn't decided)

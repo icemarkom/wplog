@@ -38,6 +38,7 @@ const ASSETS = [
     "./js/sheet-data.js",
     "./js/sheet-screen.js",
     "./js/sheet-print.js",
+    "./js/pagination.js",
     "./js/share.js",
     "./js/app.js",
     "./js/export.js",

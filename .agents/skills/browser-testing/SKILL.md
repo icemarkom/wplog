@@ -71,6 +71,7 @@ See [patterns.md](references/patterns.md) for detailed examples covering screen 
 - **Screen HTML**: Fetch from `/screens/<name>.html` and inject into sandbox. Do not copy HTML into tests.
 - **Async everything**: Screen HTML fetching and dynamic imports are async. All test callbacks should be `async`.
 - **No test data files**: Game state comes from `Game.create()` + `Game.addEvent()`, not `testdata/*.json`.
+- **Never trigger `window.print()`**: Do not click Print buttons or call `window.print()` via browser automation. It opens a native OS dialog that the agent cannot dismiss, causing a timeout. Verify print rendering by inspecting the DOM after `Sheet.render(game, paperSize)` — the print layout is built as regular DOM elements before `window.print()` is called.
 
 ## Checklist for Adding a Test
 
