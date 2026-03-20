@@ -191,7 +191,7 @@ Inherits from `_academic` (8-min periods). Adds:
 
 ### What's Done ✅
 - Complete setup screen (rules, date, time, location, Game #, team names, OT/SO toggles, timeout overrides)
-- Setup guards during active game (disable Start/rules, lock OT/SO if started, red END GAME button)
+- Setup guards during active game (disable Start/rules, lock OT/SO/period config/timeouts/logging mode, red END GAME button)
 - Live-save of editable setup fields during active game
 - Four rule sets: USAWP, NFHS Varsity, NFHS JV, NCAA (via inheritance-based config system)
 - Rule set inheritance: `_base`/`_academic` internal bases, `inherits`, `addEvents`/`removeEvents` directives
