@@ -37,6 +37,7 @@ wplog/
 │   ├── setup.js        # Setup screen (with active-game guards)
 │   ├── events.js       # Live log screen (main UI, owns Storage.save after mutations)
 │   ├── sheet.js        # Game sheet orchestrator + shared render helpers
+│   ├── sheet-data.js   # Sheet data builders (pure — no DOM)
 │   ├── sheet-screen.js # Game sheet screen rendering (2-page DOM layout)
 │   ├── sheet-print.js  # Game sheet print pagination (multi-column, table splitting)
 │   ├── share.js        # Share/Print functionality
@@ -314,6 +315,8 @@ Inherits from `_academic` (8-min periods). Adds:
 - Restart App handler awaits async cleanup (SW unregistration + cache deletion) before reload — fixes race condition
 - Help documentation kept current alongside feature delivery — geronimo and kraken workflows include help.html check steps, bazinga establishes doc-as-delivery principle
 - `Game` decoupled from `Storage`: mutation methods (`addEvent`, `deleteEvent`, `editEvent`, `advancePeriod`) no longer call `Storage.save()` — UI layer (`events.js`) owns persistence
+- Score formatting extracted: `formatFractionalScore()` exported from `game.js` as a pure utility
+- Sheet data builders extracted: `sheet-data.js` exports pure functions (`buildPeriodScores`, `buildPersonalFoulTable`, `buildTimeoutSummary`, `buildCardSummary`, `buildPlayerStats`) — `sheet.js` render methods are thin DOM wrappers
 
 ### Known Gaps / Future Work 📋
 - No substitution tracking (user hasn't decided)
