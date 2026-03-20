@@ -33,9 +33,9 @@ wplog/
 │   ├── config.js       # APP_VERSION + RULES definitions (USAWP, NFHS Varsity, NFHS JV, NCAA)
 │   ├── confirm.js      # Custom confirmation dialog (replaces native confirm())
 │   ├── storage.js      # localStorage wrapper (with schema validation)
-│   ├── game.js         # Core data model + game logic
+│   ├── game.js         # Core data model + game logic (pure — no Storage dependency)
 │   ├── setup.js        # Setup screen (with active-game guards)
-│   ├── events.js       # Live log screen (main UI)
+│   ├── events.js       # Live log screen (main UI, owns Storage.save after mutations)
 │   ├── sheet.js        # Game sheet orchestrator + shared render helpers
 │   ├── sheet-screen.js # Game sheet screen rendering (2-page DOM layout)
 │   ├── sheet-print.js  # Game sheet print pagination (multi-column, table splitting)
@@ -312,6 +312,7 @@ Inherits from `_academic` (8-min periods). Adds:
 - Service worker registration in `loader.js` with `{ type: 'module' }` — enables offline caching, cache busting via `APP_VERSION`
 - Restart App handler awaits async cleanup (SW unregistration + cache deletion) before reload — fixes race condition
 - Help documentation kept current alongside feature delivery — geronimo and kraken workflows include help.html check steps, bazinga establishes doc-as-delivery principle
+- `Game` decoupled from `Storage`: mutation methods (`addEvent`, `deleteEvent`, `editEvent`, `advancePeriod`) no longer call `Storage.save()` — UI layer (`events.js`) owns persistence
 
 ### Known Gaps / Future Work 📋
 - No substitution tracking (user hasn't decided)

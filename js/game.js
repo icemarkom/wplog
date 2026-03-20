@@ -15,7 +15,6 @@
  */
 
 import { RULES } from './config.js';
-import { Storage } from './storage.js';
 
 // wplog — Game State Management
 
@@ -80,7 +79,6 @@ export const Game = {
         game.log.push(entry);
         this._sortLog(game);
         this._recalcScores(game);
-        Storage.save(game);
         return entry;
     },
 
@@ -88,7 +86,6 @@ export const Game = {
     deleteEvent(game, eventId) {
         game.log = game.log.filter((e) => e.id !== eventId);
         this._recalcScores(game);
-        Storage.save(game);
     },
 
     // Edit an existing event and recalculate scores
@@ -98,7 +95,6 @@ export const Game = {
         Object.assign(entry, updates);
         this._sortLog(game);
         this._recalcScores(game);
-        Storage.save(game);
     },
 
     // Sort events within each period by game time (descending).
@@ -303,7 +299,6 @@ export const Game = {
         const next = this.getNextPeriod(game);
         if (next !== null) {
             game.currentPeriod = next;
-            Storage.save(game);
         }
         return next;
     },

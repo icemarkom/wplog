@@ -18,6 +18,7 @@ import { RULES } from './config.js';
 import { ConfirmDialog } from './confirm.js';
 import { Game } from './game.js';
 import { escapeHTML } from './sanitize.js';
+import { Storage } from './storage.js';
 
 // wplog — Live Log Screen (Event Logging)
 // Event-first workflow: tap event button → modal opens → enter details → OK
@@ -489,6 +490,7 @@ export const Events = {
             event: eventDef.code,
             note: "",
         });
+        Storage.save(this.game);
 
         // Close modal
         this._closeModal();
@@ -719,6 +721,7 @@ export const Events = {
                         this.game.currentPeriod = entry.period;
                     }
                     Game.deleteEvent(this.game, id);
+                    Storage.save(this.game);
                     this._updateScoreBar();
                     this._updateLog();
                     this._updateEndButton();
@@ -747,6 +750,7 @@ export const Events = {
             event: "---",
             note,
         });
+        Storage.save(this.game);
 
         if (isEndGame) {
             // Store end time on game object
@@ -758,6 +762,7 @@ export const Events = {
             this._showToast("Game over", "info");
         } else {
             Game.advancePeriod(this.game);
+            Storage.save(this.game);
             this._buildPeriodTabs();
             this._updateScoreBar();
             this._updateLog();
