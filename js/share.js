@@ -15,6 +15,7 @@
  */
 
 import { Sheet } from './sheet.js';
+import { buildFilename, buildCSV } from './export.js';
 
 // wplog — Share / Print / Export
 
@@ -132,7 +133,7 @@ export const Share = {
         const ext = format === "json" ? ".json" : ".csv";
         document.getElementById("download-title").textContent = title;
         const input = document.getElementById("download-filename");
-        input.value = this._buildFilename(ext);
+        input.value = buildFilename(this.game, ext);
         document.getElementById("download-overlay").classList.add("visible");
         input.focus();
         input.select();
@@ -152,36 +153,6 @@ export const Share = {
         }
     },
 
-    // ── Filename Builder ────────────────────────────────────
-
-    _buildFilename(ext) {
-        const parts = ["wplog"];
-
-        // Date
-        const date = this.game.date || new Date().toISOString().slice(0, 10);
-        parts.push(date);
-
-        // Teams (only if custom)
-        const w = this.game.white.name;
-        const d = this.game.dark.name;
-        if (w !== "White" || d !== "Dark") {
-            parts.push(this._sanitizeName(w !== "White" ? w : "White"));
-            parts.push(this._sanitizeName(d !== "Dark" ? d : "Dark"));
-        }
-
-        // Time: startTime if set, else current time
-        const time = this.game.startTime
-            ? this.game.startTime.replace(":", "")
-            : new Date().toTimeString().slice(0, 5).replace(":", "");
-        parts.push(time);
-
-        return parts.join("-") + ext;
-    },
-
-    _sanitizeName(name) {
-        return name.replace(/\s+/g, "-").replace(/[^a-zA-Z0-9-]/g, "");
-    },
-
     // ── JSON Export ─────────────────────────────────────────
 
     _doDownloadJSON() {
@@ -195,29 +166,9 @@ export const Share = {
 
     _doDownloadCSV() {
         if (!this.game) return;
-        const header = "deviceTime,seq,period,time,team,cap,event";
-        const rows = this.game.log.map((e) => {
-            return [
-                e.deviceTime || "",
-                e.seq || "",
-                e.period || "",
-                e.time || "",
-                e.team || "",
-                this._csvEscape(e.cap || ""),
-                this._csvEscape(e.event || ""),
-            ].join(",");
-        });
-        const csv = header + "\n" + rows.join("\n") + "\n";
+        const csv = buildCSV(this.game);
         const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
         this._downloadBlob(blob, "download-filename");
-    },
-
-    _csvEscape(val) {
-        const str = String(val);
-        if (str.includes(",") || str.includes("\"") || str.includes("\n")) {
-            return "\"" + str.replace(/"/g, "\"\"") + "\"";
-        }
-        return str;
     },
 
     // ── Shared Download Helper ──────────────────────────────
