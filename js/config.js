@@ -84,6 +84,16 @@ export const RULES = {
         ],
         timeouts: { full: 2, to30: 0 },
     },
+    USAWP7: {
+        inherits: "USAWP",
+        name: "USA Water Polo (7 min)",
+        periodLength: 7,
+    },
+    USAWP6: {
+        inherits: "USAWP",
+        name: "USA Water Polo (6 min)",
+        periodLength: 6,
+    },
     _academic: {
         inherits: "_base",
         periodLength: 7,
