@@ -14,7 +14,7 @@
 
 import { describe, it } from "node:test";
 import { strictEqual, deepStrictEqual, ok } from "node:assert";
-import { Game } from "../js/game.js";
+import { Game, formatFractionalScore } from "../js/game.js";
 import { RULES } from "../js/config.js";
 
 // All public rule sets — tests iterate over these.
@@ -339,6 +339,30 @@ describe("Game.formatEntryScore", () => {
         Game.addEvent(g, { period: "SO", time: "0:00", team: "W", cap: "9", event: "G" });
         const formatted = Game.formatEntryScore(g.log[1], g);
         strictEqual(formatted, "1.1–0.0");
+    });
+});
+
+// ── formatFractionalScore ─────────────────────────────────────────
+
+describe("formatFractionalScore", () => {
+    it("formats typical SO score", () => {
+        strictEqual(formatFractionalScore(5, 3), "2.3");
+    });
+
+    it("formats zero SO goals", () => {
+        strictEqual(formatFractionalScore(4, 0), "4.0");
+    });
+
+    it("formats all goals from SO", () => {
+        strictEqual(formatFractionalScore(3, 3), "0.3");
+    });
+
+    it("formats single SO goal", () => {
+        strictEqual(formatFractionalScore(7, 1), "6.1");
+    });
+
+    it("formats zero total and zero SO", () => {
+        strictEqual(formatFractionalScore(0, 0), "0.0");
     });
 });
 

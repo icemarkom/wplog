@@ -18,6 +18,11 @@ import { RULES } from './config.js';
 
 // wplog — Game State Management
 
+// Pure utility: format a fractional SO score (e.g., "5.3" for 5 total, 3 in SO).
+export function formatFractionalScore(totalScore, soGoals) {
+    return `${totalScore - soGoals}.${soGoals}`;
+}
+
 export const Game = {
     // Create a new game with defaults from rules
     create(rulesKey = "USAWP") {
@@ -168,8 +173,8 @@ export const Game = {
         if (!inSO) return { white: String(score.white), dark: String(score.dark) };
 
         return {
-            white: (score.white - soW) + "." + soW,
-            dark: (score.dark - soD) + "." + soD,
+            white: formatFractionalScore(score.white, soW),
+            dark: formatFractionalScore(score.dark, soD),
         };
     },
 
@@ -179,7 +184,7 @@ export const Game = {
         const soW = game.log.filter(e => e.id <= entry.id && e.event === "G" && e.team === "W" && e.period === "SO").length;
         const soD = game.log.filter(e => e.id <= entry.id && e.event === "G" && e.team === "D" && e.period === "SO").length;
         if (soW === 0 && soD === 0) return entry.scoreW + "–" + entry.scoreD;
-        return (entry.scoreW - soW) + "." + soW + "–" + (entry.scoreD - soD) + "." + soD;
+        return formatFractionalScore(entry.scoreW, soW) + "–" + formatFractionalScore(entry.scoreD, soD);
     },
 
     // Get timeouts used per team
