@@ -110,6 +110,7 @@ These were explicitly discussed and agreed with the user:
 | **USAWP + NFHS + NCAA supported** | USAWP (8-min default, 7-min, 6-min variants), NFHS Varsity (7-min, OT, MAM), NFHS JV (6-min, no OT), NCAA (8-min, OT, YRC). Additional rule sets added via inheritance. |
 | **Rule set inheritance** | `inherits` key chains parent→child. `addEvents`/`removeEvents` directives for per-ruleset event list mutations. `_base` and `_academic` are internal (hidden from dropdown). `STATS_EVENTS` auto-appended to all rule sets. |
 | **Cap flags** | `allowCoach`, `allowAssistant`, `allowBench` enable C/AC/B cap values. `allowPlayer` (default true) can be set false to block digit input. `allowNoCap` allows submitting without cap. `teamOnly` (renamed from `noPlayer`) hides cap field entirely. |
+| **`allowOfficial` flag** | Config-driven flag (valid on `teamOnly` events only). Shows a third "OFFICIAL" team toggle button in the modal. Selecting it stores `team: ""` — no new team code. TOL counting naturally excludes official timeouts. `O` keyboard shortcut. Button order: WHITE → OFFICIAL → DARK (Dark stays rightmost for muscle memory). |
 | **No `#` in Cap display** | Cap numbers shown without `#` prefix everywhere (modal, live log, sheet tables). |
 | **Score on Goals only** | Score column in game log (live + sheet) only shows on Goal events. Other events leave it empty. |
 | **Responsive modal** | Full-screen on mobile (default), fixed centered dialog on desktop (`@media min-width:900px and min-height:700px`). |
@@ -187,7 +188,7 @@ Inherits from `_academic` (8-min periods). Adds:
 
 ---
 
-## Current State (as of 2026-03-19)
+## Current State (as of 2026-03-20)
 
 ### What's Done ✅
 - Complete setup screen (rules, date, time, location, Game #, team names, OT/SO toggles, timeout overrides)
@@ -207,6 +208,7 @@ Inherits from `_academic` (8-min periods). Adds:
 - Auto-clear time/cap on refocus (user click only, not auto-advance)
 - Event alignment framework (left/right/center per event in config)
 - Cap flags: `allowCoach`, `allowAssistant`, `allowBench`, `allowPlayer` (default true), `allowNoCap`
+- `allowOfficial` flag: third "OFFICIAL" team toggle for team-neutral events (e.g., referee/media timeouts), stores `team: ""`
 - `teamOnly` flag (renamed from `noPlayer`) hides cap field entirely for team-level events
 - Period End / End Game logic (OT/SO aware, score-tie checks)
 - Timeout tracking with configurable limits, TOL display, over-limit warnings
