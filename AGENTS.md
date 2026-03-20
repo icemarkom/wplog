@@ -196,7 +196,7 @@ Inherits from `_academic` (8-min periods). Adds:
 
 ---
 
-## Current State (as of 2026-03-20)
+## Current State (as of 2026-03-21)
 
 ### What's Done ✅
 - Complete setup screen (rules, date, time, location, Game #, team names, OT/SO toggles, timeout overrides)
@@ -323,10 +323,16 @@ Inherits from `_academic` (8-min periods). Adds:
 - Stateless Sheet: `Sheet.game` removed, `Sheet.init()` replaced with `Sheet.render(game, paperSize)` — all render methods accept `game` as parameter
 - `sheet-print.js` refactored to DOM-only rendering layer — consumes pagination plans from `pagination.js`, no pagination arithmetic
 - Time parsing extracted: `time.js` exports pure functions (`getMaxMinutes`, `parseTime`, `formatTimeDisplay`) — `events.js` delegates via thin wrappers
+- Export module extracted: `export.js` exports pure functions (`buildCSV`, `makeFilename`) — CSV/filename builders with zero DOM dependency
+- Input validation fixes: cap `"0"` rejected, time `"0:60"` rejected (seconds ≥ 60)
+- Unit test framework: 561 Node.js tests across 11 modules (`game`, `config`, `export`, `sheet-data`, `pagination`, `time`, `storage`)
+- Browser test suite: 115 tests across 6 DOM-dependent modules (`setup`, `events`, `confirm`, `share`, `sheet`, `app`)
+- Dev server: `tools/serve.go` (Go stdlib) with correct MIME types for ES modules and browser testing
+- Test data: realistic game fixtures in `testdata/` (small/medium/large) for NCAA and NFHS rule sets
 
 ### Known Gaps / Future Work 📋
 - No substitution tracking (user hasn't decided)
-- Unit test framework (#117)
+- Refactor tests to contract-based assertions (#151)
 
 
 ---
