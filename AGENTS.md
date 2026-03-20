@@ -36,6 +36,7 @@ wplog/
 │   ├── game.js         # Core data model + game logic (pure — no Storage dependency)
 │   ├── setup.js        # Setup screen (with active-game guards)
 │   ├── events.js       # Live log screen (main UI, owns Storage.save after mutations)
+│   ├── time.js         # Time parsing utilities (pure — no DOM, no game state)
 │   ├── sheet.js        # Game sheet orchestrator + shared render helpers (stateless — no stored game)
 │   ├── sheet-data.js   # Sheet data builders (pure — no DOM)
 │   ├── sheet-screen.js # Game sheet screen rendering (2-page DOM layout)
@@ -321,6 +322,7 @@ Inherits from `_academic` (8-min periods). Adds:
 - Pagination engine extracted: `pagination.js` exports pure functions (`filterLogEvents`, `buildLogPagePlan`, `buildSummaryDescriptors`, `buildStatsDescriptors`, `paginateItems`, `availableRows`) — all print layout math with zero DOM dependency
 - Stateless Sheet: `Sheet.game` removed, `Sheet.init()` replaced with `Sheet.render(game, paperSize)` — all render methods accept `game` as parameter
 - `sheet-print.js` refactored to DOM-only rendering layer — consumes pagination plans from `pagination.js`, no pagination arithmetic
+- Time parsing extracted: `time.js` exports pure functions (`getMaxMinutes`, `parseTime`, `formatTimeDisplay`) — `events.js` delegates via thin wrappers
 
 ### Known Gaps / Future Work 📋
 - No substitution tracking (user hasn't decided)
