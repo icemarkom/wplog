@@ -426,7 +426,7 @@ describe("validateGameData — game clock time format", () => {
     }
 
     for (const time of ["10:00", "12:00", "1:2", ":30", "abc", "0:60"]) {
-        it(`rejects time "${time}"`, { todo: "see issue" }, () => {
+        it(`rejects time "${time}"`, () => {
             const result = validateGameData(validGame({
                 log: [validGoalEntry({ time })],
             }));
