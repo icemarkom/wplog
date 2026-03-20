@@ -23,20 +23,27 @@ export const Share = {
     _bound: false,
     _pageStyleEl: null,
     _paperSize: "letter",
+    _pendingFormat: null, // "csv" or "json"
 
     init(game) {
         this.game = game || null;
         const printBtn = document.getElementById("print-sheet-btn");
         const csvBtn = document.getElementById("export-csv-btn");
+        const jsonBtn = document.getElementById("export-json-btn");
         printBtn.disabled = !this.game;
         csvBtn.disabled = !this.game;
+        jsonBtn.disabled = !this.game;
         if (!this._bound) {
             printBtn.addEventListener("click", () => {
                 this._showPrintDialog();
             });
 
             csvBtn.addEventListener("click", () => {
-                this._showCSVDialog();
+                this._showDownloadDialog("csv");
+            });
+
+            jsonBtn.addEventListener("click", () => {
+                this._showDownloadDialog("json");
             });
 
             // Paper size segmented control
@@ -65,20 +72,20 @@ export const Share = {
                 if (e.target === e.currentTarget) this._closePrintDialog();
             });
 
-            // CSV confirm
-            document.getElementById("csv-confirm").addEventListener("click", () => {
-                this._closeCSVDialog();
-                this._doExport();
+            // Download confirm
+            document.getElementById("download-confirm").addEventListener("click", () => {
+                this._doDownload();
+                this._closeDownloadDialog();
             });
 
-            // CSV cancel
-            document.getElementById("csv-cancel").addEventListener("click", () => {
-                this._closeCSVDialog();
+            // Download cancel
+            document.getElementById("download-cancel").addEventListener("click", () => {
+                this._closeDownloadDialog();
             });
 
-            // CSV backdrop click = cancel
-            document.getElementById("csv-overlay").addEventListener("click", (e) => {
-                if (e.target === e.currentTarget) this._closeCSVDialog();
+            // Download backdrop click = cancel
+            document.getElementById("download-overlay").addEventListener("click", (e) => {
+                if (e.target === e.currentTarget) this._closeDownloadDialog();
             });
 
             this._bound = true;
@@ -116,22 +123,38 @@ export const Share = {
         this._pageStyleEl.textContent = `@page { size: ${cssSize}; margin: 0.5in; }`;
     },
 
-    // ── CSV Export Dialog ────────────────────────────────────
+    // ── Download Dialog (shared by CSV and JSON) ────────────
 
-    _showCSVDialog() {
+    _showDownloadDialog(format) {
         if (!this.game) return;
-        const input = document.getElementById("csv-filename");
-        input.value = this._buildFilename();
-        document.getElementById("csv-overlay").classList.add("visible");
+        this._pendingFormat = format;
+        const title = format === "json" ? "Download Game Data" : "Download CSV";
+        const ext = format === "json" ? ".json" : ".csv";
+        document.getElementById("download-title").textContent = title;
+        const input = document.getElementById("download-filename");
+        input.value = this._buildFilename(ext);
+        document.getElementById("download-overlay").classList.add("visible");
         input.focus();
         input.select();
     },
 
-    _closeCSVDialog() {
-        document.getElementById("csv-overlay").classList.remove("visible");
+    _closeDownloadDialog() {
+        document.getElementById("download-overlay").classList.remove("visible");
+        this._pendingFormat = null;
     },
 
-    _buildFilename() {
+    _doDownload() {
+        if (!this.game || !this._pendingFormat) return;
+        if (this._pendingFormat === "json") {
+            this._doDownloadJSON();
+        } else {
+            this._doDownloadCSV();
+        }
+    },
+
+    // ── Filename Builder ────────────────────────────────────
+
+    _buildFilename(ext) {
         const parts = ["wplog"];
 
         // Date
@@ -152,14 +175,25 @@ export const Share = {
             : new Date().toTimeString().slice(0, 5).replace(":", "");
         parts.push(time);
 
-        return parts.join("-") + ".csv";
+        return parts.join("-") + ext;
     },
 
     _sanitizeName(name) {
         return name.replace(/\s+/g, "-").replace(/[^a-zA-Z0-9-]/g, "");
     },
 
-    _doExport() {
+    // ── JSON Export ─────────────────────────────────────────
+
+    _doDownloadJSON() {
+        if (!this.game) return;
+        const json = JSON.stringify(this.game);
+        const blob = new Blob([json], { type: "application/json;charset=utf-8;" });
+        this._downloadBlob(blob, "download-filename");
+    },
+
+    // ── CSV Export ───────────────────────────────────────────
+
+    _doDownloadCSV() {
         if (!this.game) return;
         const header = "deviceTime,seq,period,time,team,cap,event";
         const rows = this.game.log.map((e) => {
@@ -175,12 +209,7 @@ export const Share = {
         });
         const csv = header + "\n" + rows.join("\n") + "\n";
         const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement("a");
-        a.href = url;
-        a.download = document.getElementById("csv-filename").value || this._buildFilename();
-        a.click();
-        URL.revokeObjectURL(url);
+        this._downloadBlob(blob, "download-filename");
     },
 
     _csvEscape(val) {
@@ -189,5 +218,16 @@ export const Share = {
             return "\"" + str.replace(/"/g, "\"\"") + "\"";
         }
         return str;
+    },
+
+    // ── Shared Download Helper ──────────────────────────────
+
+    _downloadBlob(blob, filenameInputId) {
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = document.getElementById(filenameInputId).value || "wplog-export";
+        a.click();
+        URL.revokeObjectURL(url);
     },
 };

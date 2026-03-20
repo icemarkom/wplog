@@ -1,0 +1,245 @@
+{
+  "rules": "NCAA",
+  "date": "2024-12-08",
+  "startTime": "14:00",
+  "endTime": "15:35",
+  "location": "Avery Aquatic Center, Stanford, CA",
+  "gameId": "NCAA-2024-FINAL",
+  "periodLength": 8,
+  "otPeriodLength": 3,
+  "overtime": true,
+  "shootout": false,
+  "timeoutsAllowed": {
+    "full": 3,
+    "to30": 1
+  },
+  "enableLog": true,
+  "enableStats": false,
+  "statsTimeMode": "off",
+  "white": {
+    "name": "UCLA"
+  },
+  "dark": {
+    "name": "USC"
+  },
+  "currentPeriod": 4,
+  "log": [
+    {
+      "id": 1, "seq": 10, "deviceTime": "", "period": 1,
+      "time": "5:32", "team": "W", "cap": "20", "event": "G",
+      "scoreW": 1, "scoreD": 0, "note": ""
+    },
+    {
+      "id": 2, "seq": 20, "deviceTime": "", "period": 1,
+      "time": "3:39", "team": "D", "cap": "4", "event": "P-E",
+      "scoreW": 1, "scoreD": 0, "note": ""
+    },
+    {
+      "id": 3, "seq": 30, "deviceTime": "", "period": 1,
+      "time": "3:39", "team": "W", "cap": "24", "event": "G",
+      "scoreW": 2, "scoreD": 0, "note": ""
+    },
+    {
+      "id": 4, "seq": 40, "deviceTime": "", "period": 1,
+      "time": "3:08", "team": "D", "cap": "2", "event": "G",
+      "scoreW": 2, "scoreD": 1, "note": ""
+    },
+    {
+      "id": 5, "seq": 50, "deviceTime": "", "period": 1,
+      "time": "2:45", "team": "D", "cap": "24", "event": "E",
+      "scoreW": 2, "scoreD": 1, "note": ""
+    },
+    {
+      "id": 6, "seq": 60, "deviceTime": "", "period": 1,
+      "time": "1:21", "team": "D", "cap": "21", "event": "E",
+      "scoreW": 2, "scoreD": 1, "note": ""
+    },
+    {
+      "id": 7, "seq": 70, "deviceTime": "", "period": 1,
+      "time": "0:27", "team": "W", "cap": "20", "event": "E",
+      "scoreW": 2, "scoreD": 1, "note": ""
+    },
+    {
+      "id": 8, "seq": 80, "deviceTime": "", "period": 1,
+      "time": "0:18", "team": "D", "cap": "6", "event": "G",
+      "scoreW": 2, "scoreD": 2, "note": ""
+    },
+    {
+      "id": 9, "seq": 90, "deviceTime": "", "period": 1,
+      "time": "0:00", "team": "", "cap": "", "event": "---",
+      "scoreW": 2, "scoreD": 2, "note": ""
+    },
+    {
+      "id": 10, "seq": 100, "deviceTime": "", "period": 2,
+      "time": "7:33", "team": "D", "cap": "9", "event": "G",
+      "scoreW": 2, "scoreD": 3, "note": ""
+    },
+    {
+      "id": 11, "seq": 110, "deviceTime": "", "period": 2,
+      "time": "5:59", "team": "D", "cap": "9", "event": "E",
+      "scoreW": 2, "scoreD": 3, "note": ""
+    },
+    {
+      "id": 12, "seq": 120, "deviceTime": "", "period": 2,
+      "time": "5:19", "team": "W", "cap": "8", "event": "G",
+      "scoreW": 3, "scoreD": 3, "note": ""
+    },
+    {
+      "id": 13, "seq": 130, "deviceTime": "", "period": 2,
+      "time": "3:47", "team": "W", "cap": "5", "event": "E",
+      "scoreW": 3, "scoreD": 3, "note": ""
+    },
+    {
+      "id": 14, "seq": 140, "deviceTime": "", "period": 2,
+      "time": "2:33", "team": "D", "cap": "10", "event": "E",
+      "scoreW": 3, "scoreD": 3, "note": ""
+    },
+    {
+      "id": 15, "seq": 150, "deviceTime": "", "period": 2,
+      "time": "2:03", "team": "W", "cap": "2", "event": "E",
+      "scoreW": 3, "scoreD": 3, "note": ""
+    },
+    {
+      "id": 16, "seq": 160, "deviceTime": "", "period": 2,
+      "time": "2:03", "team": "D", "cap": "11", "event": "G",
+      "scoreW": 3, "scoreD": 4, "note": ""
+    },
+    {
+      "id": 17, "seq": 170, "deviceTime": "", "period": 2,
+      "time": "1:42", "team": "W", "cap": "22", "event": "G",
+      "scoreW": 4, "scoreD": 4, "note": ""
+    },
+    {
+      "id": 18, "seq": 180, "deviceTime": "", "period": 2,
+      "time": "1:10", "team": "D", "cap": "4", "event": "E",
+      "scoreW": 4, "scoreD": 4, "note": ""
+    },
+    {
+      "id": 19, "seq": 190, "deviceTime": "", "period": 2,
+      "time": "0:36", "team": "W", "cap": "6", "event": "G",
+      "scoreW": 5, "scoreD": 4, "note": ""
+    },
+    {
+      "id": 20, "seq": 200, "deviceTime": "", "period": 2,
+      "time": "0:02", "team": "D", "cap": "5", "event": "E",
+      "scoreW": 5, "scoreD": 4, "note": ""
+    },
+    {
+      "id": 21, "seq": 210, "deviceTime": "", "period": 2,
+      "time": "0:00", "team": "", "cap": "", "event": "---",
+      "scoreW": 5, "scoreD": 4, "note": ""
+    },
+    {
+      "id": 22, "seq": 220, "deviceTime": "", "period": 3,
+      "time": "7:38", "team": "W", "cap": "1A", "event": "E",
+      "scoreW": 5, "scoreD": 4, "note": ""
+    },
+    {
+      "id": 23, "seq": 230, "deviceTime": "", "period": 3,
+      "time": "7:03", "team": "D", "cap": "2", "event": "G",
+      "scoreW": 5, "scoreD": 5, "note": ""
+    },
+    {
+      "id": 24, "seq": 240, "deviceTime": "", "period": 3,
+      "time": "5:22", "team": "D", "cap": "21", "event": "E",
+      "scoreW": 5, "scoreD": 5, "note": ""
+    },
+    {
+      "id": 25, "seq": 250, "deviceTime": "", "period": 3,
+      "time": "4:43", "team": "W", "cap": "24", "event": "E",
+      "scoreW": 5, "scoreD": 5, "note": ""
+    },
+    {
+      "id": 26, "seq": 260, "deviceTime": "", "period": 3,
+      "time": "4:29", "team": "D", "cap": "9", "event": "G",
+      "scoreW": 5, "scoreD": 6, "note": ""
+    },
+    {
+      "id": 27, "seq": 270, "deviceTime": "", "period": 3,
+      "time": "4:14", "team": "W", "cap": "2", "event": "G",
+      "scoreW": 6, "scoreD": 6, "note": ""
+    },
+    {
+      "id": 28, "seq": 280, "deviceTime": "", "period": 3,
+      "time": "3:30", "team": "W", "cap": "", "event": "TO",
+      "scoreW": 6, "scoreD": 6, "note": ""
+    },
+    {
+      "id": 29, "seq": 290, "deviceTime": "", "period": 3,
+      "time": "1:03", "team": "D", "cap": "11", "event": "E",
+      "scoreW": 6, "scoreD": 6, "note": ""
+    },
+    {
+      "id": 30, "seq": 300, "deviceTime": "", "period": 3,
+      "time": "0:49", "team": "W", "cap": "17", "event": "G",
+      "scoreW": 7, "scoreD": 6, "note": ""
+    },
+    {
+      "id": 31, "seq": 310, "deviceTime": "", "period": 3,
+      "time": "0:00", "team": "", "cap": "", "event": "---",
+      "scoreW": 7, "scoreD": 6, "note": ""
+    },
+    {
+      "id": 32, "seq": 320, "deviceTime": "", "period": 4,
+      "time": "7:34", "team": "D", "cap": "24", "event": "E",
+      "scoreW": 7, "scoreD": 6, "note": ""
+    },
+    {
+      "id": 33, "seq": 330, "deviceTime": "", "period": 4,
+      "time": "7:25", "team": "W", "cap": "6", "event": "G",
+      "scoreW": 8, "scoreD": 6, "note": ""
+    },
+    {
+      "id": 34, "seq": 340, "deviceTime": "", "period": 4,
+      "time": "6:46", "team": "D", "cap": "3", "event": "E",
+      "scoreW": 8, "scoreD": 6, "note": ""
+    },
+    {
+      "id": 35, "seq": 350, "deviceTime": "", "period": 4,
+      "time": "6:08", "team": "D", "cap": "4", "event": "G",
+      "scoreW": 8, "scoreD": 7, "note": ""
+    },
+    {
+      "id": 36, "seq": 360, "deviceTime": "", "period": 4,
+      "time": "5:42", "team": "W", "cap": "22", "event": "G",
+      "scoreW": 9, "scoreD": 7, "note": ""
+    },
+    {
+      "id": 37, "seq": 370, "deviceTime": "", "period": 4,
+      "time": "5:28", "team": "W", "cap": "6", "event": "E",
+      "scoreW": 9, "scoreD": 7, "note": ""
+    },
+    {
+      "id": 38, "seq": 380, "deviceTime": "", "period": 4,
+      "time": "4:19", "team": "W", "cap": "8", "event": "G",
+      "scoreW": 10, "scoreD": 7, "note": ""
+    },
+    {
+      "id": 39, "seq": 390, "deviceTime": "", "period": 4,
+      "time": "3:59", "team": "D", "cap": "6", "event": "E",
+      "scoreW": 10, "scoreD": 7, "note": ""
+    },
+    {
+      "id": 40, "seq": 400, "deviceTime": "", "period": 4,
+      "time": "3:00", "team": "D", "cap": "", "event": "TO",
+      "scoreW": 10, "scoreD": 7, "note": ""
+    },
+    {
+      "id": 41, "seq": 410, "deviceTime": "", "period": 4,
+      "time": "2:27", "team": "D", "cap": "20", "event": "G",
+      "scoreW": 10, "scoreD": 8, "note": ""
+    },
+    {
+      "id": 42, "seq": 420, "deviceTime": "", "period": 4,
+      "time": "0:13", "team": "W", "cap": "6", "event": "G",
+      "scoreW": 11, "scoreD": 8, "note": ""
+    },
+    {
+      "id": 43, "seq": 430, "deviceTime": "", "period": 4,
+      "time": "0:00", "team": "", "cap": "", "event": "---",
+      "scoreW": 11, "scoreD": 8, "note": ""
+    }
+  ],
+  "_nextId": 44,
+  "_nextSeq": 440
+}
