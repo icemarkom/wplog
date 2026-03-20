@@ -110,6 +110,10 @@ export const Setup = {
         // Disable rules change during game
         document.getElementById("setup-rules").disabled = true;
 
+        // Disable OT/SO if that phase has started
+        const hasOT = game.log.some((e) => typeof e.period === "string" && e.period.startsWith("OT"));
+        const hasSO = game.log.some((e) => e.period === "SO");
+
         // Live-save editable fields back to the active game
         const saveField = (id, setter) => {
             document.getElementById(id).addEventListener("change", () => {
@@ -153,13 +157,15 @@ export const Setup = {
 
         this._updateLoggingHeader();
 
-        // Post-regulation — set active and always disable during active game
+        // Post-regulation — set active and disable
         const prValue = game.overtime ? "overtime" : game.shootout ? "shootout" : "none";
         const prControl = document.getElementById("setup-post-regulation");
-        prControl.classList.add("disabled");
+        if (hasOT || hasSO) {
+            prControl.classList.add("disabled");
+        }
         prControl.querySelectorAll(".segment-btn").forEach((btn) => {
             btn.classList.toggle("active", btn.dataset.value === prValue);
-            btn.disabled = true;
+            if (hasOT || hasSO) btn.disabled = true;
         });
 
         // Steppers — set values and disable
