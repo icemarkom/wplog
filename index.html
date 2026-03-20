@@ -130,15 +130,15 @@
     </div>
   </div>
 
-  <!-- CSV Export Dialog -->
-  <div id="csv-overlay" class="overlay">
+  <!-- Download Dialog (shared by CSV and JSON exports) -->
+  <div id="download-overlay" class="overlay">
     <div class="overlay-content print-card">
-      <div class="overlay-title print-title">Export CSV</div>
-      <label for="csv-filename" class="sr-only">Filename</label>
-      <input type="text" id="csv-filename" class="csv-filename" spellcheck="false" autocomplete="off">
+      <div id="download-title" class="overlay-title print-title">Download</div>
+      <label for="download-filename" class="sr-only">Filename</label>
+      <input type="text" id="download-filename" class="csv-filename" spellcheck="false" autocomplete="off">
       <div class="print-dialog-actions">
-        <button id="csv-confirm" class="btn btn-primary btn-large">Download</button>
-        <button id="csv-cancel" class="btn-link">Cancel</button>
+        <button id="download-confirm" class="btn btn-primary btn-large">Download</button>
+        <button id="download-cancel" class="btn-link">Cancel</button>
       </div>
     </div>
   </div>
