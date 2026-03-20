@@ -247,7 +247,7 @@ export const App = {
         document.getElementById("nav-sheet").addEventListener("click", () => {
             if (this.game) {
                 this.showScreen("sheet");
-                Sheet.init(this.game);
+                Sheet.render(this.game);
             }
         });
 
@@ -386,7 +386,7 @@ export const App = {
             case "sheet":
                 if (this.game) {
                     this.showScreen("sheet");
-                    Sheet.init(this.game);
+                    Sheet.render(this.game);
                 } else {
                     this.showScreen("setup");
                 }

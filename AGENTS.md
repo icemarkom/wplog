@@ -33,13 +33,17 @@ wplog/
 │   ├── config.js       # APP_VERSION + RULES definitions (USAWP, NFHS Varsity, NFHS JV, NCAA)
 │   ├── confirm.js      # Custom confirmation dialog (replaces native confirm())
 │   ├── storage.js      # localStorage wrapper (with schema validation)
-│   ├── game.js         # Core data model + game logic
+│   ├── game.js         # Core data model + game logic (pure — no Storage dependency)
 │   ├── setup.js        # Setup screen (with active-game guards)
-│   ├── events.js       # Live log screen (main UI)
-│   ├── sheet.js        # Game sheet orchestrator + shared render helpers
+│   ├── events.js       # Live log screen (main UI, owns Storage.save after mutations)
+│   ├── time.js         # Time parsing utilities (pure — no DOM, no game state)
+│   ├── sheet.js        # Game sheet orchestrator + shared render helpers (stateless — no stored game)
+│   ├── sheet-data.js   # Sheet data builders (pure — no DOM)
 │   ├── sheet-screen.js # Game sheet screen rendering (2-page DOM layout)
-│   ├── sheet-print.js  # Game sheet print pagination (multi-column, table splitting)
+│   ├── sheet-print.js  # Game sheet print rendering (DOM only — renders from pagination plans)
+│   ├── pagination.js   # Print pagination engine (pure — no DOM)
 │   ├── share.js        # Share/Print functionality
+│   ├── export.js       # Export utilities — filename, CSV builders (pure — no DOM)
 │   └── app.js          # App init + screen navigation + version display
 ├── help.html           # Standalone help page (uses standalone.css)
 ├── sw.js               # Service worker (offline caching, version-keyed cache)
@@ -56,7 +60,11 @@ wplog/
 │       ├── geronimo.md  # "geronimo" = one-time approval to commit/push/close
 │       └── kraken.md    # "kraken" = tag and release workflow
 ├── testdata/
-│   └── monster-game.json  # 201-event stress test data for print pagination testing
+│   ├── small-game.json     # NCAA Final test data (43 events)
+│   ├── medium-game.json    # NCAA Semifinal test data (52 events)
+│   └── large-game.json     # NFHS Varsity + OT test data (65 events)
+├── tools/
+│   └── serve.go           # Dev server (Go stdlib) — correct MIME types for ES modules
 ├── PRIVACY.md          # Privacy policy (Markdown, for GitHub)
 └── privacy.html        # Privacy policy (HTML, canonical for OAuth consent)
 ```
@@ -136,7 +144,7 @@ These were explicitly discussed and agreed with the user:
 | **Stats are separate from log** | Live view: stats interleaved in recent events with teal accent. Game sheet: stats filtered from Progress of Game, shown in separate Player Stats section. |
 | **Logging mode** | Collapsible section on setup screen with mode segmented control (Game Log Only / Both / Stats Only) and Stats Time Entry (Disabled / Optional / Required). Summary shown in foldable header. |
 | **Stats code = name** | Stats events omit `code` in config — auto-derived from `name`. Normalizer runs at load time for any event missing a code. Multi-word codes (e.g. "Field Block") are supported. |
-| **Stats buttons teal** | Shot (S) and Assist (A) buttons styled with `color: "teal"` (`#2dd4bf`). Visual separator between log and stats buttons. |
+| **Stats buttons teal** | All stats buttons styled with `color: "teal"` (`#2dd4bf`). Visual separator between log and stats buttons. |
 | **Player Stats on sheet** | Single `<table>` per stat type with colspan White/Dark headers. Per-period columns (Q1, Q2, etc.) + bold Total. All events with cap numbers aggregated (not just statsOnly). Proper English pluralization for section titles. |
 | **`statsOnly` flag** | Events with `statsOnly: true` skip foul-out checks, allow blank time, and are filtered from Progress of Game on sheet. |
 | **`statsTimeMode`** | Controls time field in modal: `"off"` = hidden, `"optional"` = shown but not required, `"on"` = required. Stored in game data model. |
@@ -157,8 +165,8 @@ These were explicitly discussed and agreed with the user:
 | Brutality | `BR` | `autoFoulOut: 1, color: "red"` |
 | Red Card | `RC` | `color: "red", allowCoach: true, allowAssistant: true` |
 | Game Exclusion | `E-Game` | `autoFoulOut: 1, color: "red"` |
-| Shot | `S` | `statsOnly: true, color: "teal"` |
-| Assist | `A` | `statsOnly: true, color: "teal"` |
+| Shot | — | `statsOnly: true, color: "teal"` |
+| Assist | — | `statsOnly: true, color: "teal"` |
 | Offensive | — | `statsOnly: true, color: "teal"` |
 | Steal | — | `statsOnly: true, color: "teal"` |
 | Intercept | — | `statsOnly: true, color: "teal"` |
@@ -188,7 +196,7 @@ Inherits from `_academic` (8-min periods). Adds:
 
 ---
 
-## Current State (as of 2026-03-20)
+## Current State (as of 2026-03-21)
 
 ### What's Done ✅
 - Complete setup screen (rules, date, time, location, Game #, team names, OT/SO toggles, timeout overrides)
@@ -289,8 +297,12 @@ Inherits from `_academic` (8-min periods). Adds:
 - Branching workflow converted to agentskills.io skill (`.agents/skills/branching/SKILL.md`)
 - Setup screen progressive disclosure: essentials always visible (Rules, Teams), Game Details, Game Setup, and Logging as collapsible sections, Start Game at bottom
 - Single-track branching model (post-v2): all work off `main`, `v2-dev` retired
-- Test data: `testdata/monster-game.json` with 201 events for print pagination stress testing
+- Test data: real game data files (`testdata/small-game.json`, `testdata/medium-game.json`, `testdata/large-game.json`) for NCAA and NFHS rule sets
 - CSV export: Download CSV button on Share screen with editable filename dialog (date + teams + time)
+- JSON export: Download Game Data button on Share screen (compact JSON, shared filename dialog with CSV)
+- Load Game: button on Setup screen (visible when no game active), file picker for JSON, 5-layer validation
+- Input validation: `validateGameData()` in `storage.js` — file size limit (128 KB), schema checks, property stripping, allowlisted fields only
+- Error dialog for invalid load files (foul-out overlay pattern with specific error messages)
 - Screen persistence: active screen restored across page reloads via `sessionStorage`
 - Game Setup section uses stepper controls for period length, OT length, and timeout limits (with ∞ option)
 - Stepper boundary protection: dec disabled at min, inc disabled at max (non-unlimited), defensive min/max guards in click handlers, init ordering ensures disable states aren't overwritten
@@ -304,10 +316,23 @@ Inherits from `_academic` (8-min periods). Adds:
 - Service worker registration in `loader.js` with `{ type: 'module' }` — enables offline caching, cache busting via `APP_VERSION`
 - Restart App handler awaits async cleanup (SW unregistration + cache deletion) before reload — fixes race condition
 - Help documentation kept current alongside feature delivery — geronimo and kraken workflows include help.html check steps, bazinga establishes doc-as-delivery principle
+- `Game` decoupled from `Storage`: mutation methods (`addEvent`, `deleteEvent`, `editEvent`, `advancePeriod`) no longer call `Storage.save()` — UI layer (`events.js`) owns persistence
+- Score formatting extracted: `formatFractionalScore()` exported from `game.js` as a pure utility
+- Sheet data builders extracted: `sheet-data.js` exports pure functions (`buildPeriodScores`, `buildPersonalFoulTable`, `buildTimeoutSummary`, `buildCardSummary`, `buildPlayerStats`) — `sheet.js` render methods are thin DOM wrappers
+- Pagination engine extracted: `pagination.js` exports pure functions (`filterLogEvents`, `buildLogPagePlan`, `buildSummaryDescriptors`, `buildStatsDescriptors`, `paginateItems`, `availableRows`) — all print layout math with zero DOM dependency
+- Stateless Sheet: `Sheet.game` removed, `Sheet.init()` replaced with `Sheet.render(game, paperSize)` — all render methods accept `game` as parameter
+- `sheet-print.js` refactored to DOM-only rendering layer — consumes pagination plans from `pagination.js`, no pagination arithmetic
+- Time parsing extracted: `time.js` exports pure functions (`getMaxMinutes`, `parseTime`, `formatTimeDisplay`) — `events.js` delegates via thin wrappers
+- Export module extracted: `export.js` exports pure functions (`buildCSV`, `makeFilename`) — CSV/filename builders with zero DOM dependency
+- Input validation fixes: cap `"0"` rejected, time `"0:60"` rejected (seconds ≥ 60)
+- Unit test framework: 561 Node.js tests across 11 modules (`game`, `config`, `export`, `sheet-data`, `pagination`, `time`, `storage`)
+- Browser test suite: 115 tests across 6 DOM-dependent modules (`setup`, `events`, `confirm`, `share`, `sheet`, `app`)
+- Dev server: `tools/serve.go` (Go stdlib) with correct MIME types for ES modules and browser testing
+- Test data: realistic game fixtures in `testdata/` (small/medium/large) for NCAA and NFHS rule sets
 
 ### Known Gaps / Future Work 📋
 - No substitution tracking (user hasn't decided)
-- Multi-game management not implemented (save/load multiple games)
+- Refactor tests to contract-based assertions (#151)
 
 
 ---
@@ -315,10 +340,10 @@ Inherits from `_academic` (8-min periods). Adds:
 ## How to Run
 
 Serve locally with any static file server. The app has no build step.
-Do NOT use Python's `http.server` — use the included `serve.go`:
+Do NOT use Python's `http.server` — use the included dev server:
 
 ```sh
-go run serve.go
+go run tools/serve.go
 ```
 
 Then open `http://localhost:8080`.

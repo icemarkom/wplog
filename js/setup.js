@@ -16,7 +16,7 @@
 
 import { RULES } from './config.js';
 import { ConfirmDialog } from './confirm.js';
-import { Storage } from './storage.js';
+import { Storage, validateGameData } from './storage.js';
 import { Game } from './game.js';
 
 // wplog — Setup Screen Logic
@@ -81,6 +81,9 @@ export const Setup = {
         document.getElementById("setup-game-id").value = game.gameId || "";
         document.getElementById("setup-white-name").value = game.white.name === "White" ? "" : game.white.name;
         document.getElementById("setup-dark-name").value = game.dark.name === "Dark" ? "" : game.dark.name;
+
+        // Hide Load Game button during active game
+        document.getElementById("setup-load-btn").style.display = "none";
 
         // Replace Start Game with End Game button
         const startBtn = document.getElementById("setup-start-btn");
@@ -358,6 +361,20 @@ export const Setup = {
             this._startGame();
         });
 
+        // Load Game button → trigger hidden file input
+        document.getElementById("setup-load-btn").addEventListener("click", () => {
+            document.getElementById("setup-load-file").click();
+        });
+
+        // File input change → validate and load
+        document.getElementById("setup-load-file").addEventListener("change", (e) => {
+            if (e.target.files.length > 0) {
+                this._loadGame(e.target.files[0]);
+            }
+            // Reset so same file can be re-selected
+            e.target.value = "";
+        });
+
         // Toggle has-value class for time input styling
         document.getElementById("setup-time").addEventListener("change", (e) => {
             e.target.classList.toggle("has-value", !!e.target.value);
@@ -448,5 +465,59 @@ export const Setup = {
 
         Storage.save(game);
         this.onStart(game);
+    },
+
+    // ── Load Game from file ──
+
+    async _loadGame(file) {
+        // Layer 1: File size check
+        if (file.size > Storage.MAX_FILE_SIZE) {
+            this._showLoadError(
+                `File too large (${Math.round(file.size / 1024)} KB). ` +
+                `Maximum is ${Storage.MAX_FILE_SIZE / 1024} KB.`
+            );
+            return;
+        }
+
+        let text;
+        try {
+            text = await file.text();
+        } catch (e) {
+            this._showLoadError("Could not read file.");
+            return;
+        }
+
+        // Layer 1: Cheap pre-check
+        if (!text.trimStart().startsWith("{")) {
+            this._showLoadError("File does not contain valid JSON.");
+            return;
+        }
+
+        // Layer 2: JSON parse
+        let parsed;
+        try {
+            parsed = JSON.parse(text);
+        } catch (e) {
+            this._showLoadError("Invalid JSON: " + e.message);
+            return;
+        }
+
+        // Layer 3+4: Schema validation + property stripping
+        const result = validateGameData(parsed);
+        if (!result.valid) {
+            this._showLoadError(result.error);
+            return;
+        }
+
+        // Success: save clean data and reload
+        Storage.save(result.data);
+        location.reload();
+    },
+
+    _showLoadError(message) {
+        const overlay = document.getElementById("foulout-overlay");
+        document.getElementById("foulout-title").textContent = "Load Failed";
+        document.getElementById("foulout-message").textContent = message;
+        overlay.classList.add("visible");
     },
 };

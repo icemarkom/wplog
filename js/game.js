@@ -15,9 +15,13 @@
  */
 
 import { RULES } from './config.js';
-import { Storage } from './storage.js';
 
 // wplog — Game State Management
+
+// Pure utility: format a fractional SO score (e.g., "5.3" for 5 total, 3 in SO).
+export function formatFractionalScore(totalScore, soGoals) {
+    return `${totalScore - soGoals}.${soGoals}`;
+}
 
 export const Game = {
     // Create a new game with defaults from rules
@@ -80,7 +84,6 @@ export const Game = {
         game.log.push(entry);
         this._sortLog(game);
         this._recalcScores(game);
-        Storage.save(game);
         return entry;
     },
 
@@ -88,7 +91,6 @@ export const Game = {
     deleteEvent(game, eventId) {
         game.log = game.log.filter((e) => e.id !== eventId);
         this._recalcScores(game);
-        Storage.save(game);
     },
 
     // Edit an existing event and recalculate scores
@@ -98,7 +100,6 @@ export const Game = {
         Object.assign(entry, updates);
         this._sortLog(game);
         this._recalcScores(game);
-        Storage.save(game);
     },
 
     // Sort events within each period by game time (descending).
@@ -172,8 +173,8 @@ export const Game = {
         if (!inSO) return { white: String(score.white), dark: String(score.dark) };
 
         return {
-            white: (score.white - soW) + "." + soW,
-            dark: (score.dark - soD) + "." + soD,
+            white: formatFractionalScore(score.white, soW),
+            dark: formatFractionalScore(score.dark, soD),
         };
     },
 
@@ -183,7 +184,7 @@ export const Game = {
         const soW = game.log.filter(e => e.id <= entry.id && e.event === "G" && e.team === "W" && e.period === "SO").length;
         const soD = game.log.filter(e => e.id <= entry.id && e.event === "G" && e.team === "D" && e.period === "SO").length;
         if (soW === 0 && soD === 0) return entry.scoreW + "–" + entry.scoreD;
-        return (entry.scoreW - soW) + "." + soW + "–" + (entry.scoreD - soD) + "." + soD;
+        return formatFractionalScore(entry.scoreW, soW) + "–" + formatFractionalScore(entry.scoreD, soD);
     },
 
     // Get timeouts used per team
@@ -303,7 +304,6 @@ export const Game = {
         const next = this.getNextPeriod(game);
         if (next !== null) {
             game.currentPeriod = next;
-            Storage.save(game);
         }
         return next;
     },

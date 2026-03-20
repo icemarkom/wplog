@@ -17,54 +17,59 @@
 import { RULES } from './config.js';
 import { Game } from './game.js';
 import { escapeHTML } from './sanitize.js';
+import { buildPeriodScores, buildPersonalFoulTable, buildTimeoutSummary, buildCardSummary, buildPlayerStats } from './sheet-data.js';
 import { renderScreen } from './sheet-screen.js';
-import { buildLogPages, buildSummaryItems, buildStatsItems, paginateItems } from './sheet-print.js';
+import {
+    availableRows,
+    filterLogEvents,
+    buildLogPagePlan,
+    buildSummaryDescriptors,
+    buildStatsDescriptors,
+    paginateItems,
+} from './pagination.js';
+import { renderLogPages, renderSummaryPages, renderStatsPages } from './sheet-print.js';
 
-// wplog — Game Sheet (Orchestrator + Shared Helpers)
+// wplog — Game Sheet (Stateless Orchestrator + Shared Render Helpers)
+//
+// Sheet does not hold game state. All methods receive `game` as a parameter.
+// Pure pagination logic lives in pagination.js; DOM rendering in sheet-print.js.
 
 export const Sheet = {
-    game: null,
 
-    // Row-based print constants (all measurements in 18px rows).
-    _ROW_HEIGHT: 18,
-    // Measured header: title(26) + meta(94) + teams(40) + gaps(32) = 192px
-    // 192/18 = 10.67 → round up to 11.
-    _PAGE_ROWS: { letter: 52, a4: 56 },
-    _HEADER_ROWS: 12,
+    // ── Main entry point ─────────────────────────────────────────
 
-    init(game, paperSize) {
-        this.game = game;
-        this.render(paperSize || null);
-    },
-
-    // ── Main render ──────────────────────────────────────────────
-
-    render(paperSize) {
+    render(game, paperSize) {
         const container = document.getElementById("sheet-content");
         container.innerHTML = "";
 
-        const rules = RULES[this.game.rules];
         const isPrint = !!paperSize;
 
         if (!isPrint) {
-            renderScreen(this, container);
+            renderScreen(game, this, container);
             return;
         }
 
         // Print mode: paginated, multi-column log, sections on own pages
-        const availRows = this._PAGE_ROWS[paperSize] - this._HEADER_ROWS;
+        const avail = availableRows(paperSize);
+        const rules = RULES[game.rules];
 
         // === Section 1: Game Log ===
-        const logPages = buildLogPages(this, availRows);
+        const filteredLog = filterLogEvents(game.log, rules);
+        const logPlan = buildLogPagePlan(filteredLog.length, avail);
+        const logPages = renderLogPages(logPlan, filteredLog, game, rules, avail);
+
         // === Section 2: Game Summary ===
-        const summaryItems = buildSummaryItems(this);
-        const summaryPages = paginateItems(summaryItems, availRows);
+        const summaryDescriptors = buildSummaryDescriptors(game);
+        const summaryPlan = paginateItems(summaryDescriptors, avail);
+        const summaryPages = renderSummaryPages(summaryPlan, summaryDescriptors, game);
+
         // === Section 3: Game Stats (optional) ===
         let statsPages = [];
-        if (this.game.enableStats) {
-            const statsItems = buildStatsItems(this);
-            if (statsItems.length > 0) {
-                statsPages = paginateItems(statsItems, availRows);
+        if (game.enableStats) {
+            const statsDescriptors = buildStatsDescriptors(game);
+            if (statsDescriptors.length > 0) {
+                const statsPlan = paginateItems(statsDescriptors, avail);
+                statsPages = renderStatsPages(statsPlan, statsDescriptors, game);
             }
         }
 
@@ -87,7 +92,7 @@ export const Sheet = {
                 pageNum++;
                 const pageDiv = document.createElement("div");
                 pageDiv.className = "sheet-page" + (pageNum > 1 ? " sheet-page-break" : "");
-                pageDiv.appendChild(this._renderHeader(section.title, pageNum, totalPages));
+                pageDiv.appendChild(this._renderHeader(game, section.title, pageNum, totalPages));
                 for (const el of page.elements) {
                     pageDiv.appendChild(el);
                 }
@@ -98,8 +103,7 @@ export const Sheet = {
 
     // ── Header ───────────────────────────────────────────────────
 
-    _renderHeader(title, pageNum, totalPages) {
-        const game = this.game;
+    _renderHeader(game, title, pageNum, totalPages) {
         const header = document.createElement("div");
         header.className = "sheet-header";
 
@@ -146,7 +150,7 @@ export const Sheet = {
 
     // ── Existing render helpers (used by both screen + print) ────
 
-    _renderProgressOfGame() {
+    _renderProgressOfGame(game) {
         const section = document.createElement("div");
         section.className = "sheet-section";
 
@@ -171,13 +175,9 @@ export const Sheet = {
         table.appendChild(thead);
 
         const tbody = document.createElement("tbody");
-        const rules = RULES[this.game.rules];
+        const rules = RULES[game.rules];
 
-        const logEntries = this.game.log.filter((entry) => {
-            if (entry.event === "---") return true;
-            const eventDef = rules.events.find((e) => e.code === entry.event);
-            return !eventDef || !eventDef.statsOnly;
-        });
+        const logEntries = filterLogEvents(game.log, rules);
 
         for (const entry of logEntries) {
             const tr = document.createElement("tr");
@@ -193,7 +193,7 @@ export const Sheet = {
           <td>${escapeHTML(entry.cap || "—")}</td>
           <td>${escapeHTML(entry.team || "—")}</td>
           <td style="text-align:${align}">${escapeHTML(entry.event)}</td>
-          <td>${escapeHTML(Game.formatEntryScore(entry, this.game))}</td>
+          <td>${escapeHTML(Game.formatEntryScore(entry, game))}</td>
         `;
             }
             tbody.appendChild(tr);
@@ -204,7 +204,8 @@ export const Sheet = {
         return section;
     },
 
-    _renderPeriodScores() {
+    _renderPeriodScores(game) {
+        const data = buildPeriodScores(game);
         const section = document.createElement("div");
         section.className = "sheet-section";
 
@@ -216,8 +217,7 @@ export const Sheet = {
         const table = document.createElement("table");
         table.className = "sheet-table sheet-table-compact";
 
-        const periods = Game.getAllPeriods(this.game);
-        const headerCells = periods.map((p) => `<th>${Game.getPeriodLabel(p)}</th>`).join("");
+        const headerCells = data.periods.map((p) => `<th>${p}</th>`).join("");
 
         const thead = document.createElement("thead");
         thead.innerHTML = `<tr><th>Team</th>${headerCells}<th>Total</th></tr>`;
@@ -225,22 +225,13 @@ export const Sheet = {
 
         const tbody = document.createElement("tbody");
 
-        for (const team of ["W", "D"]) {
+        for (const [label, scores, total] of [["White", data.white, data.totalWhite], ["Dark", data.dark, data.totalDark]]) {
             const tr = document.createElement("tr");
-            const teamLabel = team === "W" ? "White" : "Dark";
-            let total = 0;
-            let cells = `<td class="sheet-team-cell">${teamLabel}</td>`;
-
-            for (const period of periods) {
-                const goals = this.game.log.filter(
-                    (e) => e.event === "G" && e.team === team && e.period === period
-                ).length;
-                total += goals;
-                cells += `<td>${String(goals)}</td>`;
+            let cells = `<td class="sheet-team-cell">${label}</td>`;
+            for (const count of scores) {
+                cells += `<td>${String(count)}</td>`;
             }
-            const displayScore = Game.getDisplayScore(this.game);
-            const totalDisplay = team === "W" ? displayScore.white : displayScore.dark;
-            cells += `<td class="sheet-total"><strong>${totalDisplay}</strong></td>`;
+            cells += `<td class="sheet-total"><strong>${total}</strong></td>`;
             tr.innerHTML = cells;
             tbody.appendChild(tr);
         }
@@ -250,7 +241,8 @@ export const Sheet = {
         return section;
     },
 
-    _renderFoulSummary() {
+    _renderFoulSummary(game) {
+        const data = buildPersonalFoulTable(game);
         const section = document.createElement("div");
         section.className = "sheet-section";
 
@@ -259,29 +251,7 @@ export const Sheet = {
         title.textContent = "Personal Fouls";
         section.appendChild(title);
 
-        const rules = RULES[this.game.rules];
-        const foulCodes = rules.events
-            .filter(e => e.isPersonalFoul || e.autoFoulOut)
-            .map(e => e.code);
-        const playerFouls = {};
-
-        for (const entry of this.game.log) {
-            if (foulCodes.includes(entry.event) && entry.cap) {
-                const key = entry.team + "#" + entry.cap;
-                if (!playerFouls[key]) {
-                    playerFouls[key] = { team: entry.team, cap: entry.cap, fouls: [] };
-                }
-                const eventDef = rules.events.find((e) => e.code === entry.event);
-                playerFouls[key].fouls.push({
-                    period: entry.period,
-                    time: entry.time,
-                    event: eventDef ? eventDef.name : entry.event,
-                    code: entry.event,
-                });
-            }
-        }
-
-        if (Object.keys(playerFouls).length === 0) {
+        if (data.length === 0) {
             const empty = document.createElement("p");
             empty.className = "sheet-empty";
             empty.textContent = "No personal fouls recorded.";
@@ -299,27 +269,18 @@ export const Sheet = {
 
         const tbody = document.createElement("tbody");
 
-        for (const [, player] of Object.entries(playerFouls)) {
+        for (const player of data) {
             const tr = document.createElement("tr");
-            const personalFoulCount = player.fouls.filter(f => {
-                const def = rules.events.find(e => e.name === f.event);
-                return def && def.isPersonalFoul;
-            }).length;
-            const hasAutoFoulOut = player.fouls.some(f => {
-                const def = rules.events.find(e => e.name === f.event);
-                return def && def.autoFoulOut;
-            });
-            const isFouledOut = personalFoulCount >= rules.foulOutLimit || hasAutoFoulOut;
-            if (isFouledOut) tr.classList.add("sheet-fouled-out");
+            if (player.fouledOut) tr.classList.add("sheet-fouled-out");
 
-            const details = player.fouls
+            const details = player.details
                 .map((f) => `${Game.getPeriodLabel(f.period)} ${f.time} ${f.event}`)
                 .join("; ");
 
             tr.innerHTML = `
         <td>${player.team === "W" ? "White" : "Dark"}</td>
         <td>${escapeHTML(player.cap)}</td>
-        <td>${player.fouls.length}</td>
+        <td>${player.count}</td>
         <td class="sheet-foul-details">${escapeHTML(details)}</td>
       `;
             tbody.appendChild(tr);
@@ -330,7 +291,8 @@ export const Sheet = {
         return section;
     },
 
-    _renderTimeoutSummary() {
+    _renderTimeoutSummary(game) {
+        const data = buildTimeoutSummary(game);
         const section = document.createElement("div");
         section.className = "sheet-section";
 
@@ -339,9 +301,7 @@ export const Sheet = {
         title.textContent = "Timeouts";
         section.appendChild(title);
 
-        const timeouts = this.game.log.filter((e) => e.event === "TO" || e.event === "TO30");
-
-        if (timeouts.length === 0) {
+        if (data.length === 0) {
             const empty = document.createElement("p");
             empty.className = "sheet-empty";
             empty.textContent = "No timeouts recorded.";
@@ -358,16 +318,13 @@ export const Sheet = {
     `;
 
         const tbody = document.createElement("tbody");
-        for (const entry of timeouts) {
+        for (const entry of data) {
             const tr = document.createElement("tr");
-            const rules = RULES[this.game.rules];
-            const eventDef = rules.events.find((e) => e.code === entry.event);
-            const teamDisplay = entry.team === "W" ? "White" : (entry.team === "D" ? "Dark" : (entry.team === "" ? "Official" : "—"));
             tr.innerHTML = `
-        <td>${teamDisplay}</td>
-        <td>${Game.getPeriodLabel(entry.period)}</td>
-        <td>${entry.time.replace(/^0(\d:)/, '$1')}</td>
-        <td>${eventDef ? eventDef.name : entry.event}</td>
+        <td>${entry.team}</td>
+        <td>${entry.period}</td>
+        <td>${entry.time}</td>
+        <td>${entry.type}</td>
       `;
             tbody.appendChild(tr);
         }
@@ -377,14 +334,13 @@ export const Sheet = {
         return section;
     },
 
-    _renderCardSummary() {
+    _renderCardSummary(game) {
+        const data = buildCardSummary(game);
         const section = document.createElement("div");
         section.className = "sheet-section";
         section.innerHTML = `<div class="sheet-section-title">Cards</div>`;
 
-        const cards = this.game.log.filter((e) => e.event === "YC" || e.event === "RC");
-
-        if (cards.length === 0) {
+        if (data.length === 0) {
             const empty = document.createElement("p");
             empty.className = "sheet-empty";
             empty.textContent = "No cards issued.";
@@ -401,16 +357,14 @@ export const Sheet = {
     `;
 
         const tbody = document.createElement("tbody");
-        for (const entry of cards) {
+        for (const entry of data) {
             const tr = document.createElement("tr");
-            const rules = RULES[this.game.rules];
-            const eventDef = rules.events.find((e) => e.code === entry.event);
             tr.innerHTML = `
-        <td>${entry.team === "W" ? "White" : (entry.team === "D" ? "Dark" : "—")}</td>
-        <td>${escapeHTML(entry.cap || "—")}</td>
-        <td>${Game.getPeriodLabel(entry.period)}</td>
-        <td>${escapeHTML(entry.time.replace(/^0(\d:)/, '$1'))}</td>
-        <td>${eventDef ? eventDef.name : escapeHTML(entry.event)}</td>
+        <td>${entry.team}</td>
+        <td>${escapeHTML(entry.cap)}</td>
+        <td>${entry.period}</td>
+        <td>${escapeHTML(entry.time)}</td>
+        <td>${entry.type}</td>
       `;
             tbody.appendChild(tr);
         }
@@ -420,7 +374,8 @@ export const Sheet = {
         return section;
     },
 
-    _renderPlayerStats() {
+    _renderPlayerStats(game) {
+        const data = buildPlayerStats(game);
         const section = document.createElement("div");
         section.className = "sheet-section";
 
@@ -429,45 +384,7 @@ export const Sheet = {
         title.textContent = "Player Stats";
         section.appendChild(title);
 
-        const rules = RULES[this.game.rules];
-        const statTypes = rules.events
-            .filter((e) => !e.teamOnly)
-            .map((e) => {
-                const n = e.name;
-                const plural = n.endsWith("y") ? n.slice(0, -1) + "ies" : n + "s";
-                return { code: e.code, name: plural };
-            });
-
-        const periodOrder = [];
-        const periodSeen = new Set();
-        for (const entry of this.game.log) {
-            if (entry.event === "---") continue;
-            if (!periodSeen.has(entry.period)) {
-                periodSeen.add(entry.period);
-                periodOrder.push(entry.period);
-            }
-        }
-
-        const counts = {};
-        for (const st of statTypes) {
-            counts[st.code] = { W: {}, D: {} };
-        }
-        for (const entry of this.game.log) {
-            if (!entry.cap || !entry.team) continue;
-            if (!counts[entry.event]) continue;
-            const teamData = counts[entry.event][entry.team];
-            if (!teamData[entry.cap]) teamData[entry.cap] = {};
-            teamData[entry.cap][entry.period] = (teamData[entry.cap][entry.period] || 0) + 1;
-        }
-
-        let anyStats = false;
-        for (const st of statTypes) {
-            if (Object.keys(counts[st.code].W).length > 0 || Object.keys(counts[st.code].D).length > 0) {
-                anyStats = true;
-                break;
-            }
-        }
-        if (!anyStats) {
+        if (!data) {
             const empty = document.createElement("p");
             empty.className = "sheet-empty";
             empty.textContent = "No stats recorded.";
@@ -475,16 +392,14 @@ export const Sheet = {
             return section;
         }
 
-        const periodHeaders = periodOrder.map((p) => Game.getPeriodLabel(p));
-        const colsPerTeam = 1 + periodHeaders.length + 1;
+        const colsPerTeam = 1 + data.periodLabels.length + 1;
 
-        for (const st of statTypes) {
-            const wCaps = Object.keys(counts[st.code].W).sort((a, b) => (parseInt(a) || 0) - (parseInt(b) || 0));
-            const dCaps = Object.keys(counts[st.code].D).sort((a, b) => (parseInt(a) || 0) - (parseInt(b) || 0));
+        for (const st of data.statTypes) {
+            const wCaps = Object.keys(data.stats[st.code].W).sort((a, b) => (parseInt(a) || 0) - (parseInt(b) || 0));
+            const dCaps = Object.keys(data.stats[st.code].D).sort((a, b) => (parseInt(a) || 0) - (parseInt(b) || 0));
             if (wCaps.length === 0 && dCaps.length === 0) continue;
 
-            const tableWrapper = this._renderStatTypeTable(st, wCaps, dCaps, counts[st.code], periodOrder, periodHeaders, colsPerTeam);
-            // Append the table directly (unwrap from the wrapper div)
+            const tableWrapper = this._renderStatTypeTable(st, wCaps, dCaps, data.stats[st.code], data.periods, data.periodLabels, colsPerTeam);
             section.appendChild(tableWrapper);
         }
 
