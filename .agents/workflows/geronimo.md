@@ -16,26 +16,27 @@ When the user says **"geronimo"**, they are giving one-time approval to run all 
 
 // turbo-all
 
-1. **Update `AGENTS.md`** — review the "Current State" section and update it to reflect the changes being shipped:
+1. **Update `help.html`** — if any user-facing changes are being shipped, check whether the help content needs updating. Update if needed.
+2. **Update `AGENTS.md`** — review the "Current State" section and update it to reflect the changes being shipped:
    - Add new items to the "What's Done ✅" list
    - Update design decision table entries if any decisions changed
    - Update the date in the section header
    - Remove completed items from "Known Gaps / Future Work 📋" if applicable
-2. **Fix license headers** — run `addlicense -c "Marko Milivojevic" -l apache -ignore '.github/**' -ignore '.agents/**' -ignore 'lib/**' .` to add any missing headers.
-3. **Commit** the staged/changed files with an appropriate commit message referencing the issue number.
+3. **Fix license headers** — run `addlicense -c "Marko Milivojevic" -l apache -ignore '.github/**' -ignore '.agents/**' -ignore 'lib/**' .` to add any missing headers.
+4. **Commit** the staged/changed files with an appropriate commit message referencing the issue number.
    > **Signed commits:** All commits in this repo are signed. The commit command will trigger a passphrase prompt. When this happens, **pause and instruct the user to enter the passphrase in the IDE** — it is handled by an extension the agent cannot interact with. Wait for the commit to complete before proceeding.
-4. **Push** the current branch to `origin`.
-5. **Merge via GitHub** (skip on `main`) — create a PR and merge into `main`:
+5. **Push** the current branch to `origin`.
+6. **Merge via GitHub** (skip on `main`) — create a PR and merge into `main`:
    ```sh
    gh pr create --fill --base main
    gh pr merge --merge --delete-branch
    ```
-6. **Pull main** locally (skip if already on `main`):
+7. **Pull main** locally (skip if already on `main`):
    ```sh
    git checkout main && git pull origin main
    ```
-7. **Comment on and close** the relevant GitHub issue using `gh issue close <N> -c "<comment>"`. Skip if the issue is still in progress.
-8. **Prune stale branches** — run `git fetch --prune origin` to clean up any stale remote tracking references.
+8. **Comment on and close** the relevant GitHub issue using `gh issue close <N> -c "<comment>"`. Skip if the issue is still in progress.
+9. **Prune stale branches** — run `git fetch --prune origin` to clean up any stale remote tracking references.
 
 > **Important:** Outside of the "geronimo" trigger, NEVER commit, push, or close issues without explicit user confirmation.
 
