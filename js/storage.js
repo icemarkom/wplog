@@ -31,7 +31,7 @@ const MAX_NOTE = 500;
 
 const RE_DATE = /^\d{4}-\d{2}-\d{2}$/;
 const RE_TIME_HM = /^\d{2}:\d{2}$/;
-const RE_GAME_TIME = /^\d:\d{2}$/;
+const RE_GAME_TIME = /^\d:[0-5]\d$/;
 const RE_CAP = /^[1-9]\d?[ABC]?$/;
 const RE_PERIOD_OT = /^OT([1-9]\d?)$/;
 
