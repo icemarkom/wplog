@@ -40,6 +40,7 @@ wplog/
 │   ├── sheet-screen.js # Game sheet screen rendering (2-page DOM layout)
 │   ├── sheet-print.js  # Game sheet print pagination (multi-column, table splitting)
 │   ├── share.js        # Share/Print functionality
+│   ├── export.js       # Export utilities — filename, CSV builders (pure — no DOM)
 │   └── app.js          # App init + screen navigation + version display
 ├── help.html           # Standalone help page (uses standalone.css)
 ├── sw.js               # Service worker (offline caching, version-keyed cache)
