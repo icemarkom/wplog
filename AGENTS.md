@@ -118,6 +118,7 @@ These were explicitly discussed and agreed with the user:
 | **Don't commit without confirmation** | Always wait for user to confirm before committing and pushing. |
 | **"Geronimo" workflow** | When user says "geronimo", it's one-time approval to commit, push, and close the relevant issue. Branch-aware: on long-lived feature branches, skip PR/merge. See `.agents/workflows/geronimo.md`. |
 | **"Kraken" workflow** | When user says "kraken", triggers the release workflow: evaluate changes, update AGENTS.md, propose version, prepare release notes, tag and release. See `.agents/workflows/kraken.md`. |
+| **Help docs as delivery** | User-facing documentation (`help.html`) is part of feature delivery. Bazinga establishes the principle; geronimo and kraken enforce it with check steps. |
 | **Branching strategy** | Single-track: all work uses short-lived `fix/<name>` or `feature/<name>` branches off `main`. No parallel development branches. See the `branching` skill (`.agents/skills/branching/SKILL.md`). |
 | **Auto-clear on refocus** | Tapping a filled time/cap field in the modal auto-clears it for re-entry. Only on user clicks, not auto-advance. |
 | **Custom dialogs** | All `confirm()` calls replaced with `ConfirmDialog` (overlay-based). Supports `danger` (red) and `warning` (amber) types. |
@@ -301,6 +302,7 @@ Inherits from `_academic` (8-min periods). Adds:
 - Sheet split: `sheet.js` (orchestrator + shared helpers), `sheet-screen.js` (screen rendering), `sheet-print.js` (print pagination) — isolates print debugging to one file
 - Service worker registration in `loader.js` with `{ type: 'module' }` — enables offline caching, cache busting via `APP_VERSION`
 - Restart App handler awaits async cleanup (SW unregistration + cache deletion) before reload — fixes race condition
+- Help documentation kept current alongside feature delivery — geronimo and kraken workflows include help.html check steps, bazinga establishes doc-as-delivery principle
 
 ### Known Gaps / Future Work 📋
 - No substitution tracking (user hasn't decided)

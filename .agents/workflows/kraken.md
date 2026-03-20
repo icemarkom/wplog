@@ -18,11 +18,12 @@ When the user says **"kraken"**, they want to prepare and publish a new release.
    - **Major** (+1.0.0): breaking changes, data model changes (unlikely for this project)
    Present the proposed version to the user with justification.
 
-4. **Update `AGENTS.md`** — review and update the "Current State" section:
+4. **Update `AGENTS.md` and `help.html`** — review and update the "Current State" section:
    - Move newly completed items to the "What's Done ✅" list
    - Remove completed items from "Known Gaps / Future Work 📋"
    - Update the date in the section header
    - Add any new design decisions to the table if applicable
+   - If any user-facing features were added since the last release, update `help.html`
 
 5. **Prepare release notes** — create an implementation plan artifact with:
    - Proposed version number (e.g., `v1.4.0`)
