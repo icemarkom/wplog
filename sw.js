@@ -35,6 +35,8 @@ const ASSETS = [
     "./js/setup.js",
     "./js/events.js",
     "./js/sheet.js",
+    "./js/sheet-screen.js",
+    "./js/sheet-print.js",
     "./js/share.js",
     "./js/app.js",
     "./img/qr-wplog.svg",
