@@ -26,9 +26,9 @@ export const Setup = {
         this.onStart = onStart;
         this._bindEvents();
         this._bindSteppers();
-        this._populateRules();
-        this._setDefaultDate();
         this._resetForm();
+        this._setDefaultDate();
+        this._populateRules();
         this._bindLoggingMode();
     },
 
@@ -226,7 +226,7 @@ export const Setup = {
         // Update +/- disabled states
         const isDisabled = el.classList.contains("disabled");
         el.querySelector(".stepper-dec").disabled = (val !== -1 && val <= min) || isDisabled;
-        el.querySelector(".stepper-inc").disabled = (val === -1) || isDisabled;
+        el.querySelector(".stepper-inc").disabled = (val === -1) || (!hasUnlimited && val >= max) || isDisabled;
 
         // Update shortcut button highlighting
         el.querySelectorAll(".stepper-set").forEach((btn) => {
@@ -261,8 +261,9 @@ export const Setup = {
                     const next = (cur >= max && hasUnlimited) ? -1 : cur + 1;
                     this._setStepperValue(stepper.id, next);
                 } else {
-                    // At unlimited → jump back to max
-                    const next = (cur === -1) ? max : cur - 1;
+                    // At unlimited → jump back to max; otherwise clamp to min
+                    const min = parseInt(stepper.dataset.min);
+                    const next = (cur === -1) ? max : Math.max(min, cur - 1);
                     this._setStepperValue(stepper.id, next);
                 }
                 this._updateGameSetupHeader();
