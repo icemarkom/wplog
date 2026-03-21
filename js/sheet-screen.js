@@ -34,7 +34,7 @@ export function renderScreen(game, sheet, container) {
     page2.appendChild(sheet._renderTimeoutSummary(game));
     page2.appendChild(sheet._renderCardSummary(game));
     if (game.enableStats) {
-        page2.appendChild(sheet._renderPlayerStats(game));
+        page2.appendChild(sheet._renderPlayerStatsByTeam(game));
     }
     container.appendChild(page2);
 }

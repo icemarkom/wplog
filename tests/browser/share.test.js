@@ -31,6 +31,13 @@ const OVERLAY_HTML = `
         <button type="button" class="segment-btn" data-value="a4">A4</button>
       </div>
     </div>
+    <div id="print-stats-group" class="form-group" style="display: none;">
+      <label id="label-stats-detail">Stats Detail</label>
+      <div id="print-stats-detail" class="segment-control" aria-labelledby="label-stats-detail">
+        <button type="button" class="segment-btn active" data-value="totals">Totals Only</button>
+        <button type="button" class="segment-btn" data-value="periods">Per Period</button>
+      </div>
+    </div>
     <div class="print-dialog-actions">
       <button id="print-confirm" class="btn btn-primary btn-large">Print</button>
       <button id="print-cancel" class="btn-link">Cancel</button>

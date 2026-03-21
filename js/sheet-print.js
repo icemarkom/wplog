@@ -20,6 +20,7 @@
 // No pagination logic here — just DOM construction from plans + data.
 
 import { Game } from './game.js';
+import { ROW_HEIGHT } from './pagination.js';
 import { escapeHTML } from './sanitize.js';
 
 // ── Game Log rendering ───────────────────────────────────────
@@ -130,14 +131,12 @@ export function renderSummaryPages(plan, descriptors, game) {
     return _renderPaginatedPages(plan, descriptors, SUMMARY_RENDERERS);
 }
 
-// ── Stats rendering ──────────────────────────────────────────
-
 /**
  * Render Player Stats pages from a pagination plan + descriptors.
  * Each descriptor carries .statsData from buildStatsDescriptors().
  * @param {Array<{items: Array}>} plan - From paginateItems()
- * @param {Array} descriptors - From buildStatsDescriptors() — each has .statsData
- * @param {object} game - Game data (unused, reserved for future use)
+ * @param {Array} descriptors - From buildStatsDescriptors() — each has .statsData + .statChunk
+ * @param {object} game - Game data
  * @returns {Array<{elements: Array<Element>}>}
  */
 export function renderStatsPages(plan, descriptors, game) {
@@ -145,7 +144,7 @@ export function renderStatsPages(plan, descriptors, game) {
         const elements = [];
         for (const item of page.items) {
             const desc = descriptors[item.index];
-            const el = _renderStatTypeFromDescriptor(desc, item);
+            const el = _renderTeamStatsFromDescriptor(desc, item, game);
             elements.push(el);
         }
         return { elements };
@@ -359,90 +358,123 @@ function _renderCardSection(data) {
     return section;
 }
 
-// ── Stats section renderer ───────────────────────────────────
+// ── Team Stats section renderer ──────────────────────────────
 
-function _renderStatTypeFromDescriptor(desc, item) {
+function _renderTeamStatsFromDescriptor(desc, item, game) {
     const statsData = desc.statsData;
-    const st = { code: desc.code, name: desc.name };
+    const statChunk = desc.statChunk;
+    const team = desc.team;
+    const periods = statsData.periods;
+    const periodLabels = statsData.periodLabels;
+    const teamData = statsData.teams[team];
+    const totalsOnly = desc.totalsOnly;
+    const colsPerStat = totalsOnly ? 1 : periods.length + 1;
 
-    const wCaps = Object.keys(statsData.stats[st.code].W).sort((a, b) => (parseInt(a) || 0) - (parseInt(b) || 0));
-    const dCaps = Object.keys(statsData.stats[st.code].D).sort((a, b) => (parseInt(a) || 0) - (parseInt(b) || 0));
-    const colsPerTeam = 1 + statsData.periodLabels.length + 1; // Cap + periods + Tot
-    const periodHeaders = statsData.periodLabels;
-    const periodOrder = statsData.periods;
+    const teamLabel = team === "W" ? "White" : "Dark";
+    const teamName = team === "W"
+        ? (game.white.name !== "White" ? ` (${game.white.name})` : "")
+        : (game.dark.name !== "Dark" ? ` (${game.dark.name})` : "");
 
-    // Build full table
     const wrapper = document.createElement("div");
     wrapper.className = "sheet-section";
 
     const title = document.createElement("h3");
     title.className = "sheet-section-title";
-    title.textContent = item.continued ? st.name + " - continued" : st.name;
+    const isContinued = item.continued || desc.chunkIndex > 0;
+    title.textContent = (isContinued ? "Player Stats — " + teamLabel + teamName + " - continued"
+        : "Player Stats — " + teamLabel + teamName);
     wrapper.appendChild(title);
 
     const table = document.createElement("table");
     table.className = "sheet-table sheet-table-compact sheet-table-stats";
 
+    // ── thead ──
     const thead = document.createElement("thead");
-    const periodCols = periodHeaders.map((h) => `<th>${h}</th>`).join("");
-    thead.innerHTML = `
-        <tr>
-            <th colspan="${colsPerTeam}" class="sheet-team-header">White</th>
-            <th colspan="${colsPerTeam}" class="sheet-team-header">Dark</th>
-        </tr>
-        <tr>
-            <th>Cap</th>${periodCols}<th>Tot</th>
-            <th>Cap</th>${periodCols}<th>Tot</th>
-        </tr>
-    `;
+
+    if (totalsOnly) {
+        // Single header row: Cap + rotated stat names
+        // Set height = theadRows × ROW_HEIGHT so pagination math is exact.
+        const headerHeight = desc.theadRows * ROW_HEIGHT;
+        const tr = document.createElement("tr");
+        tr.innerHTML = `<th class="stats-cap-header" style="height:${headerHeight}px">Cap</th>`;
+        for (const sc of statChunk) {
+            tr.innerHTML += `<th class="stat-header-rotated" style="height:${headerHeight}px"><span>${escapeHTML(sc.name)}</span></th>`;
+        }
+        thead.appendChild(tr);
+    } else {
+        // Two header rows: stat group names + period labels
+        const tr1 = document.createElement("tr");
+        tr1.innerHTML = `<th rowspan="2" class="stats-cap-header">Cap</th>`;
+        for (const sc of statChunk) {
+            tr1.innerHTML += `<th colspan="${colsPerStat}" class="stat-group-header"><span>${escapeHTML(sc.name)}</span></th>`;
+        }
+        thead.appendChild(tr1);
+
+        const tr2 = document.createElement("tr");
+        for (let si = 0; si < statChunk.length; si++) {
+            for (let pi = 0; pi < periods.length; pi++) {
+                const cls = pi === 0 ? ' class="stat-group-start"' : '';
+                tr2.innerHTML += `<th${cls}>${periodLabels[pi]}</th>`;
+            }
+            tr2.innerHTML += `<th class="stats-total-col">Tot</th>`;
+        }
+        thead.appendChild(tr2);
+    }
     table.appendChild(thead);
 
-    // Slice data rows based on item.startRow / item.endRow
-    const maxRows = Math.max(wCaps.length, dCaps.length);
+    // ── tbody: slice player rows based on item.startRow / item.endRow ──
+    const allPlayers = teamData.players;
     const startRow = item.startRow;
-    const endRow = Math.min(item.endRow, maxRows);
+    const endRow = item.endRow;
 
     const tbody = document.createElement("tbody");
     for (let i = startRow; i < endRow; i++) {
-        const tr = document.createElement("tr");
-        let cells = "";
-
-        // White half
-        if (i < wCaps.length) {
-            const cap = wCaps[i];
-            const capData = statsData.stats[st.code].W[cap];
-            let total = 0;
-            cells += `<td>${escapeHTML(cap)}</td>`;
-            for (const period of periodOrder) {
-                const val = capData[period] || 0;
-                total += val;
-                cells += `<td>${val || ""}</td>`;
+        if (i < allPlayers.length) {
+            const player = allPlayers[i];
+            const tr = document.createElement("tr");
+            tr.innerHTML = `<td class="stats-cap-cell">${escapeHTML(player.cap)}</td>`;
+            for (const sc of statChunk) {
+                const statData = player.stats[sc.code] || {};
+                if (totalsOnly) {
+                    const total = statData.total || 0;
+                    tr.innerHTML += `<td class="stats-total-col">${total || ''}</td>`;
+                } else {
+                    for (let pi = 0; pi < periods.length; pi++) {
+                        const val = statData[periods[pi]] || 0;
+                        const cls = pi === 0 ? ' class="stat-group-start"' : '';
+                        tr.innerHTML += `<td${cls}>${val || ''}</td>`;
+                    }
+                    const total = statData.total || 0;
+                    tr.innerHTML += `<td class="stats-total-col">${total ? `<strong>${total}</strong>` : ''}</td>`;
+                }
             }
-            cells += `<td><strong>${total}</strong></td>`;
+            tbody.appendChild(tr);
         } else {
-            cells += `<td></td>`.repeat(colsPerTeam);
-        }
-
-        // Dark half
-        if (i < dCaps.length) {
-            const cap = dCaps[i];
-            const capData = statsData.stats[st.code].D[cap];
-            let total = 0;
-            cells += `<td>${escapeHTML(cap)}</td>`;
-            for (const period of periodOrder) {
-                const val = capData[period] || 0;
-                total += val;
-                cells += `<td>${val || ""}</td>`;
+            // Totals row
+            const totRow = document.createElement("tr");
+            totRow.className = "stats-totals-row";
+            totRow.innerHTML = `<td class="stats-cap-cell"><strong>Total</strong></td>`;
+            for (const sc of statChunk) {
+                const totals = teamData.totals[sc.code] || {};
+                if (totalsOnly) {
+                    const total = totals.total || 0;
+                    totRow.innerHTML += `<td class="stats-total-col">${total ? `<strong>${total}</strong>` : ''}</td>`;
+                } else {
+                    for (let pi = 0; pi < periods.length; pi++) {
+                        const val = totals[periods[pi]] || 0;
+                        const cls = pi === 0 ? ' class="stat-group-start"' : '';
+                        totRow.innerHTML += `<td${cls}>${val ? `<strong>${val}</strong>` : ''}</td>`;
+                    }
+                    const total = totals.total || 0;
+                    totRow.innerHTML += `<td class="stats-total-col">${total ? `<strong>${total}</strong>` : ''}</td>`;
+                }
             }
-            cells += `<td><strong>${total}</strong></td>`;
-        } else {
-            cells += `<td></td>`.repeat(colsPerTeam);
+            tbody.appendChild(totRow);
         }
-
-        tr.innerHTML = cells;
-        tbody.appendChild(tr);
     }
+
     table.appendChild(tbody);
     wrapper.appendChild(table);
     return wrapper;
 }
+

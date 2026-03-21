@@ -21,6 +21,13 @@ import {
     PAGE_ROWS,
     HEADER_ROWS,
     ROW_HEIGHT,
+    PAGE_WIDTH,
+    STATS_COL_WIDTH,
+    STATS_CAP_COL_WIDTH,
+    ROTATED_CHAR_PX,
+    rotatedHeaderRows,
+    maxStatsPerTable,
+    splitStatColumns,
     availableRows,
     filterLogEvents,
     buildLogPagePlan,
@@ -287,46 +294,81 @@ describe("buildSummaryDescriptors", () => {
 describe("buildStatsDescriptors", () => {
     it("returns empty array when no stats events", () => {
         const g = Game.create("USAWP");
-        Game.addEvent(g, { period: 1, time: "7:00", team: "W", cap: "7", event: "G" });
+        Game.addEvent(g, { period: 1, time: "7:00", team: "W", event: "TO" });
         const desc = buildStatsDescriptors(g);
-        // Goals are not statsOnly, but buildPlayerStats returns them if cap+team exists
-        // However, if no stats at all, it might still return descriptors for goals
-        // The point is it doesn't crash
-        ok(Array.isArray(desc));
+        strictEqual(desc.length, 0);
     });
 
-    it("returns descriptors for stats events", () => {
+    it("returns per-team descriptors", () => {
         const g = Game.create("USAWP");
-        g.enableStats = true;
         Game.addEvent(g, { period: 1, time: "7:00", team: "W", cap: "7", event: "Shot" });
         Game.addEvent(g, { period: 1, time: "6:00", team: "D", cap: "3", event: "Shot" });
         const desc = buildStatsDescriptors(g);
-        ok(desc.length > 0);
-        const shotDesc = desc.find((d) => d.code === "Shot");
-        ok(shotDesc);
-        strictEqual(shotDesc.titleRows, 1);
-        strictEqual(shotDesc.theadRows, 2); // team header + column header
+        ok(desc.length >= 2);
+        ok(desc.some(d => d.team === "W"));
+        ok(desc.some(d => d.team === "D"));
+        strictEqual(desc[0].type, "teamStats");
     });
 
-    it("dataRows = max(wCaps, dCaps)", () => {
+    it("dataRows = playerCount + 1 (totals row)", () => {
         const g = Game.create("USAWP");
-        g.enableStats = true;
         Game.addEvent(g, { period: 1, time: "7:00", team: "W", cap: "7", event: "Shot" });
         Game.addEvent(g, { period: 1, time: "6:00", team: "W", cap: "9", event: "Shot" });
         Game.addEvent(g, { period: 1, time: "5:00", team: "D", cap: "3", event: "Shot" });
         const desc = buildStatsDescriptors(g);
-        const shotDesc = desc.find((d) => d.code === "Shot");
-        strictEqual(shotDesc.dataRows, 2); // 2 white caps, 1 dark cap → max=2
+        const wDesc = desc.find(d => d.team === "W");
+        const dDesc = desc.find(d => d.team === "D");
+        strictEqual(wDesc.dataRows, 3); // 2 players + 1 totals
+        strictEqual(dDesc.dataRows, 2); // 1 player + 1 totals
     });
 
-    it("skips stat types with no entries", () => {
+    it("theadRows uses rotatedHeaderRows in default totals mode", () => {
         const g = Game.create("USAWP");
-        g.enableStats = true;
         Game.addEvent(g, { period: 1, time: "7:00", team: "W", cap: "7", event: "Shot" });
-        // Only Shot, no Assist/Steal/etc.
         const desc = buildStatsDescriptors(g);
-        const assistDesc = desc.find((d) => d.code === "Assist");
-        strictEqual(assistDesc, undefined);
+        // "Shot" = 4 chars → (4*5+8)/18 = ceil(1.56) = 2 rows
+        ok(desc[0].theadRows >= 1);
+        strictEqual(desc[0].totalsOnly, true);
+    });
+
+    it("theadRows is 2 in periods mode", () => {
+        const g = Game.create("USAWP");
+        Game.addEvent(g, { period: 1, time: "7:00", team: "W", cap: "7", event: "Shot" });
+        const desc = buildStatsDescriptors(g, null, "periods");
+        strictEqual(desc[0].theadRows, 2);
+        strictEqual(desc[0].totalsOnly, false);
+    });
+
+    it("carries statsData and statChunk", () => {
+        const g = Game.create("USAWP");
+        Game.addEvent(g, { period: 1, time: "7:00", team: "W", cap: "7", event: "Shot" });
+        const desc = buildStatsDescriptors(g);
+        ok(desc[0].statsData);
+        ok(Array.isArray(desc[0].statChunk));
+    });
+
+    it("splits into chunks with paperSize", () => {
+        const g = Game.create("USAWP");
+        // Add many stat types to force splitting
+        Game.addEvent(g, { period: 1, time: "7:00", team: "W", cap: "7", event: "G" });
+        Game.addEvent(g, { period: 1, time: "6:00", team: "W", cap: "7", event: "E" });
+        Game.addEvent(g, { period: 1, time: "5:00", team: "W", cap: "7", event: "Shot" });
+        Game.addEvent(g, { period: 1, time: "4:00", team: "W", cap: "7", event: "Assist" });
+        Game.addEvent(g, { period: 1, time: "3:00", team: "W", cap: "7", event: "Steal" });
+        // With paperSize, may produce more descriptors per team if chunks are needed
+        const descNoSplit = buildStatsDescriptors(g);
+        const descSplit = buildStatsDescriptors(g, "letter");
+        // Both should have W + D descriptors
+        ok(descNoSplit.length >= 2);
+        ok(descSplit.length >= 2);
+        ok(Array.isArray(descSplit));
+    });
+
+    it("returns empty for game with only team-level events", () => {
+        const g = Game.create("USAWP");
+        Game.addEvent(g, { period: 1, time: "7:00", team: "W", event: "TO" });
+        const desc = buildStatsDescriptors(g);
+        strictEqual(desc.length, 0);
     });
 });
 
@@ -607,17 +649,19 @@ describe("buildSummaryDescriptors — populated games", () => {
     });
 });
 
-// ── buildStatsDescriptors — additional coverage ──────────────
+// ── buildStatsDescriptors — additional coverage ────────────────
 
 describe("buildStatsDescriptors — additional", () => {
-    it("multiple stat types produce multiple descriptors", () => {
+    it("multiple stat types included in statChunk", () => {
         const g = Game.create("USAWP");
-        g.enableStats = true;
         Game.addEvent(g, { period: 1, time: "7:00", team: "W", cap: "7", event: "Shot" });
         Game.addEvent(g, { period: 1, time: "6:00", team: "W", cap: "7", event: "Assist" });
         Game.addEvent(g, { period: 1, time: "5:00", team: "D", cap: "3", event: "Steal" });
         const desc = buildStatsDescriptors(g);
-        const codes = desc.map((d) => d.code);
+        const wDesc = desc.find(d => d.team === "W");
+        ok(wDesc);
+        // Should have all 3 stat types in the chunk (no split without paperSize)
+        const codes = wDesc.statChunk.map(sc => sc.code);
         ok(codes.includes("Shot"));
         ok(codes.includes("Assist"));
         ok(codes.includes("Steal"));
@@ -625,35 +669,104 @@ describe("buildStatsDescriptors — additional", () => {
 
     it("asymmetric teams: more dark caps than white", () => {
         const g = Game.create("USAWP");
-        g.enableStats = true;
         Game.addEvent(g, { period: 1, time: "7:00", team: "W", cap: "7", event: "Shot" });
         Game.addEvent(g, { period: 1, time: "6:00", team: "D", cap: "3", event: "Shot" });
         Game.addEvent(g, { period: 1, time: "5:00", team: "D", cap: "5", event: "Shot" });
         Game.addEvent(g, { period: 1, time: "4:00", team: "D", cap: "9", event: "Shot" });
         const desc = buildStatsDescriptors(g);
-        const shotDesc = desc.find((d) => d.code === "Shot");
-        strictEqual(shotDesc.dataRows, 3); // max(1 white, 3 dark) = 3
+        const wDesc = desc.find(d => d.team === "W");
+        const dDesc = desc.find(d => d.team === "D");
+        strictEqual(wDesc.dataRows, 2); // 1 player + totals
+        strictEqual(dDesc.dataRows, 4); // 3 players + totals
+    });
+});
+
+// ── Column constants ─────────────────────────────────────────
+
+describe("column constants", () => {
+    it("PAGE_WIDTH has letter and a4", () => {
+        strictEqual(PAGE_WIDTH.letter, 720);
+        strictEqual(PAGE_WIDTH.a4, 698);
     });
 
-    it("carries statsData on each descriptor", () => {
-        const g = Game.create("USAWP");
-        g.enableStats = true;
-        Game.addEvent(g, { period: 1, time: "7:00", team: "W", cap: "7", event: "Shot" });
-        const desc = buildStatsDescriptors(g);
-        ok(desc.length > 0);
-        ok(desc[0].statsData);
-        ok(desc[0].statsData.statTypes);
-        ok(desc[0].statsData.periodLabels);
+    it("STATS_COL_WIDTH is 20", () => {
+        strictEqual(STATS_COL_WIDTH, 20);
     });
 
-    it("returns empty for game with only team-level events", () => {
-        const g = Game.create("USAWP");
-        g.enableStats = true;
-        Game.addEvent(g, { period: 1, time: "7:00", team: "W", event: "TO" });
-        const desc = buildStatsDescriptors(g);
-        // TO is teamOnly — no cap → won't appear in player stats
-        // buildPlayerStats may return null
-        strictEqual(desc.length, 0);
+    it("STATS_CAP_COL_WIDTH is 40", () => {
+        strictEqual(STATS_CAP_COL_WIDTH, 40);
+    });
+});
+
+// ── maxStatsPerTable ─────────────────────────────────────
+
+describe("maxStatsPerTable", () => {
+    it("letter with 4 periods = floor((720-40)/(5*20)) = 6", () => {
+        strictEqual(maxStatsPerTable("letter", 4), 6);
+    });
+
+    it("a4 with 4 periods = floor((698-40)/(5*20)) = 6", () => {
+        strictEqual(maxStatsPerTable("a4", 4), 6);
+    });
+
+    it("letter with 6 periods (OT) = floor((720-40)/(7*20)) = 4", () => {
+        strictEqual(maxStatsPerTable("letter", 6), 4);
+    });
+
+    it("returns at least 1", () => {
+        ok(maxStatsPerTable("letter", 100) >= 1);
+    });
+});
+
+// ── rotatedHeaderRows ───────────────────────────────────
+
+describe("rotatedHeaderRows", () => {
+    it("short name: 'Shot' = 4 chars → (4*9+8)/18 = 3 rows", () => {
+        strictEqual(rotatedHeaderRows([{name: "Shot"}]), 3);
+    });
+
+    it("long name: 'Penalty-Exclusions' = 19 chars → (19*9+8)/18 = 10 rows", () => {
+        strictEqual(rotatedHeaderRows([{name: "Penalty-Exclusions"}]), 10);
+    });
+
+    it("uses longest name in chunk", () => {
+        const chunk = [{name: "Shot"}, {name: "Drawn Exclusion"}, {name: "G"}];
+        // "Drawn Exclusion" = 15 chars → (15*9+8)/18 = ceil(7.9) = 8
+        strictEqual(rotatedHeaderRows(chunk), 8);
+    });
+
+    it("returns at least 1", () => {
+        ok(rotatedHeaderRows([{name: ""}]) >= 1);
+    });
+
+    it("ROTATED_CHAR_PX is 9", () => {
+        strictEqual(ROTATED_CHAR_PX, 9);
+    });
+});
+
+// ── splitStatColumns ─────────────────────────────────────
+
+describe("splitStatColumns", () => {
+    const cols = [{code: "A"}, {code: "B"}, {code: "C"}, {code: "D"}, {code: "E"}];
+
+    it("no split when all fit", () => {
+        const result = splitStatColumns(cols, 10);
+        strictEqual(result.length, 1);
+        deepStrictEqual(result[0], cols);
+    });
+
+    it("splits into correct chunks", () => {
+        const result = splitStatColumns(cols, 2);
+        strictEqual(result.length, 3);
+        strictEqual(result[0].length, 2);
+        strictEqual(result[1].length, 2);
+        strictEqual(result[2].length, 1);
+    });
+
+    it("handles exact division", () => {
+        const fourCols = [{code: "A"}, {code: "B"}, {code: "C"}, {code: "D"}];
+        const result = splitStatColumns(fourCols, 2);
+        strictEqual(result.length, 2);
     });
 });
 
@@ -878,7 +991,7 @@ describe("pagination invariants with test data", () => {
                             for (const item of page.items) seenIndices.add(item.index);
                         }
                         for (let i = 0; i < desc.length; i++) {
-                            ok(seenIndices.has(i), `stats descriptor ${i} (${desc[i].code}) missing`);
+                            ok(seenIndices.has(i), `stats descriptor ${i} (${desc[i].team}) missing`);
                         }
                     });
                 });

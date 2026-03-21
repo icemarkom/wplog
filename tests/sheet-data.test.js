@@ -22,6 +22,7 @@ import {
     buildTimeoutSummary,
     buildCardSummary,
     buildPlayerStats,
+    buildPlayerStatsByTeam,
 } from "../js/sheet-data.js";
 
 import { readFileSync } from "node:fs";
@@ -375,6 +376,123 @@ describe("buildPlayerStats", () => {
     });
 });
 
+// ── buildPlayerStatsByTeam ───────────────────────────────────
+
+describe("buildPlayerStatsByTeam", () => {
+    it("returns null for game with no stats", () => {
+        const g = Game.create("USAWP");
+        Game.addEvent(g, { period: 1, time: "7:00", team: "W", event: "TO" });
+        const result = buildPlayerStatsByTeam(g);
+        strictEqual(result, null);
+    });
+
+    it("aggregates single stat per period", () => {
+        const g = Game.create("USAWP");
+        Game.addEvent(g, { period: 1, time: "7:00", team: "W", cap: "7", event: "Shot" });
+        Game.addEvent(g, { period: 1, time: "6:00", team: "W", cap: "7", event: "Shot" });
+        Game.addEvent(g, { period: 2, time: "5:00", team: "W", cap: "7", event: "Shot" });
+        const result = buildPlayerStatsByTeam(g);
+        ok(result !== null);
+        const player = result.teams.W.players.find(p => p.cap === "7");
+        ok(player);
+        strictEqual(player.stats["Shot"][1], 2);
+        strictEqual(player.stats["Shot"][2], 1);
+        strictEqual(player.stats["Shot"].total, 3);
+    });
+
+    it("calculates team totals", () => {
+        const g = Game.create("USAWP");
+        Game.addEvent(g, { period: 1, time: "7:00", team: "W", cap: "7", event: "Shot" });
+        Game.addEvent(g, { period: 1, time: "6:00", team: "W", cap: "9", event: "Shot" });
+        Game.addEvent(g, { period: 2, time: "5:00", team: "W", cap: "7", event: "Shot" });
+        const result = buildPlayerStatsByTeam(g);
+        strictEqual(result.teams.W.totals["Shot"][1], 2);
+        strictEqual(result.teams.W.totals["Shot"][2], 1);
+        strictEqual(result.teams.W.totals["Shot"].total, 3);
+    });
+
+    it("separates teams", () => {
+        const g = Game.create("USAWP");
+        Game.addEvent(g, { period: 1, time: "7:00", team: "W", cap: "7", event: "Shot" });
+        Game.addEvent(g, { period: 1, time: "6:00", team: "D", cap: "3", event: "Shot" });
+        const result = buildPlayerStatsByTeam(g);
+        strictEqual(result.teams.W.players.length, 1);
+        strictEqual(result.teams.D.players.length, 1);
+        strictEqual(result.teams.W.players[0].cap, "7");
+        strictEqual(result.teams.D.players[0].cap, "3");
+    });
+
+    it("only includes stat columns with data", () => {
+        const g = Game.create("USAWP");
+        Game.addEvent(g, { period: 1, time: "7:00", team: "W", cap: "7", event: "Shot" });
+        Game.addEvent(g, { period: 1, time: "6:00", team: "W", cap: "7", event: "Assist" });
+        const result = buildPlayerStatsByTeam(g);
+        const codes = result.statColumns.map(sc => sc.code);
+        ok(codes.includes("Shot"));
+        ok(codes.includes("Assist"));
+        // Steal has no data so should not be in columns
+        ok(!codes.includes("Steal"));
+    });
+
+    it("sorts players by cap number", () => {
+        const g = Game.create("USAWP");
+        Game.addEvent(g, { period: 1, time: "7:00", team: "W", cap: "9", event: "Shot" });
+        Game.addEvent(g, { period: 1, time: "6:00", team: "W", cap: "3", event: "Shot" });
+        Game.addEvent(g, { period: 1, time: "5:00", team: "W", cap: "11", event: "Shot" });
+        const result = buildPlayerStatsByTeam(g);
+        const caps = result.teams.W.players.map(p => p.cap);
+        deepStrictEqual(caps, ["3", "9", "11"]);
+    });
+
+    it("includes log events with data (Goals, Exclusions)", () => {
+        const g = Game.create("USAWP");
+        Game.addEvent(g, { period: 1, time: "7:00", team: "W", cap: "7", event: "G" });
+        Game.addEvent(g, { period: 1, time: "6:00", team: "W", cap: "7", event: "E" });
+        const result = buildPlayerStatsByTeam(g);
+        const codes = result.statColumns.map(sc => sc.code);
+        ok(codes.includes("G"));
+        ok(codes.includes("E"));
+    });
+
+    it("handles multiple stats across multiple periods", () => {
+        const g = Game.create("USAWP");
+        Game.addEvent(g, { period: 1, time: "7:00", team: "W", cap: "7", event: "Shot" });
+        Game.addEvent(g, { period: 2, time: "6:00", team: "W", cap: "7", event: "Assist" });
+        Game.addEvent(g, { period: 1, time: "5:00", team: "D", cap: "3", event: "Steal" });
+        const result = buildPlayerStatsByTeam(g);
+        ok(result.statColumns.length === 3);
+        strictEqual(result.teams.W.players[0].stats["Shot"][1], 1);
+        strictEqual(result.teams.W.players[0].stats["Assist"][2], 1);
+        strictEqual(result.teams.D.players[0].stats["Steal"][1], 1);
+    });
+
+    it("empty team has no players but has totals", () => {
+        const g = Game.create("USAWP");
+        Game.addEvent(g, { period: 1, time: "7:00", team: "W", cap: "7", event: "Shot" });
+        const result = buildPlayerStatsByTeam(g);
+        strictEqual(result.teams.D.players.length, 0);
+        strictEqual(result.teams.D.totals["Shot"].total, 0);
+    });
+
+    it("pluralizes stat names correctly", () => {
+        const g = Game.create("USAWP");
+        Game.addEvent(g, { period: 1, time: "7:00", team: "W", cap: "7", event: "G" });
+        const result = buildPlayerStatsByTeam(g);
+        const goalCol = result.statColumns.find(sc => sc.code === "G");
+        ok(goalCol);
+        strictEqual(goalCol.name, "Goals");
+    });
+
+    it("returns period labels", () => {
+        const g = Game.create("USAWP");
+        Game.addEvent(g, { period: 1, time: "7:00", team: "W", cap: "7", event: "Shot" });
+        Game.addEvent(g, { period: 3, time: "5:00", team: "W", cap: "7", event: "Shot" });
+        const result = buildPlayerStatsByTeam(g);
+        ok(result.periodLabels.includes("Q1"));
+        ok(result.periodLabels.includes("Q3"));
+    });
+});
+
 // ── Test data files ──────────────────────────────────────────
 
 describe("sheet-data builders with test data", () => {
@@ -438,6 +556,25 @@ describe("sheet-data builders with test data", () => {
                     ok(Array.isArray(result.periods));
                     ok(Array.isArray(result.periodLabels));
                     ok(typeof result.stats === "object");
+                }
+            });
+
+            it("buildPlayerStatsByTeam returns consistent shape", () => {
+                const result = buildPlayerStatsByTeam(gameData);
+                if (result !== null) {
+                    ok(Array.isArray(result.statColumns));
+                    ok(Array.isArray(result.periods));
+                    ok(Array.isArray(result.periodLabels));
+                    ok(result.teams.W);
+                    ok(result.teams.D);
+                    ok(Array.isArray(result.teams.W.players));
+                    ok(typeof result.teams.W.totals === "object");
+                    // Each player has stats matching statColumns
+                    for (const p of result.teams.W.players) {
+                        for (const sc of result.statColumns) {
+                            ok(typeof p.stats[sc.code].total === "number");
+                        }
+                    }
                 }
             });
         });

@@ -310,7 +310,7 @@ export const App = {
     async _detectDevTimestamp() {
         const files = [
             "index.html",
-            "css/style.css",
+            "css/screen.css",
             "js/config.js",
             "js/app.js",
             "js/events.js",

@@ -17,7 +17,7 @@
 import { RULES } from './config.js';
 import { Game } from './game.js';
 import { escapeHTML } from './sanitize.js';
-import { buildPeriodScores, buildPersonalFoulTable, buildTimeoutSummary, buildCardSummary, buildPlayerStats } from './sheet-data.js';
+import { buildPeriodScores, buildPersonalFoulTable, buildTimeoutSummary, buildCardSummary, buildPlayerStatsByTeam } from './sheet-data.js';
 import { renderScreen } from './sheet-screen.js';
 import {
     availableRows,
@@ -38,7 +38,7 @@ export const Sheet = {
 
     // ── Main entry point ─────────────────────────────────────────
 
-    render(game, paperSize) {
+    render(game, paperSize, statsDetail) {
         const container = document.getElementById("sheet-content");
         container.innerHTML = "";
 
@@ -66,10 +66,10 @@ export const Sheet = {
         // === Section 3: Game Stats (optional) ===
         let statsPages = [];
         if (game.enableStats) {
-            const statsDescriptors = buildStatsDescriptors(game);
+            const statsDescriptors = buildStatsDescriptors(game, paperSize, statsDetail);
             if (statsDescriptors.length > 0) {
                 const statsPlan = paginateItems(statsDescriptors, avail);
-                statsPages = renderStatsPages(statsPlan, statsDescriptors, game);
+                statsPages = renderStatsPages(statsPlan, statsDescriptors, game, statsDetail);
             }
         }
 
@@ -374,8 +374,8 @@ export const Sheet = {
         return section;
     },
 
-    _renderPlayerStats(game) {
-        const data = buildPlayerStats(game);
+    _renderPlayerStatsByTeam(game) {
+        const data = buildPlayerStatsByTeam(game);
         const section = document.createElement("div");
         section.className = "sheet-section";
 
@@ -392,91 +392,135 @@ export const Sheet = {
             return section;
         }
 
-        const colsPerTeam = 1 + data.periodLabels.length + 1;
+        // Expand/collapse toggle (shared across both team tables)
+        const toggleBtn = document.createElement("button");
+        toggleBtn.className = "btn stats-toggle-btn";
+        toggleBtn.textContent = "Show Periods ▸";
+        toggleBtn.type = "button";
+        section.appendChild(toggleBtn);
 
-        for (const st of data.statTypes) {
-            const wCaps = Object.keys(data.stats[st.code].W).sort((a, b) => (parseInt(a) || 0) - (parseInt(b) || 0));
-            const dCaps = Object.keys(data.stats[st.code].D).sort((a, b) => (parseInt(a) || 0) - (parseInt(b) || 0));
-            if (wCaps.length === 0 && dCaps.length === 0) continue;
+        const tables = [];
+        for (const [team, label] of [["W", "White"], ["D", "Dark"]]) {
+            const teamName = team === "W"
+                ? (game.white.name !== "White" ? ` (${game.white.name})` : "")
+                : (game.dark.name !== "Dark" ? ` (${game.dark.name})` : "");
 
-            const tableWrapper = this._renderStatTypeTable(st, wCaps, dCaps, data.stats[st.code], data.periods, data.periodLabels, colsPerTeam);
-            section.appendChild(tableWrapper);
+            const table = this._renderTeamStatsTable(
+                `${label}${teamName}`,
+                data.teams[team],
+                data.statColumns,
+                data.periodLabels,
+                data.periods
+            );
+            tables.push(table);
+            section.appendChild(table);
         }
+
+        // Toggle handler
+        let expanded = false;
+        const colsPerStat = data.periods.length + 1;
+        toggleBtn.addEventListener("click", () => {
+            expanded = !expanded;
+            toggleBtn.textContent = expanded ? "◂ Hide Periods" : "Show Periods ▸";
+            for (const t of tables) {
+                t.classList.toggle("stats-expanded", expanded);
+                // Update colspans on stat group headers
+                for (const th of t.querySelectorAll(".stat-group-header")) {
+                    th.colSpan = expanded ? colsPerStat : 1;
+                }
+                // Update Cap header rowspan (2 when expanded for period row, 1 when collapsed)
+                const capTh = t.querySelector(".stats-cap-header");
+                if (capTh) capTh.rowSpan = expanded ? 2 : 1;
+            }
+        });
 
         return section;
     },
 
-    _renderStatTypeTable(st, wCaps, dCaps, data, periodOrder, periodHeaders, colsPerTeam) {
+    _renderTeamStatsTable(teamTitle, teamData, statChunk, periodLabels, periods) {
         const wrapper = document.createElement("div");
-        wrapper.className = "sheet-section";
+        wrapper.className = "sheet-section stats-team-table";
 
-        // Title as h3 above table — same style as summary sections
         const title = document.createElement("h3");
         title.className = "sheet-section-title";
-        title.textContent = st.name;
+        title.textContent = `Player Stats — ${teamTitle}`;
         wrapper.appendChild(title);
 
-        const totalCols = colsPerTeam * 2;
+        const colsPerStat = periods.length + 1; // periods + Tot
+
+        // Scrollable container for expanded mode
+        const scrollWrap = document.createElement("div");
+        scrollWrap.className = "stats-scroll-wrap";
+
         const table = document.createElement("table");
         table.className = "sheet-table sheet-table-compact sheet-table-stats";
 
+        // ── thead: 2 rows ──
         const thead = document.createElement("thead");
-        const periodCols = periodHeaders.map((h) => `<th>${h}</th>`).join("");
-        thead.innerHTML = `
-          <tr>
-            <th colspan="${colsPerTeam}" class="sheet-team-header">White</th>
-            <th colspan="${colsPerTeam}" class="sheet-team-header">Dark</th>
-          </tr>
-          <tr>
-            <th>Cap</th>${periodCols}<th>Tot</th>
-            <th>Cap</th>${periodCols}<th>Tot</th>
-          </tr>
-        `;
+
+        // Row 1: Cap + stat names
+        // Collapsed: colspan=1 (only Tot column visible per stat)
+        // Expanded: colspan=colsPerStat (period cols + Tot)
+        const tr1 = document.createElement("tr");
+        tr1.innerHTML = `<th class="stats-cap-header">Cap</th>`;
+        for (const sc of statChunk) {
+            tr1.innerHTML += `<th class="stat-group-header"><span>${escapeHTML(sc.name)}</span></th>`;
+        }
+        thead.appendChild(tr1);
+
+        // Row 2: period labels + Tot per stat group
+        const tr2 = document.createElement("tr");
+        tr2.className = "stats-period-row";
+        for (let si = 0; si < statChunk.length; si++) {
+            for (let pi = 0; pi < periods.length; pi++) {
+                const cls = pi === 0 ? 'stat-group-start stats-period-col' : 'stats-period-col';
+                tr2.innerHTML += `<th class="${cls}">${periodLabels[pi]}</th>`;
+            }
+            tr2.innerHTML += `<th class="stats-total-col">Tot</th>`;
+        }
+        thead.appendChild(tr2);
         table.appendChild(thead);
 
-        const maxRows = Math.max(wCaps.length, dCaps.length);
+        // ── tbody: player rows ──
         const tbody = document.createElement("tbody");
-        for (let i = 0; i < maxRows; i++) {
+        for (const player of teamData.players) {
             const tr = document.createElement("tr");
-            let cells = "";
-
-            // White half
-            if (i < wCaps.length) {
-                const cap = wCaps[i];
-                const capData = data.W[cap];
-                let total = 0;
-                cells += `<td>${escapeHTML(cap)}</td>`;
-                for (const period of periodOrder) {
-                    const val = capData[period] || 0;
-                    total += val;
-                    cells += `<td>${val || ""}</td>`;
+            tr.innerHTML = `<td class="stats-cap-cell">${escapeHTML(player.cap)}</td>`;
+            for (let si = 0; si < statChunk.length; si++) {
+                const sc = statChunk[si];
+                const statData = player.stats[sc.code] || {};
+                for (let pi = 0; pi < periods.length; pi++) {
+                    const val = statData[periods[pi]] || 0;
+                    const cls = pi === 0 ? 'stat-group-start stats-period-col' : 'stats-period-col';
+                    tr.innerHTML += `<td class="${cls}">${val || ''}</td>`;
                 }
-                cells += `<td><strong>${total}</strong></td>`;
-            } else {
-                cells += `<td></td>`.repeat(colsPerTeam);
+                const total = statData.total || 0;
+                tr.innerHTML += `<td class="stats-total-col">${total ? `<strong>${total}</strong>` : ''}</td>`;
             }
-
-            // Dark half
-            if (i < dCaps.length) {
-                const cap = dCaps[i];
-                const capData = data.D[cap];
-                let total = 0;
-                cells += `<td>${escapeHTML(cap)}</td>`;
-                for (const period of periodOrder) {
-                    const val = capData[period] || 0;
-                    total += val;
-                    cells += `<td>${val || ""}</td>`;
-                }
-                cells += `<td><strong>${total}</strong></td>`;
-            } else {
-                cells += `<td></td>`.repeat(colsPerTeam);
-            }
-
-            tr.innerHTML = cells;
             tbody.appendChild(tr);
         }
+
+        // Totals row
+        const totRow = document.createElement("tr");
+        totRow.className = "stats-totals-row";
+        totRow.innerHTML = `<td class="stats-cap-cell"><strong>Total</strong></td>`;
+        for (let si = 0; si < statChunk.length; si++) {
+            const sc = statChunk[si];
+            const totals = teamData.totals[sc.code] || {};
+            for (let pi = 0; pi < periods.length; pi++) {
+                const val = totals[periods[pi]] || 0;
+                const cls = pi === 0 ? 'stat-group-start stats-period-col' : 'stats-period-col';
+                totRow.innerHTML += `<td class="${cls}">${val ? `<strong>${val}</strong>` : ''}</td>`;
+            }
+            const total = totals.total || 0;
+            totRow.innerHTML += `<td class="stats-total-col">${total ? `<strong>${total}</strong>` : ''}</td>`;
+        }
+        tbody.appendChild(totRow);
+
         table.appendChild(tbody);
-        wrapper.appendChild(table);
+        scrollWrap.appendChild(table);
+        wrapper.appendChild(scrollWrap);
         return wrapper;
     },
 };
+

@@ -1284,7 +1284,11 @@ select.form-input {
 
 /* ============================
    Game Sheet (on-screen)
+   Scoped to @media screen so print.css
+   is the sole authority for print rendering.
    ============================ */
+@media screen {
+
 .sheet-content {
   margin-bottom: 20px;
 }
@@ -1454,8 +1458,133 @@ select.form-input {
   border-bottom: 1px solid var(--border);
 }
 
-.sheet-table-stats {
-  table-layout: fixed;
+.sheet-table.sheet-table-stats {
+  table-layout: auto;
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+/* Stats cells: single-side borders (right+bottom only) to prevent doubling
+   under separate mode. Chained selector for specificity over .sheet-table td. */
+.sheet-table.sheet-table-stats td,
+.sheet-table.sheet-table-stats th {
+  border: none;
+  border-right: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+}
+
+/* Outer frame: left edge + top edge */
+.sheet-table.sheet-table-stats tr > :first-child {
+  border-left: 1px solid var(--border);
+}
+.sheet-table.sheet-table-stats thead tr:first-child th {
+  border-top: 1px solid var(--border);
+}
+
+/* Horizontal scroll wrapper for wide stats tables */
+.stats-scroll-wrap {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Stat group name header — rotated text in collapsed mode, horizontal when expanded */
+.stat-group-header {
+  text-align: center;
+  white-space: nowrap;
+  font-size: 11px;
+  vertical-align: bottom;
+  padding: 4px 2px;
+}
+
+/* Rotation on inner span — keeps th borders untransformed */
+.stat-group-header > span {
+  display: inline-block;
+  writing-mode: vertical-rl;
+  transform: rotate(180deg);
+}
+
+.stats-expanded .stat-group-header > span {
+  writing-mode: horizontal-tb;
+  transform: none;
+}
+
+.stats-expanded .stat-group-header {
+  padding: 2px 3px;
+}
+
+/* Cap column — sticky on horizontal scroll */
+.stats-cap-header,
+.stats-cap-cell {
+  text-align: center;
+  min-width: 36px;
+  position: sticky;
+  left: 0;
+  background: var(--bg-card);
+  z-index: 1;
+}
+
+.stats-cap-header {
+  background: var(--bg-elevated);
+}
+
+/* Total sub-column */
+.stats-total-col {
+  font-weight: 700;
+}
+
+/* Totals row at bottom */
+.stats-totals-row {
+  font-weight: 700;
+}
+
+/* Data cells: compact, centered */
+.sheet-table.sheet-table-stats td {
+  text-align: center;
+  padding: 2px 3px;
+  font-size: 12px;
+}
+
+.sheet-table.sheet-table-stats th {
+  text-align: center;
+  padding: 2px 3px;
+  font-size: 11px;
+}
+
+/* ── Expand/Collapse Toggle ── */
+
+/* Toggle button */
+.stats-toggle-btn {
+  margin-bottom: 8px;
+  padding: 6px 14px;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  background: var(--bg-elevated);
+  color: var(--text-secondary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+}
+
+/* Period columns: hidden by default (collapsed) */
+.stats-period-col {
+  display: none;
+}
+
+/* Period sub-header row: hidden when collapsed */
+.stats-team-table:not(.stats-expanded) .stats-period-row {
+  display: none;
+}
+
+
+/* When expanded: show period columns and sub-header row */
+.stats-expanded .stats-period-col {
+  display: table-cell;
+}
+
+.stats-expanded .stats-period-row {
+  display: table-row;
 }
 
 .sheet-log-columns {
@@ -1537,6 +1666,8 @@ select.form-input {
   color: var(--text-muted);
   font-size: 13px;
 }
+
+} /* end @media screen — Game Sheet */
 
 /* ============================
    Share Screen

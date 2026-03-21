@@ -24,6 +24,7 @@ export const Share = {
     _bound: false,
     _pageStyleEl: null,
     _paperSize: "letter",
+    _statsDetail: "totals",
     _pendingFormat: null, // "csv" or "json"
 
     init(game) {
@@ -55,6 +56,16 @@ export const Share = {
                 control.querySelectorAll(".segment-btn").forEach((b) => b.classList.remove("active"));
                 btn.classList.add("active");
                 this._paperSize = btn.dataset.value;
+            });
+
+            // Stats detail segmented control
+            const statsControl = document.getElementById("print-stats-detail");
+            statsControl.addEventListener("click", (e) => {
+                const btn = e.target.closest(".segment-btn");
+                if (!btn) return;
+                statsControl.querySelectorAll(".segment-btn").forEach((b) => b.classList.remove("active"));
+                btn.classList.add("active");
+                this._statsDetail = btn.dataset.value;
             });
 
             // Print confirm
@@ -101,6 +112,19 @@ export const Share = {
         control.querySelectorAll(".segment-btn").forEach((btn) => {
             btn.classList.toggle("active", btn.dataset.value === this._paperSize);
         });
+
+        // Show stats detail control only if game has stats
+        const hasStats = this.game.enableStats && this.game.log &&
+            this.game.log.some((e) => e.statsOnly || (e.cap && e.team));
+        const statsGroup = document.getElementById("print-stats-group");
+        statsGroup.style.display = hasStats ? "" : "none";
+        if (hasStats) {
+            const statsControl = document.getElementById("print-stats-detail");
+            statsControl.querySelectorAll(".segment-btn").forEach((btn) => {
+                btn.classList.toggle("active", btn.dataset.value === this._statsDetail);
+            });
+        }
+
         document.getElementById("print-overlay").classList.add("visible");
     },
 
@@ -111,7 +135,7 @@ export const Share = {
     _doPrint() {
         if (!this.game) return;
         this._setPageSize(this._paperSize);
-        Sheet.render(this.game, this._paperSize);
+        Sheet.render(this.game, this._paperSize, this._statsDetail);
         window.print();
     },
 

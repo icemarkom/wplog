@@ -22,7 +22,7 @@ const CACHE_NAME = "wplog-" + APP_VERSION;
 const ASSETS = [
     "./",
     "./index.html",
-    "./css/style.css",
+    "./css/screen.css",
     "./css/print.css",
     "./css/standalone.css",
     "./js/sanitize.js",

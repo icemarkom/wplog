@@ -28,6 +28,7 @@ import {
     buildTimeoutSummary,
     buildCardSummary,
     buildPlayerStats,
+    buildPlayerStatsByTeam,
 } from './sheet-data.js';
 
 // ── Constants ────────────────────────────────────────────────
@@ -48,6 +49,57 @@ export const PAGE_ROWS = { letter: 52, a4: 56 };
  */
 export function availableRows(paperSize) {
     return PAGE_ROWS[paperSize] - HEADER_ROWS;
+}
+
+// Column-based print constants for stats tables.
+// Usable width = page width minus 2 × 0.5in margins, at 96 CSS px/in.
+//   Letter: (8.5 - 1) × 96 = 720px
+// Column-based print constants for horizontal overflow splitting.
+export const PAGE_WIDTH = { letter: 720, a4: 698 }; // printable px at 96dpi
+export const STATS_COL_WIDTH = 20;     // px per period/Tot sub-column
+export const STATS_CAP_COL_WIDTH = 40; // px for Cap column
+
+// Rotated header sizing: ~9px per uppercase character at 10pt print font + 8px padding.
+export const ROTATED_CHAR_PX = 9;
+const ROTATED_PADDING_PX = 8;
+
+/**
+ * Compute how many print rows a rotated header occupies,
+ * based on the longest stat name in a chunk.
+ * @param {Array<{name: string}>} statChunk
+ * @returns {number} row count (at least 1)
+ */
+export function rotatedHeaderRows(statChunk) {
+    const longest = statChunk.reduce((max, sc) => Math.max(max, sc.name.length), 0);
+    const heightPx = longest * ROTATED_CHAR_PX + ROTATED_PADDING_PX;
+    return Math.max(1, Math.ceil(heightPx / ROW_HEIGHT));
+}
+
+/**
+ * Max stat groups that fit in one table row for a given paper size.
+ * @param {string} paperSize - "letter" or "a4"
+ * @param {number} periodCount - Number of periods in the game
+ * @returns {number}
+ */
+export function maxStatsPerTable(paperSize, periodCount) {
+    const availWidth = PAGE_WIDTH[paperSize] - STATS_CAP_COL_WIDTH;
+    const colsPerStat = periodCount + 1; // periods + Tot
+    return Math.max(1, Math.floor(availWidth / (colsPerStat * STATS_COL_WIDTH)));
+}
+
+/**
+ * Split stat columns into chunks that fit the available width.
+ * @param {Array} statColumns - Full list of stat columns
+ * @param {number} maxPerTable - From maxStatsPerTable()
+ * @returns {Array<Array>} Chunks of stat columns
+ */
+export function splitStatColumns(statColumns, maxPerTable) {
+    if (statColumns.length <= maxPerTable) return [statColumns];
+    const chunks = [];
+    for (let i = 0; i < statColumns.length; i += maxPerTable) {
+        chunks.push(statColumns.slice(i, i + maxPerTable));
+    }
+    return chunks;
 }
 
 // ── Log Event Filtering ─────────────────────────────────────
@@ -193,31 +245,51 @@ export function buildSummaryDescriptors(game) {
 
 /**
  * Build row-count descriptors for Player Stats section items.
+ * Produces per-team descriptors (one per team per table chunk).
  * Pure — no DOM.
  *
  * @param {object} game - Game data object
- * @returns {Array<{type: string, code: string, name: string, titleRows: number, theadRows: number, dataRows: number}>}
+ * @param {string} [paperSize] - Paper size for column splitting (optional, defaults to no split)
+ * @param {string} [statsDetail="totals"] - "totals" for totals-only, "periods" for per-period
+ * @returns {Array<{type: string, team: string, titleRows: number, theadRows: number, dataRows: number, statsData: object, statChunk: Array}>}
  */
-export function buildStatsDescriptors(game) {
-    const statsData = buildPlayerStats(game);
+export function buildStatsDescriptors(game, paperSize, statsDetail = "totals") {
+    const statsData = buildPlayerStatsByTeam(game);
     if (!statsData) return [];
 
-    const descriptors = [];
-    for (const st of statsData.statTypes) {
-        const wCaps = Object.keys(statsData.stats[st.code].W);
-        const dCaps = Object.keys(statsData.stats[st.code].D);
-        if (wCaps.length === 0 && dCaps.length === 0) continue;
+    const isTotalsOnly = statsDetail !== "periods";
 
-        descriptors.push({
-            type: "stats",
-            code: st.code,
-            name: st.name,
-            titleRows: 1,
-            theadRows: 2, // team headers row + column headers row
-            dataRows: Math.max(wCaps.length, dCaps.length),
-            // Carry rendering data so the DOM layer doesn't need to recompute
-            statsData,
-        });
+    let chunks;
+    if (isTotalsOnly || !paperSize) {
+        // Totals-only: no splitting needed (one column per stat).
+        // Screen mode (no paperSize): also no splitting.
+        chunks = [statsData.statColumns];
+    } else {
+        // Per-period print: split by paper width
+        const periodCount = statsData.periods.length;
+        const maxPerTable = maxStatsPerTable(paperSize, periodCount);
+        chunks = splitStatColumns(statsData.statColumns, maxPerTable);
+    }
+
+    const descriptors = [];
+
+    for (const team of ["W", "D"]) {
+        const teamData = statsData.teams[team];
+        const playerCount = teamData.players.length;
+
+        for (let ci = 0; ci < chunks.length; ci++) {
+            descriptors.push({
+                type: "teamStats",
+                team,
+                chunkIndex: ci,
+                titleRows: 1,
+                theadRows: isTotalsOnly ? rotatedHeaderRows(chunks[ci]) : 2,
+                dataRows: playerCount + 1, // players + totals row
+                statsData,
+                statChunk: chunks[ci],
+                totalsOnly: isTotalsOnly,
+            });
+        }
     }
 
     return descriptors;

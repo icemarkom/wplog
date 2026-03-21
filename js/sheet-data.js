@@ -211,3 +211,110 @@ export function buildPlayerStats(game) {
         stats,
     };
 }
+
+/**
+ * Build per-team player stats tables.
+ * Each team gets: sorted player rows with per-stat per-period counts + totals.
+ *
+ * @param {Object} game
+ * @returns {{ statColumns: Array<{code, name}>, periods: Array, periodLabels: string[],
+ *             teams: { W: {players, totals}, D: {players, totals} } } | null}
+ */
+export function buildPlayerStatsByTeam(game) {
+    const rules = RULES[game.rules];
+
+    // All non-teamOnly events (potential stat columns)
+    const allEventDefs = rules.events.filter((e) => !e.teamOnly);
+
+    // Ordered periods from log
+    const periodOrder = [];
+    const periodSeen = new Set();
+    for (const entry of game.log) {
+        if (entry.event === "---") continue;
+        if (!periodSeen.has(entry.period)) {
+            periodSeen.add(entry.period);
+            periodOrder.push(entry.period);
+        }
+    }
+
+    // Valid event codes for this rule set (non-teamOnly only)
+    const validCodes = new Set(allEventDefs.map((e) => e.code));
+
+    // Aggregate: per team → per cap → per event code → per period
+    const teamAgg = { W: {}, D: {} };
+    const eventHasData = new Set();
+
+    for (const entry of game.log) {
+        if (!entry.cap || !entry.team) continue;
+        if (!validCodes.has(entry.event)) continue;
+
+        eventHasData.add(entry.event);
+        const players = teamAgg[entry.team];
+        if (!players) continue;
+        if (!players[entry.cap]) players[entry.cap] = {};
+        if (!players[entry.cap][entry.event]) players[entry.cap][entry.event] = {};
+        players[entry.cap][entry.event][entry.period] =
+            (players[entry.cap][entry.event][entry.period] || 0) + 1;
+    }
+
+    if (eventHasData.size === 0) return null;
+
+    // Stat columns: config-ordered events that have data
+    const statColumns = allEventDefs
+        .filter((e) => eventHasData.has(e.code))
+        .map((e) => {
+            const n = e.name;
+            const plural = n.endsWith("y") ? n.slice(0, -1) + "ies" : n + "s";
+            return { code: e.code, name: plural };
+        });
+
+    // Build team data
+    const teams = {};
+    for (const team of ["W", "D"]) {
+        const capMap = teamAgg[team];
+        const caps = Object.keys(capMap).sort(
+            (a, b) => (parseInt(a) || 0) - (parseInt(b) || 0)
+        );
+
+        const players = caps.map((cap) => {
+            const stats = {};
+            for (const sc of statColumns) {
+                const perPeriod = capMap[cap][sc.code] || {};
+                let total = 0;
+                const periodCounts = {};
+                for (const p of periodOrder) {
+                    const val = perPeriod[p] || 0;
+                    if (val) periodCounts[p] = val;
+                    total += val;
+                }
+                stats[sc.code] = { ...periodCounts, total };
+            }
+            return { cap, stats };
+        });
+
+        // Team totals
+        const totals = {};
+        for (const sc of statColumns) {
+            let grandTotal = 0;
+            const periodCounts = {};
+            for (const p of periodOrder) {
+                let sum = 0;
+                for (const player of players) {
+                    sum += player.stats[sc.code][p] || 0;
+                }
+                if (sum) periodCounts[p] = sum;
+                grandTotal += sum;
+            }
+            totals[sc.code] = { ...periodCounts, total: grandTotal };
+        }
+
+        teams[team] = { players, totals };
+    }
+
+    return {
+        statColumns,
+        periods: periodOrder,
+        periodLabels: periodOrder.map((p) => Game.getPeriodLabel(p)),
+        teams,
+    };
+}
