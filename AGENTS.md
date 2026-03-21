@@ -23,8 +23,8 @@ wplog/
 │   ├── sheet.html      # Game sheet container
 │   └── share.html      # Share screen content (QR code, print button)
 ├── css/
-│   ├── style.css       # Dark-mode design system, mobile-first
-│   ├── print.css       # Print-only B&W styles for game sheet
+│   ├── screen.css      # Dark-mode design system, mobile-first (game sheet scoped to @media screen)
+│   ├── print.css       # Print-only B&W styles — self-contained prn-* namespace, no screen.css dependency
 │   └── standalone.css  # Shared styles for standalone pages (privacy, help)
 ├── js/
 │   ├── sanitize.js    # escapeHTML() utility (ES module)
@@ -40,7 +40,7 @@ wplog/
 │   ├── sheet.js        # Game sheet orchestrator + shared render helpers (stateless — no stored game)
 │   ├── sheet-data.js   # Sheet data builders (pure — no DOM)
 │   ├── sheet-screen.js # Game sheet screen rendering (2-page DOM layout)
-│   ├── sheet-print.js  # Game sheet print rendering (DOM only — renders from pagination plans)
+│   ├── print.js        # Standalone print renderer (prn-* CSS classes, zero screen overlap)
 │   ├── pagination.js   # Print pagination engine (pure — no DOM)
 │   ├── share.js        # Share/Print functionality
 │   ├── export.js       # Export utilities — filename, CSV builders (pure — no DOM)
@@ -107,8 +107,8 @@ These were explicitly discussed and agreed with the user:
 | **Game # replaces Rules on sheet** | Rules only relevant for setup; Game # shown on printed game sheet header. |
 | **Print = Share** | `window.print()` is the sharing mechanism. Mobile print dialogs offer Save as PDF + native share. |
 | **Paper size selector** | Print dialog popup with US Letter / A4 segmented control. Dynamic `@page` CSS injection sets print dimensions. |
-| **Multi-column game log** | Print log uses up to 4 columns (column-first fill). Each column is its own `<table>` in a CSS grid. Column count adapts to event count. |
-| **Row-based print pagination** | All print layout uses 18px rows. Page capacity: Letter 52 rows, A4 56 rows. Header = 12 rows. Available = PAGE_ROWS - HEADER_ROWS. |
+| **Multi-column game log** | Print log uses up to 2 columns (column-first fill). Each column is its own `<table>` in a CSS grid. Column count adapts to event count. |
+| **Row-based print pagination** | All print layout uses 18px rows. Page capacity: Letter 56 rows, A4 60 rows. Header = 12 rows. Available = PAGE_ROWS - HEADER_ROWS. |
 | **Section titles in print** | Each print section has its own title in the header: "Game Log", "Game Summary", "Game Stats". Replaces generic "Game Sheet". |
 | **Table splitting with continued** | Oversized tables split across pages. Each continuation chunk gets the title + " - continued" suffix and the thead repeated. |
 | **Anti-orphan logic** | Tables only start on a page if there's room for title + thead + at least 1 data row. Otherwise flushed to next page. |
@@ -145,7 +145,8 @@ These were explicitly discussed and agreed with the user:
 | **Logging mode** | Collapsible section on setup screen with mode segmented control (Game Log Only / Both / Stats Only) and Stats Time Entry (Disabled / Optional / Required). Summary shown in foldable header. |
 | **Stats code = name** | Stats events omit `code` in config — auto-derived from `name`. Normalizer runs at load time for any event missing a code. Multi-word codes (e.g. "Field Block") are supported. |
 | **Stats buttons teal** | All stats buttons styled with `color: "teal"` (`#2dd4bf`). Visual separator between log and stats buttons. |
-| **Player Stats on sheet** | Single `<table>` per stat type with colspan White/Dark headers. Per-period columns (Q1, Q2, etc.) + bold Total. All events with cap numbers aggregated (not just statsOnly). Proper English pluralization for section titles. |
+| **Player Stats on sheet** | Per-team tables: row per player, column per stat. Two print modes: Totals Only (rotated vertical headers) and Per Period (per-period sub-columns + Total). All non-teamOnly events with cap numbers aggregated. Proper English pluralization for section titles. |
+| **Screen/print CSS split** | `screen.css` wraps game sheet styles in `@media screen {}`. `print.css` is fully self-contained with `prn-*` CSS namespace — zero overlap with screen classes. Separate `js/print.js` module replaces `sheet-print.js`. |
 | **`statsOnly` flag** | Events with `statsOnly: true` skip foul-out checks, allow blank time, and are filtered from Progress of Game on sheet. |
 | **`statsTimeMode`** | Controls time field in modal: `"off"` = hidden, `"optional"` = shown but not required, `"on"` = required. Stored in game data model. |
 | **ES modules** | All JS files use native `import`/`export` (except `year.js` which is a standalone `<script defer>`). `loader.js` is loaded as `<script type="module">` and imports `app.js`, which imports all other modules. The browser resolves the dependency tree automatically — no manual load ordering. Service worker also uses `import` for `APP_VERSION` from `config.js`. |
@@ -226,8 +227,8 @@ Inherits from `_academic` (8-min periods). Adds:
 - Fractional SO scores (5.3–5.2 format, no floats — computed at render time)
 - SO events display without time (always 0:00, redundant)
 - Score column shows only on Goal events (live log + sheet)
-- Smart print layout: multi-column game log (up to 3 cols), row-based pagination, paper size selector (Letter/A4)
-- Print dialog popup: paper size segmented control (US Letter / A4), Print + Cancel buttons
+- Smart print layout: multi-column game log (up to 2 cols), row-based pagination, paper size selector (Letter/A4)
+- Print dialog popup: paper size + stats detail (Totals Only / Per Period) segmented controls, Print + Cancel buttons
 - Print sections: Game Log, Game Summary, Game Stats — each starts on own page with section title in header
 - Table splitting with thead repeated and " - continued" suffix on continuation pages
 - Anti-orphan logic: tables only start if title + thead + 1 data row fits
@@ -286,9 +287,9 @@ Inherits from `_academic` (8-min periods). Adds:
 - Full mode: log buttons in event colors, separator, stats buttons in teal
 - Stats events interleaved in live log with teal accent and colored borders
 - Game sheet: `statsOnly` events filtered from Progress of Game
-- Game sheet: Player Stats section with per-period breakdown (Q1, Q2, etc.) and bold totals
-- Single-table layout per stat type with colspan White/Dark headers
-- All events with cap numbers aggregated in Player Stats (not just statsOnly)
+- Player Stats redesign: per-team tables with row-per-player, column-per-stat layout (totals-only and per-period modes)
+- All non-teamOnly events with cap numbers aggregated in Player Stats (not just statsOnly)
+- Stats detail print option: Totals Only (rotated vertical headers) or Per Period (sub-columns per period + Total)
 - `seq` and `deviceTime` fields on log entries for ordering and future analysis
 - Visual separator between log and stats buttons on live screen
 - Cache-busting for dynamically loaded JS/screen assets in dev
@@ -312,7 +313,10 @@ Inherits from `_academic` (8-min periods). Adds:
 - End Period button moved from score bar to event grid: same size as event buttons, `grid-column: 3` pins it to rightmost column
 - End Game button disables after press: shows "Game Over" and prevents duplicate end-of-game events
 - Native ES modules: all JS files use `import`/`export` (except `year.js`). `loader.js` loaded as `<script type="module">`, browser resolves dependency tree automatically. Service worker uses `import` for `APP_VERSION`.
-- Sheet split: `sheet.js` (orchestrator + shared helpers), `sheet-screen.js` (screen rendering), `sheet-print.js` (print pagination) — isolates print debugging to one file
+- Sheet split: `sheet.js` (orchestrator + shared helpers), `sheet-screen.js` (screen rendering), `print.js` (standalone print renderer with `prn-*` CSS classes) — full screen/print isolation
+- Screen/print CSS split: `style.css` renamed to `screen.css`, game sheet styles wrapped in `@media screen {}`; `print.css` rewritten as self-contained `prn-*` namespace
+- Stats table print styling: dotted internal grid, solid structural dividers (cap column, group boundaries, totals row)
+- Colgroup-based fixed column widths for stats tables: available width distributed across data columns with remainder absorption
 - Service worker registration in `loader.js` with `{ type: 'module' }` — enables offline caching, cache busting via `APP_VERSION`
 - Restart App handler awaits async cleanup (SW unregistration + cache deletion) before reload — fixes race condition
 - Help documentation kept current alongside feature delivery — geronimo and kraken workflows include help.html check steps, bazinga establishes doc-as-delivery principle
