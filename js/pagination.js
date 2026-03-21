@@ -40,7 +40,7 @@ export const ROW_HEIGHT = 18;
 // 192/18 = 10.67 → round up to 11, plus 1 row spacing = 12.
 export const HEADER_ROWS = 12;
 
-export const PAGE_ROWS = { letter: 52, a4: 56 };
+export const PAGE_ROWS = { letter: 56, a4: 60 };
 
 /**
  * Available content rows per page (total rows minus header).
@@ -56,8 +56,8 @@ export function availableRows(paperSize) {
 //   Letter: (8.5 - 1) × 96 = 720px
 // Column-based print constants for horizontal overflow splitting.
 export const PAGE_WIDTH = { letter: 720, a4: 698 }; // printable px at 96dpi
-export const STATS_COL_WIDTH = 20;     // px per period/Tot sub-column
-export const STATS_CAP_COL_WIDTH = 40; // px for Cap column
+export const COL_WIDTH = 30;     // px per period/Tot sub-column
+export const CAP_COL_WIDTH = 50; // px for Cap column
 
 // Rotated header sizing: ~9px per uppercase character at 10pt print font + 8px padding.
 export const ROTATED_CHAR_PX = 9;
@@ -82,9 +82,9 @@ export function rotatedHeaderRows(statChunk) {
  * @returns {number}
  */
 export function maxStatsPerTable(paperSize, periodCount) {
-    const availWidth = PAGE_WIDTH[paperSize] - STATS_CAP_COL_WIDTH;
+    const availWidth = PAGE_WIDTH[paperSize] - CAP_COL_WIDTH;
     const colsPerStat = periodCount + 1; // periods + Tot
-    return Math.max(1, Math.floor(availWidth / (colsPerStat * STATS_COL_WIDTH)));
+    return Math.max(1, Math.floor(availWidth / (colsPerStat * COL_WIDTH)));
 }
 
 /**
@@ -122,7 +122,7 @@ export function filterLogEvents(log, rules) {
 // ── Log Page Plan ────────────────────────────────────────────
 
 /** Maximum columns per page in game log layout */
-const MAX_LOG_COLS = 3;
+const MAX_LOG_COLS = 2;
 
 /**
  * Build a pagination plan for multi-column game log layout.
@@ -260,13 +260,14 @@ export function buildStatsDescriptors(game, paperSize, statsDetail = "totals") {
     const isTotalsOnly = statsDetail !== "periods";
 
     let chunks;
-    if (isTotalsOnly || !paperSize) {
-        // Totals-only: no splitting needed (one column per stat).
-        // Screen mode (no paperSize): also no splitting.
+    if (!paperSize) {
+        // Screen mode: no splitting
         chunks = [statsData.statColumns];
     } else {
-        // Per-period print: split by paper width
-        const periodCount = statsData.periods.length;
+        // Print mode: split by paper width.
+        // Totals mode: 1 col per stat → use periodCount=0.
+        // Period mode: periods+Tot cols per stat → use actual periodCount.
+        const periodCount = isTotalsOnly ? 0 : statsData.periods.length;
         const maxPerTable = maxStatsPerTable(paperSize, periodCount);
         chunks = splitStatColumns(statsData.statColumns, maxPerTable);
     }
@@ -278,15 +279,16 @@ export function buildStatsDescriptors(game, paperSize, statsDetail = "totals") {
         const playerCount = teamData.players.length;
 
         for (let ci = 0; ci < chunks.length; ci++) {
+            const chunk = chunks[ci];
             descriptors.push({
                 type: "teamStats",
                 team,
                 chunkIndex: ci,
                 titleRows: 1,
-                theadRows: isTotalsOnly ? rotatedHeaderRows(chunks[ci]) : 2,
+                theadRows: isTotalsOnly ? rotatedHeaderRows(chunk) : 2,
                 dataRows: playerCount + 1, // players + totals row
                 statsData,
-                statChunk: chunks[ci],
+                statChunk: chunk,
                 totalsOnly: isTotalsOnly,
             });
         }

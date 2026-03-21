@@ -14,11 +14,14 @@
  * limitations under the License.
  */
 
-/* wplog — Print Styles
+/* wplog — Print Styles (prn-* namespace)
  *
  * Fully self-contained: no dependency on screen.css for sheet rendering.
  * screen.css wraps its Game Sheet section in @media screen {}, so these
  * rules are the sole authority for print layout.
+ *
+ * All dynamic values (grid columns, stats table widths, header heights)
+ * are read from --prn-* CSS custom properties set by js/print.js.
  */
 
 @media print {
@@ -57,72 +60,73 @@
         margin: 0;
     }
 
-    /* ── Sheet header ── */
-    .sheet-header {
+    /* ── Page breaks ── */
+    .prn-page-break {
+        page-break-before: always;
+    }
+
+    /* ── Header ── */
+    .prn-header {
         margin-bottom: 4px;
     }
 
-    .sheet-title-row {
+    .prn-title-row {
         display: flex;
         justify-content: space-between;
         align-items: baseline;
         margin-bottom: 4px;
     }
 
-    .sheet-title {
+    .prn-title {
         color: #111;
         font-size: 14pt;
         font-weight: 800;
-        -webkit-text-fill-color: #111;
-        background: none;
     }
 
-    .sheet-page-number {
+    .prn-page-number {
         color: #555;
         font-size: 9pt;
         font-weight: 600;
         white-space: nowrap;
     }
 
-    /* ── Sheet metadata ── */
-    .sheet-meta {
-        background: none;
+    /* ── Metadata ── */
+    .prn-meta {
         border: 1px solid #333;
-        border-radius: 0;
         padding: 4px 8px;
         margin-bottom: 4px;
     }
 
-    .sheet-meta-row {
+    .prn-meta-row {
         margin-bottom: 2px;
     }
 
-    .sheet-meta-row:last-child {
+    .prn-meta-row:last-child {
         margin-bottom: 0;
     }
 
-    .sheet-meta-pair {
+    .prn-meta-pair {
         white-space: nowrap;
     }
 
-    .sheet-meta-times {
+    .prn-meta-times {
         display: flex;
         gap: 12px;
     }
 
-    .sheet-label {
+    .prn-label {
         color: #555;
         font-size: 10pt;
         font-weight: 600;
     }
 
-    .sheet-value {
+    .prn-value {
         color: #111;
         font-size: 10pt;
     }
 
     /* ── Teams + Score ── */
-    .sheet-teams {
+    .prn-teams {
         display: flex;
         justify-content: center;
         align-items: center;
@@ -130,11 +134,11 @@
         margin: 4px 0;
     }
 
-    .sheet-team {
+    .prn-team {
         text-align: center;
     }
 
-    .sheet-team-label {
+    .prn-team-label {
         display: block;
         font-size: 9pt;
         font-weight: 700;
@@ -143,25 +147,20 @@
         color: #555;
     }
 
-    .sheet-team-name {
+    .prn-team-name {
         font-size: 11pt;
         font-weight: 600;
         color: #111;
     }
 
-    .sheet-team-white .sheet-team-name,
-    .sheet-team-dark .sheet-team-name {
-        color: #111;
-    }
-
-    .sheet-final-score {
+    .prn-final-score {
         color: #111;
         font-size: 24px;
         font-weight: 800;
     }
 
     /* ── Section titles ── */
-    .sheet-section-title {
+    .prn-section-title {
         color: #111;
         font-size: 10pt;
         font-weight: 700;
@@ -174,25 +173,16 @@
     }
 
     /* ── Section spacing ── */
-    .sheet-section {
+    .prn-section {
         margin-bottom: 0;
     }
 
-    .sheet-section + .sheet-section {
+    .prn-section + .prn-section {
         margin-top: 18px;
     }
 
-    /* ── Page breaks ── */
-    .sheet-page-break {
-        page-break-before: always;
-    }
-
-    .sheet-page-break .sheet-header {
-        display: block;
-    }
-
     /* ── Base table ── */
-    .sheet-table {
+    .prn-table {
         width: 100%;
         border-collapse: collapse;
         font-size: 10pt;
@@ -201,8 +191,8 @@
 
     /* Fixed row height for ALL tables — makes pagination math exact.
        box-sizing: border-box ensures height includes padding + border. */
-    .sheet-table th,
-    .sheet-table td {
+    .prn-table th,
+    .prn-table td {
         box-sizing: border-box;
         border: 1px solid #333;
         padding: 2px 4px;
@@ -215,7 +205,7 @@
         text-align: center;
     }
 
-    .sheet-table th {
+    .prn-table th {
         background: #eee;
         color: #333;
         font-weight: 600;
@@ -223,52 +213,66 @@
         letter-spacing: 0.04em;
     }
 
-    .sheet-table td {
+    .prn-table td {
         background: white;
+        font-family: 'Source Code Pro', monospace;
     }
 
     /* Repeat table headers when tables span page breaks */
-    .sheet-table thead {
+    .prn-table thead {
         display: table-header-group;
     }
 
     /* ── Compact tables (period scores) ── */
-    .sheet-table-compact td,
-    .sheet-table-compact th {
+    .prn-table-compact td,
+    .prn-table-compact th {
         text-align: center;
         padding: 2px 4px;
     }
 
-    .sheet-team-cell {
+    .prn-team-cell {
         text-align: left;
         font-weight: 600;
     }
 
-    .sheet-total {
+    .prn-total {
         background: #eee;
     }
 
     /* ── Game log ── */
-    .sheet-log-columns {
+    .prn-log-columns {
         display: grid;
+        grid-template-columns: var(--prn-grid-cols);
         gap: 4px;
         align-items: start;
         max-width: 100%;
         overflow: hidden;
     }
 
-    .sheet-log-columns > .sheet-table-log {
+    .prn-log-columns > .prn-table-log {
         min-width: 0;
         width: 100%;
     }
 
-    .sheet-table-log th,
-    .sheet-table-log td {
+    .prn-table-log th,
+    .prn-table-log td {
         padding: 1px;
     }
 
+    /* Log column widths — fixed percentages, no inline styles */
+    .prn-table-log col:nth-child(1) { width: 16%; }
+    .prn-table-log col:nth-child(2) { width: 14%; }
+    .prn-table-log col:nth-child(3) { width: 14%; }
+    .prn-table-log col:nth-child(4) { width: 30%; }
+    .prn-table-log col:nth-child(5) { width: 26%; }
+
+    /* ── Log text alignment ── */
+    .prn-table td.prn-align-left { text-align: left; }
+    .prn-table td.prn-align-right { text-align: right; }
+    .prn-table td.prn-align-center { text-align: center; }
+
     /* ── Period end rows ── */
-    .sheet-period-end td {
+    .prn-period-end td {
         background: #f5f5f5;
         color: #666;
         text-align: center;
@@ -276,91 +280,112 @@
     }
 
     /* ── Fouls ── */
-    .sheet-fouled-out td {
+    .prn-fouled-out td {
         background: #ffe0e0;
     }
 
-    .sheet-foul-details {
+    .prn-foul-details {
         color: #555;
     }
 
-    .sheet-empty {
+    .prn-empty {
         color: #666;
         font-style: italic;
     }
 
     /* ── Stats table ── */
-    .sheet-table.sheet-table-stats {
+    .prn-table.prn-table-stats {
         border-collapse: collapse;
         border: 1px solid #333;
+        table-layout: fixed;
+        width: 100%;
     }
 
     /* Stats data cells: dotted internal grid, overridden to solid at structural dividers */
-    .sheet-table.sheet-table-stats td {
+    .prn-table.prn-table-stats td {
         border: 1px dotted #333;
     }
 
-    /* Stats: horizontal headers (per-period mode) */
-    .stat-group-header {
-        white-space: nowrap;
+    /* Stats: tighter padding for compact data columns */
+    .prn-table.prn-table-stats th,
+    .prn-table.prn-table-stats td {
+        padding: 2px 2px;
+    }
+
+    /* Stats column widths: cap column explicit, data columns fixed */
+    .prn-table.prn-table-stats .prn-cap-header,
+    .prn-table.prn-table-stats .prn-cap-cell {
+        width: var(--prn-cap-col-width, 50px);
+    }
+
+    .prn-table.prn-table-stats .prn-stat-group-header,
+    .prn-table.prn-table-stats .prn-stats-total-col,
+    .prn-table.prn-table-stats .prn-stat-group-start {
+        width: var(--prn-stat-col-width, 60px);
+    }
+
+    /* Stats: base header style (period mode — horizontal) */
+    .prn-table th.prn-stat-group-header {
+        white-space: normal;
+        overflow: hidden;
+        height: auto;
         font-size: 10pt;
     }
 
-    .stat-group-header > span {
+    .prn-stat-group-header > span {
         writing-mode: horizontal-tb;
         transform: none;
     }
 
-    /* Stats: rotated headers (totals-only mode) — height set inline by JS */
-    .stat-header-rotated {
-        text-align: center;
-        vertical-align: middle;
-        font-size: 10pt;
-        padding: 4px 1px;
-        overflow: visible;
+    /* Stats: totals mode — rotated vertical headers */
+    .prn-stats-totals th.prn-stat-group-header {
+        height: var(--prn-header-height, 90px);
+        white-space: nowrap;
+        overflow: hidden;
+        vertical-align: bottom;
+        padding: 4px 2px;
     }
 
-    .stat-header-rotated > span {
-        display: inline-block;
+    .prn-stats-totals .prn-stat-group-header > span {
         writing-mode: vertical-rl;
         transform: rotate(180deg);
+        display: inline-block;
         white-space: nowrap;
     }
 
-    /* Stats: total column + totals row emphasis */
-    .sheet-table.sheet-table-stats .stats-total-col {
-        font-weight: 700;
-        border-right: 1px solid #333;
-    }
-
-    .sheet-table.sheet-table-stats .stats-totals-row td {
-        font-weight: 700;
-        border-top: 1px solid #333;
-    }
-
-    /* Stats: cap column solid border (header + data) */
-    .sheet-table.sheet-table-stats .stats-cap-header {
+    /* Stats: cap column (header + data) */
+    .prn-table.prn-table-stats .prn-cap-header {
         border-right: 1px solid #333;
         border-bottom: 1px solid #333;
     }
 
-    .sheet-table.sheet-table-stats .stats-cap-cell {
+    .prn-table.prn-table-stats .prn-cap-cell {
         border-right: 1px solid #333;
     }
 
+    /* Stats: total column + totals row emphasis */
+    .prn-table.prn-table-stats .prn-stats-total-col {
+        font-weight: 700;
+        border-right: 1px solid #333;
+    }
+
+    .prn-table.prn-table-stats .prn-stats-totals-row td {
+        font-weight: 700;
+        border-top: 1px solid #333;
+    }
+
     /* Stats: group divider in data rows */
-    .sheet-table.sheet-table-stats .stat-group-start {
+    .prn-table.prn-table-stats .prn-stat-group-start {
         border-left: 1px solid #333;
     }
 
     /* Stats: group divider in header rows */
-    .sheet-table.sheet-table-stats .stat-header-rotated,
-    .sheet-table.sheet-table-stats .stat-group-header {
+    .prn-table.prn-table-stats .prn-stat-group-header {
         border-left: 1px solid #333;
     }
 
     /* Stats: header-to-data separator (last header row only) */
-    .sheet-table.sheet-table-stats thead tr:last-child th {
+    .prn-table.prn-table-stats thead tr:last-child th {
         border-bottom: 1px solid #333;
     }
 

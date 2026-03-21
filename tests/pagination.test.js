@@ -22,8 +22,8 @@ import {
     HEADER_ROWS,
     ROW_HEIGHT,
     PAGE_WIDTH,
-    STATS_COL_WIDTH,
-    STATS_CAP_COL_WIDTH,
+    COL_WIDTH,
+    CAP_COL_WIDTH,
     ROTATED_CHAR_PX,
     rotatedHeaderRows,
     maxStatsPerTable,
@@ -44,8 +44,8 @@ function loadTestData(name) {
 
 describe("pagination constants", () => {
     it("PAGE_ROWS has letter and a4", () => {
-        strictEqual(PAGE_ROWS.letter, 52);
-        strictEqual(PAGE_ROWS.a4, 56);
+        strictEqual(PAGE_ROWS.letter, 56);
+        strictEqual(PAGE_ROWS.a4, 60);
     });
 
     it("HEADER_ROWS is 12", () => {
@@ -60,12 +60,12 @@ describe("pagination constants", () => {
 // ── availableRows ────────────────────────────────────────────
 
 describe("availableRows", () => {
-    it("letter = 52 - 12 = 40", () => {
-        strictEqual(availableRows("letter"), 40);
+    it("letter = 56 - 12 = 44", () => {
+        strictEqual(availableRows("letter"), 44);
     });
 
-    it("a4 = 56 - 12 = 44", () => {
-        strictEqual(availableRows("a4"), 44);
+    it("a4 = 60 - 12 = 48", () => {
+        strictEqual(availableRows("a4"), 48);
     });
 });
 
@@ -179,47 +179,41 @@ describe("buildLogPagePlan", () => {
         strictEqual(plan[0].colCount, 2);
     });
 
-    it("2 * rowsPerColumn + 1 events → 3 columns", () => {
+    it("max 2 columns per page", () => {
+        // 2 * 39 = 78 events = exactly 1 page of 2 columns
+        const plan = buildLogPagePlan(78, 40);
+        strictEqual(plan.length, 1);
+        strictEqual(plan[0].colCount, 2);
+    });
+
+    it("overflows to second page at 2 * rowsPerColumn + 1", () => {
+        // 79 events = 1 full page (78) + 1 on second page
         const plan = buildLogPagePlan(79, 40);
-        strictEqual(plan.length, 1);
-        strictEqual(plan[0].colCount, 3);
-    });
-
-    it("max 3 columns per page", () => {
-        // 3 * 39 = 117 events = exactly 1 page of 3 columns
-        const plan = buildLogPagePlan(117, 40);
-        strictEqual(plan.length, 1);
-        strictEqual(plan[0].colCount, 3);
-    });
-
-    it("overflows to second page", () => {
-        // 118 events = 1 full page (117) + 1 on second page
-        const plan = buildLogPagePlan(118, 40);
         strictEqual(plan.length, 2);
         strictEqual(plan[0].startIndex, 0);
-        strictEqual(plan[0].endIndex, 117);
-        strictEqual(plan[0].colCount, 3);
-        strictEqual(plan[1].startIndex, 117);
-        strictEqual(plan[1].endIndex, 118);
+        strictEqual(plan[0].endIndex, 78);
+        strictEqual(plan[0].colCount, 2);
+        strictEqual(plan[1].startIndex, 78);
+        strictEqual(plan[1].endIndex, 79);
         strictEqual(plan[1].colCount, 1);
     });
 
     it("exact multi-page boundary", () => {
-        // 234 events = exactly 2 pages of 117 each
-        const plan = buildLogPagePlan(234, 40);
+        // 156 events = exactly 2 pages of 78 each
+        const plan = buildLogPagePlan(156, 40);
         strictEqual(plan.length, 2);
-        strictEqual(plan[0].endIndex, 117);
-        strictEqual(plan[1].startIndex, 117);
-        strictEqual(plan[1].endIndex, 234);
+        strictEqual(plan[0].endIndex, 78);
+        strictEqual(plan[1].startIndex, 78);
+        strictEqual(plan[1].endIndex, 156);
     });
 
     it("start/end indices are contiguous", () => {
-        const plan = buildLogPagePlan(300, 40);
+        const plan = buildLogPagePlan(200, 40);
         ok(plan.length > 1);
         for (let i = 1; i < plan.length; i++) {
             strictEqual(plan[i].startIndex, plan[i - 1].endIndex);
         }
-        strictEqual(plan[plan.length - 1].endIndex, 300);
+        strictEqual(plan[plan.length - 1].endIndex, 200);
     });
 });
 
@@ -326,8 +320,9 @@ describe("buildStatsDescriptors", () => {
         const g = Game.create("USAWP");
         Game.addEvent(g, { period: 1, time: "7:00", team: "W", cap: "7", event: "Shot" });
         const desc = buildStatsDescriptors(g);
-        // "Shot" = 4 chars → (4*5+8)/18 = ceil(1.56) = 2 rows
+        // Totals mode uses rotatedHeaderRows — should be > 1 for stat names
         ok(desc[0].theadRows >= 1);
+        strictEqual(desc[0].theadRows, rotatedHeaderRows(desc[0].statChunk));
         strictEqual(desc[0].totalsOnly, true);
     });
 
@@ -572,16 +567,16 @@ describe("buildLogPagePlan — A4 paper", () => {
         strictEqual(plan[0].colCount, 2);
     });
 
-    it("max 3*43=129 events per A4 page", () => {
-        const plan = buildLogPagePlan(129, a4Avail);
+    it("max 2*43=86 events per A4 page", () => {
+        const plan = buildLogPagePlan(86, a4Avail);
         strictEqual(plan.length, 1);
-        strictEqual(plan[0].colCount, 3);
+        strictEqual(plan[0].colCount, 2);
     });
 
-    it("130 events → 2 pages on A4", () => {
-        const plan = buildLogPagePlan(130, a4Avail);
+    it("87 events → 2 pages on A4", () => {
+        const plan = buildLogPagePlan(87, a4Avail);
         strictEqual(plan.length, 2);
-        strictEqual(plan[0].endIndex, 129);
+        strictEqual(plan[0].endIndex, 86);
     });
 });
 
@@ -689,28 +684,28 @@ describe("column constants", () => {
         strictEqual(PAGE_WIDTH.a4, 698);
     });
 
-    it("STATS_COL_WIDTH is 20", () => {
-        strictEqual(STATS_COL_WIDTH, 20);
+    it("COL_WIDTH is 30", () => {
+        strictEqual(COL_WIDTH, 30);
     });
 
-    it("STATS_CAP_COL_WIDTH is 40", () => {
-        strictEqual(STATS_CAP_COL_WIDTH, 40);
+    it("CAP_COL_WIDTH is 50", () => {
+        strictEqual(CAP_COL_WIDTH, 50);
     });
 });
 
 // ── maxStatsPerTable ─────────────────────────────────────
 
 describe("maxStatsPerTable", () => {
-    it("letter with 4 periods = floor((720-40)/(5*20)) = 6", () => {
-        strictEqual(maxStatsPerTable("letter", 4), 6);
+    it("letter with 4 periods = floor((720-50)/(5*30)) = 4", () => {
+        strictEqual(maxStatsPerTable("letter", 4), 4);
     });
 
-    it("a4 with 4 periods = floor((698-40)/(5*20)) = 6", () => {
-        strictEqual(maxStatsPerTable("a4", 4), 6);
+    it("a4 with 4 periods = floor((698-50)/(5*30)) = 4", () => {
+        strictEqual(maxStatsPerTable("a4", 4), 4);
     });
 
-    it("letter with 6 periods (OT) = floor((720-40)/(7*20)) = 4", () => {
-        strictEqual(maxStatsPerTable("letter", 6), 4);
+    it("letter with 6 periods (OT) = floor((720-50)/(7*30)) = 3", () => {
+        strictEqual(maxStatsPerTable("letter", 6), 3);
     });
 
     it("returns at least 1", () => {
@@ -926,11 +921,11 @@ describe("pagination invariants with test data", () => {
                         strictEqual(plan[plan.length - 1].endIndex, filtered.length);
                     });
 
-                    it("log plan column counts are 1-3", () => {
+                    it("log plan column counts are 1-2", () => {
                         const filtered = filterLogEvents(gameData.log, rules);
                         const plan = buildLogPagePlan(filtered.length, avail);
                         for (const page of plan) {
-                            ok(page.colCount >= 1 && page.colCount <= 3,
+                            ok(page.colCount >= 1 && page.colCount <= 2,
                                 `colCount ${page.colCount} out of range`);
                         }
                     });

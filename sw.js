@@ -38,7 +38,7 @@ const ASSETS = [
     "./js/sheet.js",
     "./js/sheet-data.js",
     "./js/sheet-screen.js",
-    "./js/sheet-print.js",
+    "./js/print.js",
     "./js/pagination.js",
     "./js/share.js",
     "./js/app.js",

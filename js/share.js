@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import { Sheet } from './sheet.js';
+import { Print } from './print.js';
 import { buildFilename, buildCSV } from './export.js';
 
 // wplog — Share / Print / Export
@@ -135,7 +135,7 @@ export const Share = {
     _doPrint() {
         if (!this.game) return;
         this._setPageSize(this._paperSize);
-        Sheet.render(this.game, this._paperSize, this._statsDetail);
+        Print.render(this.game, this._paperSize, this._statsDetail);
         window.print();
     },
 

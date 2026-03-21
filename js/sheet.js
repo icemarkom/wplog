@@ -19,86 +19,21 @@ import { Game } from './game.js';
 import { escapeHTML } from './sanitize.js';
 import { buildPeriodScores, buildPersonalFoulTable, buildTimeoutSummary, buildCardSummary, buildPlayerStatsByTeam } from './sheet-data.js';
 import { renderScreen } from './sheet-screen.js';
-import {
-    availableRows,
-    filterLogEvents,
-    buildLogPagePlan,
-    buildSummaryDescriptors,
-    buildStatsDescriptors,
-    paginateItems,
-} from './pagination.js';
-import { renderLogPages, renderSummaryPages, renderStatsPages } from './sheet-print.js';
+import { filterLogEvents } from './pagination.js';
 
-// wplog — Game Sheet (Stateless Orchestrator + Shared Render Helpers)
+// wplog — Game Sheet (Screen-Only Orchestrator + Render Helpers)
 //
 // Sheet does not hold game state. All methods receive `game` as a parameter.
-// Pure pagination logic lives in pagination.js; DOM rendering in sheet-print.js.
+// Screen rendering only — print rendering is handled by js/print.js.
 
 export const Sheet = {
 
     // ── Main entry point ─────────────────────────────────────────
 
-    render(game, paperSize, statsDetail) {
+    render(game) {
         const container = document.getElementById("sheet-content");
         container.innerHTML = "";
-
-        const isPrint = !!paperSize;
-
-        if (!isPrint) {
-            renderScreen(game, this, container);
-            return;
-        }
-
-        // Print mode: paginated, multi-column log, sections on own pages
-        const avail = availableRows(paperSize);
-        const rules = RULES[game.rules];
-
-        // === Section 1: Game Log ===
-        const filteredLog = filterLogEvents(game.log, rules);
-        const logPlan = buildLogPagePlan(filteredLog.length, avail);
-        const logPages = renderLogPages(logPlan, filteredLog, game, rules, avail);
-
-        // === Section 2: Game Summary ===
-        const summaryDescriptors = buildSummaryDescriptors(game);
-        const summaryPlan = paginateItems(summaryDescriptors, avail);
-        const summaryPages = renderSummaryPages(summaryPlan, summaryDescriptors, game);
-
-        // === Section 3: Game Stats (optional) ===
-        let statsPages = [];
-        if (game.enableStats) {
-            const statsDescriptors = buildStatsDescriptors(game, paperSize, statsDetail);
-            if (statsDescriptors.length > 0) {
-                const statsPlan = paginateItems(statsDescriptors, avail);
-                statsPages = renderStatsPages(statsPlan, statsDescriptors, game, statsDetail);
-            }
-        }
-
-        // Collect all sections
-        const sections = [
-            { title: "Game Log", pages: logPages },
-            { title: "Game Summary", pages: summaryPages },
-        ];
-        if (statsPages.length > 0) {
-            sections.push({ title: "Game Stats", pages: statsPages });
-        }
-
-        // Count total pages
-        const totalPages = sections.reduce((sum, s) => sum + s.pages.length, 0);
-
-        // Render all pages
-        let pageNum = 0;
-        for (const section of sections) {
-            for (const page of section.pages) {
-                pageNum++;
-                const pageDiv = document.createElement("div");
-                pageDiv.className = "sheet-page" + (pageNum > 1 ? " sheet-page-break" : "");
-                pageDiv.appendChild(this._renderHeader(game, section.title, pageNum, totalPages));
-                for (const el of page.elements) {
-                    pageDiv.appendChild(el);
-                }
-                container.appendChild(pageDiv);
-            }
-        }
+        renderScreen(game, this, container);
     },
 
     // ── Header ───────────────────────────────────────────────────
