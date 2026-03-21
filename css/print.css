@@ -292,6 +292,12 @@
     /* ── Stats table ── */
     .sheet-table.sheet-table-stats {
         border-collapse: collapse;
+        border: 1px solid #333;
+    }
+
+    /* Stats data cells: dotted internal grid, overridden to solid at structural dividers */
+    .sheet-table.sheet-table-stats td {
+        border: 1px dotted #333;
     }
 
     /* Stats: horizontal headers (per-period mode) */
@@ -322,12 +328,40 @@
     }
 
     /* Stats: total column + totals row emphasis */
-    .stats-total-col {
+    .sheet-table.sheet-table-stats .stats-total-col {
         font-weight: 700;
+        border-right: 1px solid #333;
     }
 
-    .stats-totals-row {
+    .sheet-table.sheet-table-stats .stats-totals-row td {
         font-weight: 700;
+        border-top: 1px solid #333;
+    }
+
+    /* Stats: cap column solid border (header + data) */
+    .sheet-table.sheet-table-stats .stats-cap-header {
+        border-right: 1px solid #333;
+        border-bottom: 1px solid #333;
+    }
+
+    .sheet-table.sheet-table-stats .stats-cap-cell {
+        border-right: 1px solid #333;
+    }
+
+    /* Stats: group divider in data rows */
+    .sheet-table.sheet-table-stats .stat-group-start {
+        border-left: 1px solid #333;
+    }
+
+    /* Stats: group divider in header rows */
+    .sheet-table.sheet-table-stats .stat-header-rotated,
+    .sheet-table.sheet-table-stats .stat-group-header {
+        border-left: 1px solid #333;
+    }
+
+    /* Stats: header-to-data separator (last header row only) */
+    .sheet-table.sheet-table-stats thead tr:last-child th {
+        border-bottom: 1px solid #333;
     }
 
     /* @page is set dynamically by share.js — no hardcoded size here */
