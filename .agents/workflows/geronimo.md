@@ -4,19 +4,13 @@ description: Commit, push, and close issue — triggered by user saying "geronim
 
 # Geronimo — Ship It Workflow
 
-When the user says **"geronimo"**, they are giving one-time approval to run all steps below. This approval covers ONLY the current set of changes — it does NOT carry over to future work.
+When the user says **"geronimo"**, they are giving **one-time approval** to run all steps below for **one push**. This approval covers ONLY the current set of changes — it does NOT carry over to future work in the same session.
 
-> **Branch-aware:** The `branching` skill (`.agents/skills/branching/SKILL.md`) documents branch creation and strategy. Geronimo handles branch *shipping* — the table below maps branch type to merge behavior.
-
-| Branch pattern | Geronimo does |
-|---|---|
-| `fix/<name>` | commit, push, PR into `main`, merge, delete branch |
-| `feature/<name>` | commit, push, PR into `main`, merge, delete branch |
-| `main` | commit + push only (no PR/merge — escape hatch) |
+> **Branch-aware:** The `branching` skill documents branch creation and strategy. Geronimo handles branch *shipping*.
 
 // turbo-all
 
-1. **Update `help.html`** — if any user-facing changes are being shipped, check whether the help content needs updating. Update if needed.
+1. **Update `help.html`** — if any user-facing changes are being shipped, check whether the help content needs updating. Update. If user didn't explicitly mentioned, **STOP:** inform the user.
 2. **Update `AGENTS.md`** — review the "Current State" section and update it to reflect the changes being shipped:
    - Add new items to the "What's Done ✅" list
    - Update design decision table entries if any decisions changed

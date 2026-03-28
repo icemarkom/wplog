@@ -1,5 +1,23 @@
 # wplog — Agent Handoff & Continuation Guide
 
+## Rules for Next Agent
+
+1. **The user knows water polo deeply** — they're a referee. Trust their domain knowledge on events, rules, and terminology.
+2. **Keep it simple** — the user deliberately chose "no framework, no build tools." Honor that.
+3. **Event codes** — the user specifically chose codes like `"E-Game"` (not abbreviated). Don't change them without asking.
+4. **The user is iterative** — expect inline comments on artifacts with specific feedback. Incorporate exactly what they say.
+5. **Do not commit/push without confirmation** — always wait for the user to say it's ready before `git commit` and `git push`. Exception: "geronimo" = one-time blanket approval.
+6. **Close issues manually** — auto-close is disabled. Use `gh issue close N -c "comment"` after pushing.
+7. **Release to publish** — stable releases from `main`. Use `gh release create` to deploy to GitHub Pages. See the `branching` skill (`.agents/skills/branching/SKILL.md`) for the branching strategy.
+8. **Game clock is M:SS** — max time is capped by period length (not hardcoded 9:59). Right-to-left digit entry. Start/end times remain HH:MM.
+9. **Modal uses responsive breakpoints** — default is full-screen (mobile), `@media (min-width: 900px) and (min-height: 700px)` switches to desktop dialog.
+10. **Personal fouls are config-driven** — use `isPersonalFoul: true` on events. Don't hardcode event codes for foul counting.
+11. **MAM is a dual-trigger event** — `isPersonalFoul: true` + `autoFoulOut: 2`. This pattern was explicitly designed for NFHS/NCAA.
+12. **Version system** — `APP_VERSION` lives in `config.js`. Default is `"dev"`. Deploy workflow injects release tag. Dev mode auto-detects file timestamp via `HEAD` requests. Don't hardcode versions elsewhere.
+13. **About is an overlay** — not a screen/section. It uses the same `.overlay` pattern as `ConfirmDialog` and the foul-out popup.
+15. **Always use `escapeHTML()`** — when building `innerHTML` templates with user-supplied data (team names, cap numbers, Game #, location, etc.), wrap them in `escapeHTML()`. This is mandatory — see `sanitize.js`.
+
+
 ## Project Summary
 
 **wplog** is a water polo secondary game log — a client-side-only PWA (Progressive Web App) built with **Vanilla HTML/CSS/JS** (no npm, no build tools). It lets a coach or volunteer log game events poolside and produce an official-looking game sheet.
@@ -145,50 +163,6 @@ These were explicitly discussed and agreed with the user:
 | **`statsTimeMode`** | Controls time field in modal: `"off"` = hidden, `"optional"` = shown but not required, `"on"` = required. Stored in game data model. |
 | **ES modules** | All JS files use native `import`/`export` (except `year.js` which is a standalone `<script defer>`). `loader.js` is loaded as `<script type="module">` and imports `app.js`, which imports all other modules. The browser resolves the dependency tree automatically — no manual load ordering. Service worker also uses `import` for `APP_VERSION` from `config.js`. |
 
-### USAWP Events
-
-| Name | Code | Flags |
-|---|---|---|
-| Goal | `G` | `color: "green"` |
-| Exclusion | `E` | `isPersonalFoul: true, color: "amber"` |
-| Penalty | `P` | `isPersonalFoul: true, color: "amber"` |
-| Timeout | `TO` | `teamOnly: true, color: "blue"` |
-| Timeout 30 | `TO30` | `teamOnly: true, color: "blue"` |
-| Yellow Card | `YC` | `color: "yellow", allowCoach: true, allowBench: true` |
-| Penalty-Exclusion | `P-E` | `isPersonalFoul: true, color: "amber"` |
-| Misconduct | `MC` | `autoFoulOut: 1, color: "red"` |
-| Brutality | `BR` | `autoFoulOut: 1, color: "red"` |
-| Red Card | `RC` | `color: "red", allowCoach: true, allowAssistant: true` |
-| Game Exclusion | `E-Game` | `autoFoulOut: 1, color: "red"` |
-| Shot | — | `statsOnly: true, color: "teal"` |
-| Assist | — | `statsOnly: true, color: "teal"` |
-| Offensive | — | `statsOnly: true, color: "teal"` |
-| Steal | — | `statsOnly: true, color: "teal"` |
-| Intercept | — | `statsOnly: true, color: "teal"` |
-| Turnover | — | `statsOnly: true, color: "teal"` |
-| Field Block | — | `statsOnly: true, color: "teal"` |
-| Save | — | `statsOnly: true, color: "teal"` |
-| Drawn Exclusion | — | `statsOnly: true, color: "teal"` |
-| Drawn Penalty | — | `statsOnly: true, color: "teal"` |
-| Sprint Won | — | `statsOnly: true, color: "teal"` |
-
-### NFHS Events (Varsity & JV)
-
-Inherits from `_academic` (shared base). Same log events as `_academic` plus stats. NFHS does not have Brutality.
-
-| Name | Code | Flags |
-|---|---|---|
-| Minor Act | `MAM` | `isPersonalFoul: true, autoFoulOut: 2` |
-| Flagrant Misconduct | `FM` | `autoFoulOut: 1` |
-
-### NCAA Events
-
-Inherits from `_academic` (8-min periods). Adds:
-
-| Name | Code | Flags |
-|---|---|---|
-| Yellow/Red Card | `YRC` | `color: "yellow", allowPlayer: false, allowCoach: true` |
-
 ---
 
 ## Current State (as of 2026-03-28)
@@ -328,13 +302,12 @@ Inherits from `_academic` (8-min periods). Adds:
 - No substitution tracking (user hasn't decided)
 - Refactor tests to contract-based assertions (#151)
 
-
 ---
 
 ## How to Run
 
 Serve locally with any static file server. The app has no build step.
-Do NOT use Python's `http.server` — use the included dev server:
+Do NOT use Python's `http.server` — use the included dev server in the branch:
 
 ```sh
 go run tools/serve.go
@@ -343,21 +316,3 @@ go run tools/serve.go
 Then open `http://localhost:8080`.
 
 ---
-
-## Notes for Next Agent
-
-1. **The user knows water polo deeply** — they're a coach/referee. Trust their domain knowledge on events, rules, and terminology.
-2. **Keep it simple** — the user deliberately chose "no framework, no build tools." Honor that.
-3. **Event codes** — the user specifically chose codes like `"E-Game"` (not abbreviated). Don't change them without asking.
-4. **The user is iterative** — expect inline comments on artifacts with specific feedback. Incorporate exactly what they say.
-5. **Don't commit/push without confirmation** — always wait for the user to say it's ready before `git commit` and `git push`. Exception: "geronimo" = one-time blanket approval.
-6. **Close issues manually** — auto-close is disabled. Use `gh issue close N -c "comment"` after pushing.
-7. **Release to publish** — stable releases from `main`. Use `gh release create` to deploy to GitHub Pages. See the `branching` skill (`.agents/skills/branching/SKILL.md`) for the branching strategy.
-8. **Previous conversations** exist about a full water polo scoreboard/timer controller (WTTC-1) — this is a separate, simpler project.
-9. **Game clock is M:SS** — max time is capped by period length (not hardcoded 9:59). Right-to-left digit entry. Start/end times remain HH:MM.
-10. **Modal uses responsive breakpoints** — default is full-screen (mobile), `@media (min-width: 900px) and (min-height: 700px)` switches to desktop dialog.
-11. **Personal fouls are config-driven** — use `isPersonalFoul: true` on events. Don't hardcode event codes for foul counting.
-12. **MAM is a dual-trigger event** — `isPersonalFoul: true` + `autoFoulOut: 2`. This pattern was explicitly designed for NFHS/NCAA.
-13. **Version system** — `APP_VERSION` lives in `config.js`. Default is `"dev"`. Deploy workflow injects release tag. Dev mode auto-detects file timestamp via `HEAD` requests. Don't hardcode versions elsewhere.
-14. **About is an overlay** — not a screen/section. It uses the same `.overlay` pattern as `ConfirmDialog` and the foul-out popup.
-15. **Always use `escapeHTML()`** — when building `innerHTML` templates with user-supplied data (team names, cap numbers, Game #, location, etc.), wrap them in `escapeHTML()`. This is mandatory — see `sanitize.js`.
