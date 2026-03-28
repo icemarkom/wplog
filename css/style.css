@@ -20,33 +20,38 @@
    CSS Custom Properties
    ============================ */
 :root {
-  /* Colors — Dark mode poolside palette */
+  /* ── Theme tokens (change per color scheme) ── */
+
+  /* Backgrounds */
   --bg-primary: #0a0e1a;
   --bg-secondary: #121828;
   --bg-card: #1a2236;
   --bg-elevated: #222d45;
   --bg-input: #16203a;
 
+  /* Text */
   --text-primary: #e8ecf4;
   --text-secondary: #8892a8;
   --text-muted: #5a6478;
+  --text-on-light: #111;
 
+  /* Accent */
   --accent-blue: #3b82f6;
   --accent-blue-glow: rgba(59, 130, 246, 0.25);
+  --accent-indigo: #6366f1;
+  --accent-indigo-light: #818cf8;
 
+  /* Teams */
   --white-team: #e0e8f0;
   --white-team-bg: rgba(224, 232, 240, 0.12);
+  --white-team-glow: rgba(224, 232, 240, 0.1);
   --dark-team: #f59e0b;
   --dark-team-bg: rgba(245, 158, 11, 0.12);
+  --dark-team-glow: rgba(245, 158, 11, 0.1);
+  --official-team-bg: rgba(136, 146, 168, 0.12);
+  --official-team-glow: rgba(136, 146, 168, 0.1);
 
-  /* Event colors — domain-meaningful:
-     Green  = scoring (Goal)
-     Amber  = exclusions (E, E-Game, P-E)
-     Orange = penalty shot (P)
-     Blue   = timeout (TO, TO30)
-     Yellow = yellow card (YC)
-     Red    = ejections (RC, MC, BR)
-  */
+  /* Event colors */
   --event-goal: #22c55e;
   --event-goal-bg: rgba(34, 197, 94, 0.15);
   --event-exclusion: #f59e0b;
@@ -62,24 +67,44 @@
   --event-stat: #2dd4bf;
   --event-stat-bg: rgba(45, 212, 191, 0.15);
 
+  /* Status */
   --danger: #ef4444;
   --danger-bg: rgba(239, 68, 68, 0.1);
+  --danger-dark: #dc2626;
+  --danger-darker: #b91c1c;
+  --danger-glow: rgba(220, 38, 38, 0.4);
+  --danger-glow-hover: rgba(220, 38, 38, 0.6);
+  --warning-amber: #f59e0b;
+  --warning-amber-dark: #d97706;
+  --warning-glow: rgba(245, 158, 11, 0.3);
+  --warning-glow-hover: rgba(245, 158, 11, 0.5);
   --success: #10b981;
 
+  /* Borders & surfaces */
   --border: rgba(255, 255, 255, 0.08);
   --border-focus: rgba(59, 130, 246, 0.5);
+  --overlay-bg: rgba(0, 0, 0, 0.7);
+  --highlight: rgba(255, 255, 255, 0.06);
+  --highlight-hover: rgba(255, 255, 255, 0.12);
+  --surface-white: #fff;
+  
+  /* Media filters */
 
-  --radius-sm: 6px;
-  --radius-md: 10px;
-  --radius-lg: 14px;
-  --radius-xl: 20px;
-
+  /* Shadows */
   --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.3);
   --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.4);
   --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.5);
   --shadow-glow: 0 0 20px var(--accent-blue-glow);
 
+  /* ── Structural tokens (same in every theme) ── */
+  --text-on-accent: var(--surface-white);
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+  --radius-xl: 20px;
   --font: 'Inter', system-ui, -apple-system, sans-serif;
+  --font-mono: 'Source Code Pro', monospace;
+  --letter-spacing-caps: 0.04em;
   --transition: 150ms ease;
 }
 
@@ -157,7 +182,11 @@ body {
   background: var(--accent-blue-glow);
 }
 
-.nav-btn:disabled {
+.nav-btn:disabled,
+.segment-btn:disabled,
+.stepper-btn:disabled,
+.btn:disabled,
+.modal-action-btn:disabled {
   opacity: 0.3;
   cursor: not-allowed;
 }
@@ -188,7 +217,7 @@ body {
   font-weight: 800;
   text-align: center;
   letter-spacing: -0.03em;
-  background: linear-gradient(135deg, var(--accent-blue) 0%, #818cf8 100%);
+  background: linear-gradient(135deg, var(--accent-blue) 0%, var(--accent-indigo-light) 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -212,7 +241,7 @@ body {
   font-weight: 600;
   color: var(--text-secondary);
   text-transform: uppercase;
-  letter-spacing: 0.04em;
+  letter-spacing: var(--letter-spacing-caps);
   margin-bottom: 6px;
 }
 
@@ -273,30 +302,6 @@ select.form-input {
   flex: 1;
 }
 
-.toggle-row {
-  display: flex;
-  gap: 24px;
-  margin-bottom: 24px;
-  justify-content: center;
-}
-
-.toggle-label {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  cursor: pointer;
-  font-size: 14px;
-  font-weight: 500;
-  color: var(--text-secondary);
-}
-
-.toggle-label input[type="checkbox"] {
-  width: 20px;
-  height: 20px;
-  accent-color: var(--accent-blue);
-  cursor: pointer;
-}
-
 /* ============================
    Segmented Control
    ============================ */
@@ -325,13 +330,9 @@ select.form-input {
 }
 
 .segment-btn.active {
-  background: linear-gradient(135deg, var(--accent-blue) 0%, #6366f1 100%);
-  color: white;
-  box-shadow: 0 1px 4px rgba(59, 130, 246, 0.3);
-}
-
-.segment-btn:disabled {
-  cursor: not-allowed;
+  background: linear-gradient(135deg, var(--accent-blue) 0%, var(--accent-indigo) 100%);
+  color: var(--text-on-accent);
+  box-shadow: 0 1px 4px var(--accent-blue-glow);
 }
 
 .segment-control.disabled {
@@ -356,7 +357,7 @@ select.form-input {
   height: 40px;
   border: none;
   border-radius: calc(var(--radius-md) - 2px);
-  background: rgba(255, 255, 255, 0.06);
+  background: var(--highlight);
   color: var(--text-secondary);
   font-family: var(--font);
   font-size: 18px;
@@ -371,12 +372,7 @@ select.form-input {
 }
 
 .stepper-btn:active:not(:disabled) {
-  background: rgba(255, 255, 255, 0.12);
-}
-
-.stepper-btn:disabled {
-  opacity: 0.3;
-  cursor: not-allowed;
+  background: var(--highlight-hover);
 }
 
 .stepper-value {
@@ -411,7 +407,7 @@ select.form-input {
   padding: 12px 16px;
   font-size: 13px;
   font-weight: 700;
-  letter-spacing: 0.04em;
+  letter-spacing: var(--letter-spacing-caps);
   text-transform: uppercase;
   color: var(--text-secondary);
   cursor: pointer;
@@ -435,12 +431,6 @@ select.form-input {
   padding: 0 16px 12px;
 }
 
-.setup-divider {
-  border: none;
-  border-top: 1px solid var(--border);
-  margin: 20px 0 8px;
-}
-
 /* ============================
    Buttons
    ============================ */
@@ -460,8 +450,8 @@ select.form-input {
 }
 
 .btn-primary {
-  background: linear-gradient(135deg, var(--accent-blue) 0%, #6366f1 100%);
-  color: white;
+  background: linear-gradient(135deg, var(--accent-blue) 0%, var(--accent-indigo) 100%);
+  color: var(--text-on-accent);
   box-shadow: var(--shadow-sm), 0 0 12px var(--accent-blue-glow);
 }
 
@@ -470,23 +460,18 @@ select.form-input {
   box-shadow: var(--shadow-md), var(--shadow-glow);
 }
 
-.btn:disabled {
-  opacity: 0.3;
-  cursor: not-allowed;
-}
-
 .btn-primary:active {
   transform: translateY(0);
 }
 
 .btn-danger {
-  background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%) !important;
-  color: white !important;
-  box-shadow: var(--shadow-sm), 0 0 12px rgba(220, 38, 38, 0.4) !important;
+  background: linear-gradient(135deg, var(--danger-dark) 0%, var(--danger-darker) 100%) !important;
+  color: var(--text-on-accent) !important;
+  box-shadow: var(--shadow-sm), 0 0 12px var(--danger-glow) !important;
 }
 
 .btn-danger:hover {
-  box-shadow: var(--shadow-md), 0 0 16px rgba(220, 38, 38, 0.6) !important;
+  box-shadow: var(--shadow-md), 0 0 16px var(--danger-glow-hover) !important;
 }
 
 .btn-outline {
@@ -498,7 +483,6 @@ select.form-input {
 .btn-outline:hover {
   background: var(--bg-elevated);
 }
-
 
 .btn-large {
   width: 100%;
@@ -522,21 +506,6 @@ select.form-input {
 
 .hard-reset-link:hover {
   color: var(--danger);
-}
-
-.btn-small {
-  padding: 8px 16px;
-  font-size: 12px;
-  margin-top: 24px;
-}
-
-.btn-period-end {
-  width: 100%;
-  margin-top: 12px;
-  padding: 10px;
-  color: var(--text-secondary);
-  border-color: var(--border);
-  font-size: 13px;
 }
 
 /* ============================
@@ -568,30 +537,34 @@ select.form-input {
   text-transform: uppercase;
 }
 
-.score-team-white .score-label { color: var(--white-team); }
-.score-team-dark .score-label { color: var(--dark-team); }
+.score-team-white .score-label,
+.score-team-white .score-value,
+.log-team.team-white,
+.sheet-team-white .sheet-team-name { color: var(--white-team); }
+
+.score-team-dark .score-label,
+.score-team-dark .score-value,
+.log-team.team-dark,
+.sheet-team-dark .sheet-team-name { color: var(--dark-team); }
 
 .score-value {
   font-size: 40px;
   font-weight: 800;
-  font-family: 'Source Code Pro', monospace;
+  font-family: var(--font-mono);
   line-height: 1;
   letter-spacing: -0.02em;
 }
 
-.score-team-white .score-value { color: var(--white-team); }
-.score-team-dark .score-value { color: var(--dark-team); }
-
 .tol-display {
   font-size: 11px;
-  font-family: 'Source Code Pro', monospace;
+  font-family: var(--font-mono);
   font-weight: 600;
   color: var(--text-muted);
   letter-spacing: 0.02em;
 }
 
 .tol-warning {
-  color: var(--red);
+  color: var(--danger);
 }
 
 .score-period {
@@ -618,69 +591,16 @@ select.form-input {
 }
 
 /* ============================
-   Period Tabs
+   Input Label
    ============================ */
-.period-tabs {
-  display: flex;
-  gap: 4px;
-  margin-bottom: 16px;
-  overflow-x: auto;
-  scrollbar-width: none;
-  -ms-overflow-style: none;
-}
-
-.period-tabs::-webkit-scrollbar { display: none; }
-
-.period-tab {
-  flex-shrink: 0;
-  padding: 8px 14px;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  background: var(--bg-card);
-  color: var(--text-secondary);
-  font-family: var(--font);
-  font-size: 13px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all var(--transition);
-}
-
-.period-tab.active {
-  background: var(--accent-blue);
-  border-color: var(--accent-blue);
-  color: white;
-}
-
-/* ============================
-   Input Section
-   ============================ */
-.input-section {
-  margin-bottom: 12px;
-}
-
 .input-label {
   display: block;
   font-size: 11px;
   font-weight: 600;
   color: var(--text-muted);
   text-transform: uppercase;
-  letter-spacing: 0.04em;
+  letter-spacing: var(--letter-spacing-caps);
   margin-bottom: 4px;
-}
-
-.time-input {
-  font-size: 24px;
-  font-weight: 700;
-  text-align: center;
-  letter-spacing: 0.05em;
-  font-variant-numeric: tabular-nums;
-}
-
-.cap-display {
-  font-size: 28px;
-  font-weight: 700;
-  text-align: center;
-  letter-spacing: 0.05em;
 }
 
 /* ============================
@@ -715,7 +635,7 @@ select.form-input {
 .team-btn-white.active {
   background: var(--white-team-bg);
   border-color: var(--white-team);
-  box-shadow: 0 0 16px rgba(224, 232, 240, 0.1);
+  box-shadow: 0 0 16px var(--white-team-glow);
 }
 
 .team-btn-dark {
@@ -725,7 +645,7 @@ select.form-input {
 .team-btn-dark.active {
   background: var(--dark-team-bg);
   border-color: var(--dark-team);
-  box-shadow: 0 0 16px rgba(245, 158, 11, 0.1);
+  box-shadow: 0 0 16px var(--dark-team-glow);
 }
 
 .team-btn-official {
@@ -733,9 +653,9 @@ select.form-input {
 }
 
 .team-btn-official.active {
-  background: rgba(136, 146, 168, 0.12);
+  background: var(--official-team-bg);
   border-color: var(--text-secondary);
-  box-shadow: 0 0 16px rgba(136, 146, 168, 0.1);
+  box-shadow: 0 0 16px var(--official-team-glow);
 }
 
 /* ============================
@@ -875,7 +795,7 @@ select.form-input {
   font-weight: 600;
   color: var(--text-muted);
   text-transform: uppercase;
-  letter-spacing: 0.04em;
+  letter-spacing: var(--letter-spacing-caps);
   margin-bottom: 8px;
 }
 
@@ -894,7 +814,7 @@ select.form-input {
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
   font-size: 13px;
-  font-family: 'Source Code Pro', monospace;
+  font-family: var(--font-mono);
   font-variant-numeric: tabular-nums;
 }
 
@@ -926,9 +846,6 @@ select.form-input {
   min-width: 14px;
 }
 
-.log-team.team-white { color: var(--white-team); }
-.log-team.team-dark { color: var(--dark-team); }
-
 .log-cap {
   font-weight: 600;
   min-width: 28px;
@@ -942,14 +859,6 @@ select.form-input {
   border-radius: 4px;
   flex: 1;
 }
-
-.log-event.event-green { background: var(--event-goal-bg); color: var(--event-goal); }
-.log-event.event-amber { background: var(--event-exclusion-bg); color: var(--event-exclusion); }
-.log-event.event-orange { background: var(--event-penalty-bg); color: var(--event-penalty); }
-.log-event.event-blue { background: var(--event-timeout-bg); color: var(--event-timeout); }
-.log-event.event-yellow { background: var(--event-yellow-bg); color: var(--event-yellow); }
-.log-event.event-red { background: var(--event-red-bg); color: var(--event-red); }
-.log-event.event-teal { background: var(--event-stat-bg); color: var(--event-stat); }
 
 .stats-separator {
   grid-column: 1 / -1;
@@ -987,10 +896,6 @@ select.form-input {
   margin: 0 2px;
 }
 
-.log-entry.stat-event {
-  border-left: 3px solid var(--event-stat);
-}
-
 .log-entry.event-border-green { border-left: 3px solid var(--event-goal); }
 .log-entry.event-border-amber { border-left: 3px solid var(--event-exclusion); }
 .log-entry.event-border-orange { border-left: 3px solid var(--event-penalty); }
@@ -1005,7 +910,7 @@ select.form-input {
 .overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.7);
+  background: var(--overlay-bg);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1034,7 +939,7 @@ select.form-input {
 
 .foulout-card {
   border-color: var(--danger);
-  box-shadow: var(--shadow-lg), 0 0 40px rgba(239, 68, 68, 0.2);
+  box-shadow: var(--shadow-lg), 0 0 40px var(--danger-bg);
 }
 
 /* Shared overlay title + message */
@@ -1084,23 +989,23 @@ select.form-input {
 }
 
 .confirm-btn-danger {
-  background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
-  color: white;
-  box-shadow: var(--shadow-sm), 0 0 12px rgba(220, 38, 38, 0.3);
+  background: linear-gradient(135deg, var(--danger-dark) 0%, var(--danger-darker) 100%);
+  color: var(--text-on-accent);
+  box-shadow: var(--shadow-sm), 0 0 12px var(--danger-glow);
 }
 
 .confirm-btn-danger:hover {
-  box-shadow: var(--shadow-md), 0 0 16px rgba(220, 38, 38, 0.5);
+  box-shadow: var(--shadow-md), 0 0 16px var(--danger-glow-hover);
 }
 
 .confirm-btn-warning {
-  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
-  color: #111;
-  box-shadow: var(--shadow-sm), 0 0 12px rgba(245, 158, 11, 0.3);
+  background: linear-gradient(135deg, var(--warning-amber) 0%, var(--warning-amber-dark) 100%);
+  color: var(--text-on-light);
+  box-shadow: var(--shadow-sm), 0 0 12px var(--warning-glow);
 }
 
 .confirm-btn-warning:hover {
-  box-shadow: var(--shadow-md), 0 0 16px rgba(245, 158, 11, 0.5);
+  box-shadow: var(--shadow-md), 0 0 16px var(--warning-glow-hover);
 }
 /* ============================
    Event Modal
@@ -1108,7 +1013,7 @@ select.form-input {
 .event-modal {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.7);
+  background: var(--overlay-bg);
   display: flex;
   align-items: stretch;
   justify-content: center;
@@ -1150,7 +1055,7 @@ select.form-input {
   font-size: 13px;
   font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.04em;
+  letter-spacing: var(--letter-spacing-caps);
   color: var(--accent-blue);
   text-align: center;
   margin-bottom: 1.5dvh;
@@ -1221,18 +1126,6 @@ select.form-input {
   border-radius: var(--radius-md);
 }
 
-.modal-action-btn:disabled {
-  opacity: 0.3;
-  cursor: not-allowed;
-}
-
-/* End Period grid button */
-.event-end-period {
-  background: var(--bg-card);
-  border-color: var(--border);
-  color: var(--text-secondary);
-}
-
 /* ============================
    Toast Notifications
    ============================ */
@@ -1260,12 +1153,12 @@ select.form-input {
 
 .toast-info {
   background: var(--accent-blue);
-  color: white;
+  color: var(--text-on-accent);
 }
 
 .toast-warning {
-  background: var(--event-exclusion);
-  color: #1a1a1a;
+  background: var(--warning-amber);
+  color: var(--text-on-light);
 }
 
 .toast-fade {
@@ -1293,10 +1186,6 @@ select.form-input {
   margin-bottom: 24px;
 }
 
-.sheet-page-break .sheet-header {
-  display: none;
-}
-
 .sheet-title-row {
   display: flex;
   justify-content: space-between;
@@ -1308,15 +1197,6 @@ select.form-input {
   font-size: 22px;
   font-weight: 800;
   letter-spacing: -0.02em;
-}
-
-.sheet-page-number {
-  font-size: 11px;
-  font-weight: 600;
-  color: var(--text-muted);
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  white-space: nowrap;
 }
 
 .sheet-meta {
@@ -1351,7 +1231,7 @@ select.form-input {
 
 .sheet-value {
   font-size: 13px;
-  font-family: 'Source Code Pro', monospace;
+  font-family: var(--font-mono);
   color: var(--text-primary);
 }
 
@@ -1381,13 +1261,10 @@ select.form-input {
   font-weight: 600;
 }
 
-.sheet-team-white .sheet-team-name { color: var(--white-team); }
-.sheet-team-dark .sheet-team-name { color: var(--dark-team); }
-
 .sheet-final-score {
   font-size: 32px;
   font-weight: 800;
-  font-family: 'Source Code Pro', monospace;
+  font-family: var(--font-mono);
   color: var(--text-primary);
   letter-spacing: -0.02em;
 }
@@ -1400,7 +1277,7 @@ select.form-input {
   font-size: 13px;
   font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.04em;
+  letter-spacing: var(--letter-spacing-caps);
   color: var(--accent-blue);
   border-bottom: 2px solid var(--accent-blue);
   padding-bottom: 6px;
@@ -1408,64 +1285,13 @@ select.form-input {
   text-align: left;
 }
 
-.sheet-section-subtitle {
-  font-size: 12px;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-  color: var(--text-secondary);
-  margin: 8px 0 4px;
-  text-align: left;
-}
-
-.sheet-stats-row {
-  display: flex;
-  gap: 16px;
-  margin-bottom: 8px;
-  align-items: flex-start;
-}
-
-.sheet-stats-half {
-  flex: 1;
-  min-width: 0;
-}
-
-.sheet-stats-team {
-  font-size: 11px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-  color: var(--text-secondary);
-  margin-bottom: 4px;
-}
-
-.sheet-empty-inline {
-  font-style: italic;
-  color: var(--text-muted);
-  font-size: 12px;
-}
-
 .sheet-team-header {
   font-size: 12px;
   font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.04em;
+  letter-spacing: var(--letter-spacing-caps);
   text-align: center;
   border-bottom: 1px solid var(--border);
-}
-
-.sheet-table-stats {
-  table-layout: fixed;
-}
-
-.sheet-log-columns {
-  display: grid;
-  gap: 8px;
-  align-items: start;
-}
-
-.sheet-table-log {
-  font-size: 12px;
 }
 
 .sheet-table {
@@ -1487,13 +1313,13 @@ select.form-input {
   font-weight: 600;
   font-size: 11px;
   text-transform: uppercase;
-  letter-spacing: 0.04em;
+  letter-spacing: var(--letter-spacing-caps);
   color: var(--text-secondary);
 }
 
 .sheet-table td {
   background: var(--bg-card);
-  font-family: 'Source Code Pro', monospace;
+  font-family: var(--font-mono);
 }
 
 .sheet-period-end td {
@@ -1519,10 +1345,7 @@ select.form-input {
   background: var(--bg-elevated) !important;
 }
 
-.sheet-fouled-out {
-  background: var(--danger-bg) !important;
-}
-
+.sheet-fouled-out,
 .sheet-fouled-out td {
   background: var(--danger-bg) !important;
 }
@@ -1557,9 +1380,19 @@ select.form-input {
   border: 1px solid var(--border);
   cursor: pointer;
   transition: transform 0.15s ease;
-  /* Tint white modules to accent blue */
-  filter: brightness(0.75) sepia(1) hue-rotate(190deg) saturate(3);
 }
+
+.qr-code svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.qr-code svg rect {
+  fill: var(--accent-blue) !important;
+  opacity: 0.9;
+}
+
 
 .qr-code:hover {
   transform: scale(1.03);
@@ -1577,7 +1410,7 @@ select.form-input {
   width: 90%;
   aspect-ratio: 1;
   max-height: 90%;
-  background: #fff;
+  background: var(--surface-white);
   padding: 12px;
   border-radius: var(--radius-lg);
   box-sizing: border-box;
@@ -1595,8 +1428,23 @@ select.form-input {
   width: 100%;
   height: auto;
   display: block;
-  filter: invert(1);
 }
+
+/* Force QR to always have high contrast over its white wrapper */
+.qr-fullscreen {
+  color: var(--text-on-light);
+}
+
+.qr-fullscreen svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.qr-fullscreen svg rect {
+  fill: var(--text-on-light) !important;
+}
+
 
 .qr-label {
   margin-top: 12px;
@@ -1611,35 +1459,30 @@ select.form-input {
   gap: 12px;
 }
 
-/* Print Dialog */
-.print-card {
+/* Download Dialog */
+.download-card {
   max-width: 380px;
   text-align: center;
 }
 
-.csv-filename {
-  font-family: "Source Code Pro", monospace;
+.download-filename {
+  font-family: var(--font-mono);
   font-size: 13px;
   color: var(--text-primary);
   background: var(--bg-input);
   border: 1px solid var(--border);
-  border-radius: var(--radius);
+  border-radius: var(--radius-sm);
   padding: 10px 12px;
   margin-bottom: 20px;
   width: 100%;
   box-sizing: border-box;
 }
 
-.print-title {
+.download-title {
   margin-bottom: 20px;
 }
 
-.print-card .form-group {
-  text-align: left;
-  margin-bottom: 20px;
-}
-
-.print-dialog-actions {
+.download-actions {
   display: flex;
   flex-direction: column;
   gap: 12px;
@@ -1660,14 +1503,6 @@ select.form-input {
   color: var(--text-primary);
 }
 
-.share-status {
-  text-align: center;
-  color: var(--text-muted);
-  font-size: 14px;
-  margin-top: 16px;
-  min-height: 20px;
-}
-
 /* ============================
    About Dialog
    ============================ */
@@ -1680,7 +1515,7 @@ select.form-input {
   font-weight: 800;
   text-align: center;
   letter-spacing: -0.03em;
-  background: linear-gradient(135deg, var(--accent-blue) 0%, #818cf8 100%);
+  background: linear-gradient(135deg, var(--accent-blue) 0%, var(--accent-indigo-light) 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -1718,7 +1553,7 @@ select.form-input {
   font-weight: 600;
   color: var(--text-muted);
   text-transform: uppercase;
-  letter-spacing: 0.04em;
+  letter-spacing: var(--letter-spacing-caps);
   flex-shrink: 0;
   margin-right: 16px;
 }
@@ -1727,16 +1562,7 @@ select.form-input {
   font-size: 13px;
   color: var(--text-primary);
   text-align: right;
-  font-family: 'Source Code Pro', monospace;
-}
-
-.about-value a {
-  color: var(--accent-blue);
-  text-decoration: none;
-}
-
-.about-value a:hover {
-  text-decoration: underline;
+  font-family: var(--font-mono);
 }
 
 .about-description {
@@ -1769,16 +1595,26 @@ select.form-input {
 }
 
 /* ============================
-   Fetched Content (shared by
-   Privacy overlay + Help screen)
+   Content Typography (shared by
+   in-app overlays + standalone pages)
    ============================ */
-.fetched-content h1 {
-  font-size: 22px;
+.fetched-content h1,
+.container h1 {
   font-weight: 800;
-  text-align: center;
   letter-spacing: -0.02em;
   color: var(--text-primary);
   margin-bottom: 20px;
+}
+
+.fetched-content h1 {
+  font-size: 22px;
+  text-align: center;
+}
+
+.container h1 {
+  font-size: 28px;
+  letter-spacing: -0.03em;
+  margin-bottom: 4px;
 }
 
 .fetched-content .effective-date {
@@ -1789,33 +1625,55 @@ select.form-input {
   margin-bottom: 20px;
 }
 
-.fetched-content h2 {
-  font-size: 13px;
+.fetched-content h2,
+.container h2 {
   font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.04em;
+  letter-spacing: var(--letter-spacing-caps);
   color: var(--accent-blue);
+}
+
+.fetched-content h2 {
+  font-size: 13px;
   margin-top: 16px;
   margin-bottom: 6px;
+}
+
+.container h2 {
+  font-size: 16px;
+  margin-top: 32px;
+  margin-bottom: 10px;
 }
 
 .fetched-content h2:first-of-type {
   margin-top: 0;
 }
 
-.fetched-content p {
-  font-size: 13px;
+.fetched-content p,
+.container p {
   color: var(--text-secondary);
   line-height: 1.6;
+}
+
+.fetched-content p {
+  font-size: 13px;
   margin-bottom: 4px;
 }
 
-.fetched-content a {
+.container p {
+  font-size: 14px;
+  margin-bottom: 12px;
+  line-height: 1.7;
+}
+
+.fetched-content a,
+.container a {
   color: var(--accent-blue);
   text-decoration: none;
 }
 
-.fetched-content a:hover {
+.fetched-content a:hover,
+.container a:hover {
   text-decoration: underline;
 }
 
@@ -1877,13 +1735,43 @@ select.form-input {
   opacity: 0.6;
 }
 
-.app-footer a {
+.about-value a,
+.app-footer a,
+.footer a {
   color: var(--accent-blue);
   text-decoration: none;
 }
 
-.app-footer a:hover {
+.about-value a:hover,
+.app-footer a:hover,
+.footer a:hover {
   text-decoration: underline;
+}
+
+/* ============================
+   Standalone Page Styles
+   (privacy.html, help.html)
+   ============================ */
+.container {
+  max-width: 640px;
+  margin: 0 auto;
+  padding: 40px 20px 60px;
+}
+
+.effective-date {
+  font-size: 13px;
+  color: var(--text-muted);
+  margin-bottom: 32px;
+}
+
+/* Standalone page footer (distinct from .app-footer which is fixed) */
+.footer {
+  margin-top: 48px;
+  padding-top: 20px;
+  border-top: 1px solid var(--border);
+  font-size: 11px;
+  color: var(--text-muted);
+  text-align: center;
 }
 
 /* ============================
@@ -1944,15 +1832,6 @@ select.form-input {
 }
 
 /* ============================
-   Responsive
-   ============================ */
-@media (min-width: 600px) {
-  .event-buttons {
-    grid-template-columns: repeat(3, 1fr);
-  }
-}
-
-/* ============================
    Compact layout — small viewports
    ============================ */
 @media (max-height: 700px) {
@@ -1973,8 +1852,5 @@ select.form-input {
   .form-input {
     padding: 10px 12px;
   }
-
-  .toggle-row {
-    margin-bottom: 14px;
-  }
 }
+

@@ -14,63 +14,28 @@
  * limitations under the License.
  */
 
-import { Sheet } from './sheet.js';
 import { buildFilename, buildCSV } from './export.js';
 
-// wplog — Share / Print / Export
+// wplog — Share / Export
 
 export const Share = {
     game: null,
     _bound: false,
-    _pageStyleEl: null,
-    _paperSize: "letter",
     _pendingFormat: null, // "csv" or "json"
 
     init(game) {
         this.game = game || null;
-        const printBtn = document.getElementById("print-sheet-btn");
         const csvBtn = document.getElementById("export-csv-btn");
         const jsonBtn = document.getElementById("export-json-btn");
-        printBtn.disabled = !this.game;
         csvBtn.disabled = !this.game;
         jsonBtn.disabled = !this.game;
         if (!this._bound) {
-            printBtn.addEventListener("click", () => {
-                this._showPrintDialog();
-            });
-
             csvBtn.addEventListener("click", () => {
                 this._showDownloadDialog("csv");
             });
 
             jsonBtn.addEventListener("click", () => {
                 this._showDownloadDialog("json");
-            });
-
-            // Paper size segmented control
-            const control = document.getElementById("print-paper-size");
-            control.addEventListener("click", (e) => {
-                const btn = e.target.closest(".segment-btn");
-                if (!btn) return;
-                control.querySelectorAll(".segment-btn").forEach((b) => b.classList.remove("active"));
-                btn.classList.add("active");
-                this._paperSize = btn.dataset.value;
-            });
-
-            // Print confirm
-            document.getElementById("print-confirm").addEventListener("click", () => {
-                this._closePrintDialog();
-                this._doPrint();
-            });
-
-            // Print cancel
-            document.getElementById("print-cancel").addEventListener("click", () => {
-                this._closePrintDialog();
-            });
-
-            // Print backdrop click = cancel
-            document.getElementById("print-overlay").addEventListener("click", (e) => {
-                if (e.target === e.currentTarget) this._closePrintDialog();
             });
 
             // Download confirm
@@ -91,37 +56,6 @@ export const Share = {
 
             this._bound = true;
         }
-    },
-
-    // ── Print Dialog ─────────────────────────────────────────
-
-    _showPrintDialog() {
-        if (!this.game) return;
-        const control = document.getElementById("print-paper-size");
-        control.querySelectorAll(".segment-btn").forEach((btn) => {
-            btn.classList.toggle("active", btn.dataset.value === this._paperSize);
-        });
-        document.getElementById("print-overlay").classList.add("visible");
-    },
-
-    _closePrintDialog() {
-        document.getElementById("print-overlay").classList.remove("visible");
-    },
-
-    _doPrint() {
-        if (!this.game) return;
-        this._setPageSize(this._paperSize);
-        Sheet.render(this.game, this._paperSize);
-        window.print();
-    },
-
-    _setPageSize(size) {
-        if (!this._pageStyleEl) {
-            this._pageStyleEl = document.createElement("style");
-            document.head.appendChild(this._pageStyleEl);
-        }
-        const cssSize = size === "a4" ? "A4 portrait" : "letter portrait";
-        this._pageStyleEl.textContent = `@page { size: ${cssSize}; margin: 0.5in; }`;
     },
 
     // ── Download Dialog (shared by CSV and JSON) ────────────

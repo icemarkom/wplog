@@ -17,93 +17,26 @@
 import { RULES } from './config.js';
 import { Game } from './game.js';
 import { escapeHTML } from './sanitize.js';
-import { buildPeriodScores, buildPersonalFoulTable, buildTimeoutSummary, buildCardSummary, buildPlayerStats } from './sheet-data.js';
 import { renderScreen } from './sheet-screen.js';
-import {
-    availableRows,
-    filterLogEvents,
-    buildLogPagePlan,
-    buildSummaryDescriptors,
-    buildStatsDescriptors,
-    paginateItems,
-} from './pagination.js';
-import { renderLogPages, renderSummaryPages, renderStatsPages } from './sheet-print.js';
 
-// wplog — Game Sheet (Stateless Orchestrator + Shared Render Helpers)
+// wplog — Game Sheet (Stateless Orchestrator + Render Helpers)
 //
 // Sheet does not hold game state. All methods receive `game` as a parameter.
-// Pure pagination logic lives in pagination.js; DOM rendering in sheet-print.js.
+// Data aggregation lives in game.js; this file handles DOM rendering only.
 
 export const Sheet = {
 
     // ── Main entry point ─────────────────────────────────────────
 
-    render(game, paperSize) {
+    render(game) {
         const container = document.getElementById("sheet-content");
         container.innerHTML = "";
-
-        const isPrint = !!paperSize;
-
-        if (!isPrint) {
-            renderScreen(game, this, container);
-            return;
-        }
-
-        // Print mode: paginated, multi-column log, sections on own pages
-        const avail = availableRows(paperSize);
-        const rules = RULES[game.rules];
-
-        // === Section 1: Game Log ===
-        const filteredLog = filterLogEvents(game.log, rules);
-        const logPlan = buildLogPagePlan(filteredLog.length, avail);
-        const logPages = renderLogPages(logPlan, filteredLog, game, rules, avail);
-
-        // === Section 2: Game Summary ===
-        const summaryDescriptors = buildSummaryDescriptors(game);
-        const summaryPlan = paginateItems(summaryDescriptors, avail);
-        const summaryPages = renderSummaryPages(summaryPlan, summaryDescriptors, game);
-
-        // === Section 3: Game Stats (optional) ===
-        let statsPages = [];
-        if (game.enableStats) {
-            const statsDescriptors = buildStatsDescriptors(game);
-            if (statsDescriptors.length > 0) {
-                const statsPlan = paginateItems(statsDescriptors, avail);
-                statsPages = renderStatsPages(statsPlan, statsDescriptors, game);
-            }
-        }
-
-        // Collect all sections
-        const sections = [
-            { title: "Game Log", pages: logPages },
-            { title: "Game Summary", pages: summaryPages },
-        ];
-        if (statsPages.length > 0) {
-            sections.push({ title: "Game Stats", pages: statsPages });
-        }
-
-        // Count total pages
-        const totalPages = sections.reduce((sum, s) => sum + s.pages.length, 0);
-
-        // Render all pages
-        let pageNum = 0;
-        for (const section of sections) {
-            for (const page of section.pages) {
-                pageNum++;
-                const pageDiv = document.createElement("div");
-                pageDiv.className = "sheet-page" + (pageNum > 1 ? " sheet-page-break" : "");
-                pageDiv.appendChild(this._renderHeader(game, section.title, pageNum, totalPages));
-                for (const el of page.elements) {
-                    pageDiv.appendChild(el);
-                }
-                container.appendChild(pageDiv);
-            }
-        }
+        renderScreen(game, this, container);
     },
 
     // ── Header ───────────────────────────────────────────────────
 
-    _renderHeader(game, title, pageNum, totalPages) {
+    _renderHeader(game, title) {
         const header = document.createElement("div");
         header.className = "sheet-header";
 
@@ -111,14 +44,9 @@ export const Sheet = {
         const darkName = game.dark.name === "Dark" ? "" : game.dark.name;
         const score = Game.getDisplayScore(game);
 
-        const pageInfo = (pageNum && totalPages)
-            ? `<span class="sheet-page-number">Page ${pageNum} / ${totalPages}</span>`
-            : "";
-
         header.innerHTML = `
       <div class="sheet-title-row">
         <span class="sheet-title">${escapeHTML(title)}</span>
-        ${pageInfo}
       </div>
       <div class="sheet-meta">
         <div class="sheet-meta-row">
@@ -148,7 +76,7 @@ export const Sheet = {
         return header;
     },
 
-    // ── Existing render helpers (used by both screen + print) ────
+    // ── Section renderers ────────────────────────────────────────
 
     _renderProgressOfGame(game) {
         const section = document.createElement("div");
@@ -176,8 +104,7 @@ export const Sheet = {
 
         const tbody = document.createElement("tbody");
         const rules = RULES[game.rules];
-
-        const logEntries = filterLogEvents(game.log, rules);
+        const logEntries = Game.filterLogEvents(game.log, rules);
 
         for (const entry of logEntries) {
             const tr = document.createElement("tr");
@@ -205,7 +132,7 @@ export const Sheet = {
     },
 
     _renderPeriodScores(game) {
-        const data = buildPeriodScores(game);
+        const data = Game.buildPeriodScores(game);
         const section = document.createElement("div");
         section.className = "sheet-section";
 
@@ -242,7 +169,7 @@ export const Sheet = {
     },
 
     _renderFoulSummary(game) {
-        const data = buildPersonalFoulTable(game);
+        const data = Game.buildPersonalFoulTable(game);
         const section = document.createElement("div");
         section.className = "sheet-section";
 
@@ -292,7 +219,7 @@ export const Sheet = {
     },
 
     _renderTimeoutSummary(game) {
-        const data = buildTimeoutSummary(game);
+        const data = Game.buildTimeoutSummary(game);
         const section = document.createElement("div");
         section.className = "sheet-section";
 
@@ -335,7 +262,7 @@ export const Sheet = {
     },
 
     _renderCardSummary(game) {
-        const data = buildCardSummary(game);
+        const data = Game.buildCardSummary(game);
         const section = document.createElement("div");
         section.className = "sheet-section";
         section.innerHTML = `<div class="sheet-section-title">Cards</div>`;
@@ -375,7 +302,7 @@ export const Sheet = {
     },
 
     _renderPlayerStats(game) {
-        const data = buildPlayerStats(game);
+        const data = Game.buildPlayerStats(game);
         const section = document.createElement("div");
         section.className = "sheet-section";
 
@@ -410,15 +337,13 @@ export const Sheet = {
         const wrapper = document.createElement("div");
         wrapper.className = "sheet-section";
 
-        // Title as h3 above table — same style as summary sections
         const title = document.createElement("h3");
         title.className = "sheet-section-title";
         title.textContent = st.name;
         wrapper.appendChild(title);
 
-        const totalCols = colsPerTeam * 2;
         const table = document.createElement("table");
-        table.className = "sheet-table sheet-table-compact sheet-table-stats";
+        table.className = "sheet-table sheet-table-compact";
 
         const thead = document.createElement("thead");
         const periodCols = periodHeaders.map((h) => `<th>${h}</th>`).join("");

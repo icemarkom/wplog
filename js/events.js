@@ -642,11 +642,6 @@ export const Events = {
                 // Add colored left border for all events
                 row.classList.add("event-border-" + colorClass);
 
-                // Stat events additionally get the stat-event class
-                if (isStatEvent) {
-                    row.classList.add("stat-event");
-                }
-
                 // Time display: blank for SO events and stat events without time
                 const timeDisplay = entry.period === "SO" ? "" : (entry.time || "").replace(/^0(\d:)/, '$1');
 

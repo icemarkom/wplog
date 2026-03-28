@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// Browser tests for share.js — Share/Print/Export screen.
+// Browser tests for share.js — Share/Export screen.
 
 import { describe, it, strictEqual, ok } from "../harness.js";
 
@@ -21,28 +21,12 @@ import { describe, it, strictEqual, ok } from "../harness.js";
 // We inject overlays into body once, and fetch share.html into body per test.
 
 const OVERLAY_HTML = `
-<div id="print-overlay" class="overlay">
-  <div class="overlay-content print-card">
-    <div class="overlay-title print-title">Print Game Sheet</div>
-    <div class="form-group">
-      <label id="label-paper-size">Paper Size</label>
-      <div id="print-paper-size" class="segment-control" aria-labelledby="label-paper-size">
-        <button type="button" class="segment-btn active" data-value="letter">US Letter</button>
-        <button type="button" class="segment-btn" data-value="a4">A4</button>
-      </div>
-    </div>
-    <div class="print-dialog-actions">
-      <button id="print-confirm" class="btn btn-primary btn-large">Print</button>
-      <button id="print-cancel" class="btn-link">Cancel</button>
-    </div>
-  </div>
-</div>
 <div id="download-overlay" class="overlay">
-  <div class="overlay-content print-card">
-    <div id="download-title" class="overlay-title print-title">Download</div>
+  <div class="overlay-content download-card">
+    <div id="download-title" class="overlay-title download-title">Download</div>
     <label for="download-filename" class="sr-only">Filename</label>
-    <input type="text" id="download-filename" class="csv-filename" spellcheck="false" autocomplete="off">
-    <div class="print-dialog-actions">
+    <input type="text" id="download-filename" class="download-filename" spellcheck="false" autocomplete="off">
+    <div class="download-actions">
       <button id="download-confirm" class="btn btn-primary btn-large">Download</button>
       <button id="download-cancel" class="btn-link">Cancel</button>
     </div>
@@ -96,7 +80,6 @@ describe("Share screen", () => {
         Share._bound = false;
         Share.init(null);
 
-        ok(document.getElementById("print-sheet-btn").disabled, "print button should be disabled");
         ok(document.getElementById("export-csv-btn").disabled, "CSV button should be disabled");
         ok(document.getElementById("export-json-btn").disabled, "JSON button should be disabled");
     });
@@ -107,75 +90,8 @@ describe("Share screen", () => {
         Share._bound = false;
         Share.init(game);
 
-        ok(!document.getElementById("print-sheet-btn").disabled, "print button should be enabled");
         ok(!document.getElementById("export-csv-btn").disabled, "CSV button should be enabled");
         ok(!document.getElementById("export-json-btn").disabled, "JSON button should be enabled");
-    });
-
-    it("print dialog opens on Print Game Sheet click", () => {
-        injectShareScreen();
-        const game = Game.create("USAWP");
-        Share._bound = false;
-        Share.init(game);
-
-        document.getElementById("print-sheet-btn").click();
-
-        const overlay = document.getElementById("print-overlay");
-        ok(overlay.classList.contains("visible"), "print overlay should be visible");
-
-        document.getElementById("print-cancel").click();
-    });
-
-    it("print dialog closes on Cancel click", () => {
-        injectShareScreen();
-        const game = Game.create("USAWP");
-        Share._bound = false;
-        Share.init(game);
-
-        document.getElementById("print-sheet-btn").click();
-        document.getElementById("print-cancel").click();
-
-        const overlay = document.getElementById("print-overlay");
-        ok(!overlay.classList.contains("visible"), "print overlay should not be visible");
-    });
-
-    it("print dialog closes on backdrop click", () => {
-        injectShareScreen();
-        const game = Game.create("USAWP");
-        Share._bound = false;
-        Share.init(game);
-
-        document.getElementById("print-sheet-btn").click();
-        document.getElementById("print-overlay").click();
-
-        const overlay = document.getElementById("print-overlay");
-        ok(!overlay.classList.contains("visible"), "print overlay should not be visible");
-    });
-
-    it("paper size selector switches active state", () => {
-        injectShareScreen();
-        const game = Game.create("USAWP");
-        Share._bound = false;
-        Share.init(game);
-
-        document.getElementById("print-sheet-btn").click();
-
-        const buttons = document.querySelectorAll("#print-paper-size .segment-btn");
-        const letterBtn = buttons[0];
-        const a4Btn = buttons[1];
-
-        ok(letterBtn.classList.contains("active"), "letter should be active by default");
-        ok(!a4Btn.classList.contains("active"), "a4 should not be active");
-
-        a4Btn.click();
-        ok(!letterBtn.classList.contains("active"), "letter should not be active after A4 click");
-        ok(a4Btn.classList.contains("active"), "a4 should be active");
-
-        letterBtn.click();
-        ok(letterBtn.classList.contains("active"), "letter should be active again");
-        ok(!a4Btn.classList.contains("active"), "a4 should not be active");
-
-        document.getElementById("print-cancel").click();
     });
 
     it("download CSV dialog opens with correct title", () => {
