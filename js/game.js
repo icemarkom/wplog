@@ -536,7 +536,7 @@ export const Game = {
     /**
      * Build player stats: per-cap, per-stat counts grouped by team.
      * @param {Object} game
-     * @returns {{ statTypes: Array, activeStatCodes: Array, stats: Object, totals: Object } | null}
+     * @returns {{ statTypes: Array, activeStatCodes: Array, activePeriods: Array, stats: Object, totals: Object, statsPerPeriod: Object, totalsPerPeriod: Object } | null}
      */
     buildPlayerStats(game) {
         const rules = RULES[game.rules];
@@ -547,6 +547,8 @@ export const Game = {
         const activeStatCodesSet = new Set();
         const stats = { W: {}, D: {} };
         const totals = { W: {}, D: {} };
+        const statsPerPeriod = { W: {}, D: {} };
+        const totalsPerPeriod = { W: {}, D: {} };
 
         for (const entry of game.log) {
             if (!entry.cap || !entry.team) continue;
@@ -557,9 +559,23 @@ export const Game = {
 
             if (!stats[team][entry.cap]) {
                 stats[team][entry.cap] = {};
+                statsPerPeriod[team][entry.cap] = {};
             }
+            if (!statsPerPeriod[team][entry.cap][entry.event]) {
+                statsPerPeriod[team][entry.cap][entry.event] = {};
+            }
+            if (!totalsPerPeriod[team][entry.event]) {
+                totalsPerPeriod[team][entry.event] = {};
+            }
+
+            const periodStr = this.getPeriodLabel(entry.period);
+
             stats[team][entry.cap][entry.event] = (stats[team][entry.cap][entry.event] || 0) + 1;
             totals[team][entry.event] = (totals[team][entry.event] || 0) + 1;
+
+            statsPerPeriod[team][entry.cap][entry.event][periodStr] = (statsPerPeriod[team][entry.cap][entry.event][periodStr] || 0) + 1;
+            totalsPerPeriod[team][entry.event][periodStr] = (totalsPerPeriod[team][entry.event][periodStr] || 0) + 1;
+
             activeStatCodesSet.add(entry.event);
         }
 
@@ -567,12 +583,18 @@ export const Game = {
 
         // Print ALL available stats all the time for consistent layout and muscle memory
         const activeStatCodes = statTypes.map(st => st.code);
+        
+        // Active periods for headers
+        const activePeriods = this.getAllPeriods(game).map(p => this.getPeriodLabel(p));
 
         return {
             statTypes,
             activeStatCodes,
+            activePeriods,
             stats,
             totals,
+            statsPerPeriod,
+            totalsPerPeriod,
         };
     },
 };

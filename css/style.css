@@ -1339,6 +1339,36 @@ select.form-input {
   display: inline-block;
 }
 
+.sheet-stat-header-horizontal {
+  vertical-align: bottom;
+  padding: 8px 4px !important;
+}
+
+.sheet-stat-subheader th {
+  font-size: 10px;
+  color: var(--text-muted);
+  font-weight: 500;
+  border-top: 1px dotted var(--border) !important;
+  padding: 4px 2px !important;
+}
+
+.stats-inline-toggle {
+  display: inline-flex;
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 2px;
+  vertical-align: middle;
+  margin-left: 12px;
+}
+
+.stats-inline-toggle .segment-btn {
+  min-height: 24px;
+  padding: 0 8px;
+  font-size: 11px;
+  border-radius: calc(var(--radius-sm) - 2px);
+}
+
 .sheet-stats-table {
   width: 100%;
   table-layout: fixed;
@@ -1519,6 +1549,38 @@ select.form-input {
 
 .btn-link:hover {
   color: var(--text-primary);
+}
+
+/* Print Dialog */
+.print-card {
+  max-width: 380px;
+}
+
+.print-title {
+  margin-bottom: 24px;
+  text-align: center;
+}
+
+.print-form-group {
+  margin-bottom: 20px;
+  text-align: left;
+}
+
+.print-form-group label {
+  text-align: left;
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  margin-bottom: 8px;
+}
+
+.print-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  align-items: center;
+  margin-top: 24px;
 }
 
 /* ============================
