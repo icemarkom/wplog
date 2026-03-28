@@ -343,7 +343,7 @@ export const Sheet = {
         wrapper.appendChild(title);
 
         const table = document.createElement("table");
-        table.className = "sheet-table sheet-table-compact sheet-table-stats";
+        table.className = "sheet-table sheet-table-compact";
 
         const thead = document.createElement("thead");
         const periodCols = periodHeaders.map((h) => `<th>${h}</th>`).join("");

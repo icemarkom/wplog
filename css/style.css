@@ -87,6 +87,10 @@
   --highlight: rgba(255, 255, 255, 0.06);
   --highlight-hover: rgba(255, 255, 255, 0.12);
   --surface-white: #fff;
+  
+  /* Media filters */
+  --qr-filter-tint: brightness(0.75) sepia(1) hue-rotate(190deg) saturate(3);
+  --qr-filter-invert: invert(1);
 
   /* Shadows */
   --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.3);
@@ -95,6 +99,7 @@
   --shadow-glow: 0 0 20px var(--accent-blue-glow);
 
   /* ── Structural tokens (same in every theme) ── */
+  --text-on-accent: var(--surface-white);
   --radius-sm: 6px;
   --radius-md: 10px;
   --radius-lg: 14px;
@@ -328,7 +333,7 @@ select.form-input {
 
 .segment-btn.active {
   background: linear-gradient(135deg, var(--accent-blue) 0%, var(--accent-indigo) 100%);
-  color: white;
+  color: var(--text-on-accent);
   box-shadow: 0 1px 4px var(--accent-blue-glow);
 }
 
@@ -448,7 +453,7 @@ select.form-input {
 
 .btn-primary {
   background: linear-gradient(135deg, var(--accent-blue) 0%, var(--accent-indigo) 100%);
-  color: white;
+  color: var(--text-on-accent);
   box-shadow: var(--shadow-sm), 0 0 12px var(--accent-blue-glow);
 }
 
@@ -463,7 +468,7 @@ select.form-input {
 
 .btn-danger {
   background: linear-gradient(135deg, var(--danger-dark) 0%, var(--danger-darker) 100%) !important;
-  color: white !important;
+  color: var(--text-on-accent) !important;
   box-shadow: var(--shadow-sm), 0 0 12px var(--danger-glow) !important;
 }
 
@@ -987,7 +992,7 @@ select.form-input {
 
 .confirm-btn-danger {
   background: linear-gradient(135deg, var(--danger-dark) 0%, var(--danger-darker) 100%);
-  color: white;
+  color: var(--text-on-accent);
   box-shadow: var(--shadow-sm), 0 0 12px var(--danger-glow);
 }
 
@@ -1150,11 +1155,11 @@ select.form-input {
 
 .toast-info {
   background: var(--accent-blue);
-  color: white;
+  color: var(--text-on-accent);
 }
 
 .toast-warning {
-  background: var(--event-exclusion);
+  background: var(--warning-amber);
   color: var(--text-on-light);
 }
 
@@ -1378,7 +1383,7 @@ select.form-input {
   cursor: pointer;
   transition: transform 0.15s ease;
   /* Tint white modules to accent blue */
-  filter: brightness(0.75) sepia(1) hue-rotate(190deg) saturate(3);
+  filter: var(--qr-filter-tint);
 }
 
 .qr-code:hover {
@@ -1415,7 +1420,7 @@ select.form-input {
   width: 100%;
   height: auto;
   display: block;
-  filter: invert(1);
+  filter: var(--qr-filter-invert);
 }
 
 .qr-label {
@@ -1823,10 +1828,6 @@ select.form-input {
 
   .form-input {
     padding: 10px 12px;
-  }
-
-  .toggle-row {
-    margin-bottom: 14px;
   }
 }
 
