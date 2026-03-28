@@ -534,59 +534,47 @@ export const Game = {
     },
 
     /**
-     * Build player stats: per-stat-type, per-cap, per-period counts.
+     * Build player stats: per-cap, per-stat counts grouped by team.
      * @param {Object} game
-     * @returns {{ statTypes: Array, periods: Array, periodLabels: Array, stats: Object } | null}
+     * @returns {{ statTypes: Array, activeStatCodes: Array, stats: Object, totals: Object } | null}
      */
     buildPlayerStats(game) {
         const rules = RULES[game.rules];
         const statTypes = rules.events
             .filter((e) => !e.teamOnly)
-            .map((e) => {
-                const n = e.name;
-                const plural = n.endsWith("y") ? n.slice(0, -1) + "ies" : n + "s";
-                return { code: e.code, name: plural };
-            });
+            .map((e) => ({ code: e.code, name: e.name }));
 
-        // Ordered periods from log
-        const periodOrder = [];
-        const periodSeen = new Set();
-        for (const entry of game.log) {
-            if (entry.event === "---") continue;
-            if (!periodSeen.has(entry.period)) {
-                periodSeen.add(entry.period);
-                periodOrder.push(entry.period);
-            }
-        }
+        const activeStatCodesSet = new Set();
+        const stats = { W: {}, D: {} };
+        const totals = { W: {}, D: {} };
 
-        // Aggregate counts: stats[code][team][cap][period] = count
-        const stats = {};
-        for (const st of statTypes) {
-            stats[st.code] = { W: {}, D: {} };
-        }
         for (const entry of game.log) {
             if (!entry.cap || !entry.team) continue;
-            if (!stats[entry.event]) continue;
-            const teamData = stats[entry.event][entry.team];
-            if (!teamData[entry.cap]) teamData[entry.cap] = {};
-            teamData[entry.cap][entry.period] = (teamData[entry.cap][entry.period] || 0) + 1;
+            if (!statTypes.some(st => st.code === entry.event)) continue;
+
+            const team = entry.team;
+            if (team !== "W" && team !== "D") continue;
+
+            if (!stats[team][entry.cap]) {
+                stats[team][entry.cap] = {};
+            }
+            stats[team][entry.cap][entry.event] = (stats[team][entry.cap][entry.event] || 0) + 1;
+            totals[team][entry.event] = (totals[team][entry.event] || 0) + 1;
+            activeStatCodesSet.add(entry.event);
         }
 
-        // Check if any stats exist
-        let anyStats = false;
-        for (const st of statTypes) {
-            if (Object.keys(stats[st.code].W).length > 0 || Object.keys(stats[st.code].D).length > 0) {
-                anyStats = true;
-                break;
-            }
-        }
-        if (!anyStats) return null;
+        if (activeStatCodesSet.size === 0) return null;
+
+        // Preserve order from rules config
+        const activeStatCodes = statTypes
+            .map(st => st.code)
+            .filter(code => activeStatCodesSet.has(code));
 
         return {
             statTypes,
-            periods: periodOrder,
-            periodLabels: periodOrder.map((p) => this.getPeriodLabel(p)),
+            activeStatCodes,
             stats,
+            totals,
         };
     },
 };
