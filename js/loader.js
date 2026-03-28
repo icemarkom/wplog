@@ -36,10 +36,12 @@ import { App } from './app.js';
 
     // Inject QR code inline so it can be colored via native CSS variables
     try {
-        const qrRes = await fetch("img/qr-wplog.svg");
-        const qrSvg = await qrRes.text();
-        document.getElementById("qr-svg-fullscreen").innerHTML = qrSvg;
-        document.getElementById("qr-svg-share").innerHTML = qrSvg;
+        const qrRes = await fetch("img/qr-wplog.svg" + _cb);
+        const qrSvgString = await qrRes.text();
+        const doc = new DOMParser().parseFromString(qrSvgString, "image/svg+xml");
+        const svgNode = doc.documentElement;
+        document.getElementById("qr-svg-fullscreen").appendChild(svgNode.cloneNode(true));
+        document.getElementById("qr-svg-share").appendChild(svgNode.cloneNode(true));
     } catch (e) {
         console.warn("Failed to load QR code SVG", e);
     }

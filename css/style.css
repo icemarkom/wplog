@@ -1388,11 +1388,11 @@ select.form-input {
   display: block;
 }
 
-/* Tint white modules to accent blue for aesthetics */
-.qr-code svg rect[fill="#ffffff"] {
-  fill: var(--accent-blue);
+.qr-code svg rect {
+  fill: var(--accent-blue) !important;
   opacity: 0.9;
 }
+
 
 .qr-code:hover {
   transform: scale(1.03);
@@ -1441,9 +1441,10 @@ select.form-input {
   display: block;
 }
 
-.qr-fullscreen svg rect[fill="#ffffff"] {
-  fill: currentColor;
+.qr-fullscreen svg rect {
+  fill: var(--text-on-light) !important;
 }
+
 
 .qr-label {
   margin-top: 12px;
