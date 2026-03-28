@@ -27,9 +27,19 @@ export const Share = {
         this.game = game || null;
         const csvBtn = document.getElementById("export-csv-btn");
         const jsonBtn = document.getElementById("export-json-btn");
+        const printBtn = document.getElementById("print-sheet-btn");
+        
         csvBtn.disabled = !this.game;
         jsonBtn.disabled = !this.game;
+        if (printBtn) printBtn.disabled = !this.game;
+        
         if (!this._bound) {
+            if (printBtn) {
+                printBtn.addEventListener("click", () => {
+                    if (this.game) window.print();
+                });
+            }
+
             csvBtn.addEventListener("click", () => {
                 this._showDownloadDialog("csv");
             });
