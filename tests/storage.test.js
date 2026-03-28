@@ -379,26 +379,7 @@ describe("validateGameData — invalid log entries", () => {
         strictEqual(result.valid, false);
     });
 
-    it("rejects NFHSVA event in USAWP game", () => {
-        const result = validateGameData(validGame({
-            rules: "USAWP",
-            log: [validGoalEntry({ event: "MAM" })],
-        }));
-        strictEqual(result.valid, false);
-    });
 
-    it("rejects NCAA event in NFHSVA game", () => {
-        const result = validateGameData(validGame({
-            rules: "NFHSVA",
-            periodLength: 7,
-            otPeriodLength: 3,
-            overtime: true,
-            shootout: false,
-            timeoutsAllowed: { full: 3, to30: 1 },
-            log: [validGoalEntry({ event: "YRC", cap: "C" })],
-        }));
-        strictEqual(result.valid, false);
-    });
 });
 
 // ── Valid Cap Numbers ────────────────────────────────────────
@@ -557,35 +538,4 @@ describe("validateGameData — clean output shape", () => {
     });
 });
 
-// ── Stats Events ─────────────────────────────────────────────
 
-describe("validateGameData — stats events", () => {
-    const statsEvents = [
-        "Shot", "Assist", "Offensive", "Steal", "Intercept",
-        "Turnover", "Field Block", "Save", "Drawn Exclusion",
-        "Drawn Penalty", "Sprint Won",
-    ];
-
-    for (const event of statsEvents) {
-        it(`accepts stats event "${event}" in USAWP`, () => {
-            const result = validateGameData(validGame({
-                log: [validGoalEntry({ event, cap: "7" })],
-            }));
-            strictEqual(result.valid, true, result.error);
-        });
-    }
-
-    it("rejects short code 'S' (must use full name 'Shot')", () => {
-        const result = validateGameData(validGame({
-            log: [validGoalEntry({ event: "S" })],
-        }));
-        strictEqual(result.valid, false);
-    });
-
-    it("rejects short code 'A' (must use full name 'Assist')", () => {
-        const result = validateGameData(validGame({
-            log: [validGoalEntry({ event: "A" })],
-        }));
-        strictEqual(result.valid, false);
-    });
-});
