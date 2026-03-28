@@ -35,9 +35,6 @@ const RE_GAME_TIME = /^\d:[0-5]\d$/;
 const RE_CAP = /^[1-9]\d?[ABC]?$/;
 const RE_PERIOD_OT = /^OT([1-9]\d?)$/;
 
-// Valid rule keys: public RULES keys that don't start with _
-const VALID_RULES_KEYS = Object.keys(RULES).filter((k) => !k.startsWith("_"));
-
 // ── Validation ───────────────────────────────────────────────
 
 /**
@@ -54,7 +51,8 @@ export function validateGameData(parsed) {
         // ── Game-level fields ────────────────────────────
 
         // rules (required)
-        if (!_isString(parsed.rules) || !VALID_RULES_KEYS.includes(parsed.rules)) {
+        const validRulesKeys = Object.keys(RULES).filter((k) => !k.startsWith("_"));
+        if (!_isString(parsed.rules) || !validRulesKeys.includes(parsed.rules)) {
             return _fail(`Unknown rules: "${String(parsed.rules).slice(0, 30)}".`);
         }
         const rulesKey = parsed.rules;

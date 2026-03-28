@@ -19,6 +19,7 @@
 // JS dependencies are resolved automatically via ES module imports.
 
 import { App } from './app.js';
+import { loadConfig } from './config.js';
 
 (async function () {
     const _cb = "?v=" + Date.now();
@@ -45,6 +46,9 @@ import { App } from './app.js';
     } catch (e) {
         console.warn("Failed to load QR code SVG", e);
     }
+
+    // Load external configuration before binding UI logic
+    await loadConfig();
 
     // DOMContentLoaded already fired, so manually init the app
     App.init();

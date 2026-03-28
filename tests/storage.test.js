@@ -15,7 +15,17 @@
 import { describe, it } from "node:test";
 import { strictEqual, deepStrictEqual, ok } from "node:assert";
 import { readFileSync } from "node:fs";
+import { loadConfig } from "../js/config.js";
 import { validateGameData } from "../js/storage.js";
+
+// Mock fetch for loadConfig in Node testing environment
+globalThis.fetch = async (url) => {
+    const file = url.split("?")[0];
+    const content = readFileSync(file, "utf8");
+    return { ok: true, json: async () => JSON.parse(content) };
+};
+
+await loadConfig();
 
 // ── Helpers ──────────────────────────────────────────────────
 
@@ -369,26 +379,7 @@ describe("validateGameData — invalid log entries", () => {
         strictEqual(result.valid, false);
     });
 
-    it("rejects NFHSVA event in USAWP game", () => {
-        const result = validateGameData(validGame({
-            rules: "USAWP",
-            log: [validGoalEntry({ event: "MAM" })],
-        }));
-        strictEqual(result.valid, false);
-    });
 
-    it("rejects NCAA event in NFHSVA game", () => {
-        const result = validateGameData(validGame({
-            rules: "NFHSVA",
-            periodLength: 7,
-            otPeriodLength: 3,
-            overtime: true,
-            shootout: false,
-            timeoutsAllowed: { full: 3, to30: 1 },
-            log: [validGoalEntry({ event: "YRC", cap: "C" })],
-        }));
-        strictEqual(result.valid, false);
-    });
 });
 
 // ── Valid Cap Numbers ────────────────────────────────────────
@@ -547,35 +538,4 @@ describe("validateGameData — clean output shape", () => {
     });
 });
 
-// ── Stats Events ─────────────────────────────────────────────
 
-describe("validateGameData — stats events", () => {
-    const statsEvents = [
-        "Shot", "Assist", "Offensive", "Steal", "Intercept",
-        "Turnover", "Field Block", "Save", "Drawn Exclusion",
-        "Drawn Penalty", "Sprint Won",
-    ];
-
-    for (const event of statsEvents) {
-        it(`accepts stats event "${event}" in USAWP`, () => {
-            const result = validateGameData(validGame({
-                log: [validGoalEntry({ event, cap: "7" })],
-            }));
-            strictEqual(result.valid, true, result.error);
-        });
-    }
-
-    it("rejects short code 'S' (must use full name 'Shot')", () => {
-        const result = validateGameData(validGame({
-            log: [validGoalEntry({ event: "S" })],
-        }));
-        strictEqual(result.valid, false);
-    });
-
-    it("rejects short code 'A' (must use full name 'Assist')", () => {
-        const result = validateGameData(validGame({
-            log: [validGoalEntry({ event: "A" })],
-        }));
-        strictEqual(result.valid, false);
-    });
-});

@@ -14,7 +14,17 @@
 
 import { describe, it } from "node:test";
 import { strictEqual, ok } from "node:assert";
-import { RULES } from "../js/config.js";
+import { RULES, loadConfig } from "../js/config.js";
+import { readFileSync } from "node:fs";
+
+// Mock fetch for loadConfig in Node testing environment
+globalThis.fetch = async (url) => {
+    const file = url.split("?")[0];
+    const content = readFileSync(file, "utf8");
+    return { ok: true, json: async () => JSON.parse(content) };
+};
+
+await loadConfig();
 
 // ── Helpers ──────────────────────────────────────────────────
 

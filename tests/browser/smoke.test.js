@@ -71,7 +71,8 @@ describe("DOM", () => {
 
 describe("Module imports", () => {
     it("can import config.js", async () => {
-        const { RULES } = await import("/js/config.js");
+        const { RULES, loadConfig } = await import("/js/config.js");
+        await loadConfig();
         ok(RULES, "RULES should exist");
         ok(RULES.USAWP, "should have USAWP");
     });

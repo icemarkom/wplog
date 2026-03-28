@@ -1,0 +1,72 @@
+{
+  "STATS_EVENTS": [
+    { "name": "Shot", "color": "teal", "statsOnly": true },
+    { "name": "Assist", "color": "teal", "statsOnly": true },
+    { "name": "Offensive", "color": "teal", "statsOnly": true },
+    { "name": "Steal", "color": "teal", "statsOnly": true },
+    { "name": "Turnover", "color": "teal", "statsOnly": true },
+    { "name": "Field Block", "color": "teal", "statsOnly": true },
+    { "name": "Save", "color": "teal", "statsOnly": true },
+    { "name": "Drawn Exclusion", "color": "teal", "statsOnly": true },
+    { "name": "Drawn Penalty", "color": "teal", "statsOnly": true },
+    { "name": "Sprint Won", "color": "teal", "statsOnly": true }
+  ],
+  "RULES": {
+    "_base": { "periods": 4, "foulOutLimit": 3 },
+    "USAWP": {
+      "inherits": "_base",
+      "name": "USA Water Polo",
+      "periodLength": 8,
+      "overtime": false,
+      "shootout": true,
+      "timeouts": { "full": 2, "to30": 0 },
+      "events": [
+        { "name": "Goal", "code": "G", "color": "green", "align": "left" },
+        { "name": "Exclusion", "code": "E", "color": "amber", "align": "right", "isPersonalFoul": true },
+        { "name": "Penalty", "code": "P", "color": "amber", "align": "right", "isPersonalFoul": true },
+        { "name": "Timeout", "code": "TO", "color": "blue", "teamOnly": true, "allowOfficial": true, "align": "center" },
+        { "name": "Timeout 30", "code": "TO30", "color": "blue", "align": "center", "teamOnly": true },
+        { "name": "Yellow Card", "code": "YC", "color": "yellow", "align": "center", "allowCoach": true, "allowAssistant": false, "allowBench": true },
+        { "name": "Penalty Exclusion", "code": "P-E", "color": "amber", "align": "right", "isPersonalFoul": true },
+        { "name": "Misconduct", "code": "MC", "color": "red", "align": "right", "autoFoulOut": 1 },
+        { "name": "Brutality", "code": "BR", "color": "red", "align": "right", "autoFoulOut": 1 },
+        { "name": "Red Card", "code": "RC", "color": "red", "align": "center", "allowCoach": true, "allowAssistant": true },
+        { "name": "Game Exclusion", "code": "E-Game", "color": "red", "align": "right", "autoFoulOut": 1 }
+      ]
+    },
+    "USAWP7": { "inherits": "USAWP", "name": "USA Water Polo (7 min)", "periodLength": 7 },
+    "USAWP6": { "inherits": "USAWP", "name": "USA Water Polo (6 min)", "periodLength": 6 },
+    "_academic": {
+      "inherits": "_base",
+      "periodLength": 7,
+      "otPeriodLength": 3,
+      "overtime": true,
+      "shootout": false,
+      "timeouts": { "full": 3, "to30": 1 },
+      "events": [
+        { "name": "Goal", "code": "G", "color": "green", "align": "left" },
+        { "name": "Exclusion", "code": "E", "color": "amber", "align": "right", "isPersonalFoul": true },
+        { "name": "Penalty", "code": "P", "color": "amber", "align": "right", "isPersonalFoul": true },
+        { "name": "Minor Act", "code": "MAM", "color": "amber", "align": "right", "isPersonalFoul": true, "autoFoulOut": 2 },
+        { "name": "Penalty Exclusion", "code": "P-E", "color": "amber", "align": "right", "isPersonalFoul": true },
+        { "name": "Yellow Card", "code": "YC", "color": "yellow", "align": "center", "allowCoach": true, "allowAssistant": false, "allowBench": true },
+        { "name": "Timeout", "code": "TO", "color": "blue", "teamOnly": true, "allowOfficial": true, "align": "center" },
+        { "name": "Timeout 30", "code": "TO30", "color": "blue", "align": "center", "teamOnly": true },
+        { "name": "Misconduct", "code": "MC", "color": "red", "align": "right", "autoFoulOut": 1 },
+        { "name": "Game Exclusion", "code": "E-Game", "color": "red", "align": "right", "autoFoulOut": 1 },
+        { "name": "Flagrant Misconduct", "code": "FM", "color": "red", "align": "right", "autoFoulOut": 1 },
+        { "name": "Red Card", "code": "RC", "color": "red", "align": "center", "allowCoach": true, "allowAssistant": true }
+      ]
+    },
+    "NFHSVA": { "inherits": "_academic", "name": "NFHS Varsity" },
+    "NFHSJV": { "inherits": "_academic", "name": "NFHS Junior Varsity", "periodLength": 6, "overtime": false },
+    "NCAA": {
+      "inherits": "_academic",
+      "name": "NCAA",
+      "periodLength": 8,
+      "addEvents": [
+        { "before": "RC", "event": { "name": "Yellow/Red Card", "code": "YRC", "color": "yellow", "align": "right", "allowPlayer": false, "allowCoach": true, "allowAssistant": false } }
+      ]
+    }
+  }
+}
