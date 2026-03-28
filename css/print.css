@@ -149,7 +149,12 @@
     display: none !important;
   }
 
-  .stats-inline-toggle {
+  .stats-toggle-link:not(.active),
+  .stats-toggle-sep {
     display: none !important;
+  }
+
+  .stats-toggle-link.active {
+    color: #000000 !important;
   }
 }

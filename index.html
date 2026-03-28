@@ -65,7 +65,7 @@
 
   <!-- About Dialog -->
   <div id="about-overlay" class="overlay">
-    <div class="overlay-content about-card">
+    <div class="overlay-content dialog-card">
       <div class="about-title">wplog</div>
       <div class="about-subtitle">Water Polo Game Log</div>
       <div class="about-info">
@@ -114,11 +114,11 @@
 
   <!-- Download Dialog (shared by CSV and JSON exports) -->
   <div id="download-overlay" class="overlay">
-    <div class="overlay-content download-card">
-      <div id="download-title" class="overlay-title download-title">Download</div>
+    <div class="overlay-content dialog-card">
+      <div id="download-title" class="overlay-title dialog-title">Download</div>
       <label for="download-filename" class="sr-only">Filename</label>
       <input type="text" id="download-filename" class="download-filename" spellcheck="false" autocomplete="off">
-      <div class="download-actions">
+      <div class="dialog-actions">
         <button id="download-confirm" class="btn btn-primary btn-large">Download</button>
         <button id="download-cancel" class="btn-link">Cancel</button>
       </div>
@@ -127,8 +127,8 @@
 
   <!-- Print Sheet Dialog -->
   <div id="print-overlay" class="overlay">
-    <div class="overlay-content print-card">
-      <div class="overlay-title print-title">Print Game Sheet</div>
+    <div class="overlay-content dialog-card">
+      <div class="overlay-title dialog-title">Print Game Sheet</div>
       <div class="form-group print-form-group">
         <label id="label-print-sections">Sections to Print</label>
         <div id="print-sections-mode" class="segment-control" aria-labelledby="label-print-sections">
@@ -144,7 +144,7 @@
           <button type="button" class="segment-btn" data-value="per-period">Per Period</button>
         </div>
       </div>
-      <div class="print-actions">
+      <div class="dialog-actions">
         <button id="print-confirm" class="btn btn-primary btn-large">Print</button>
         <button id="print-cancel" class="btn-link">Cancel</button>
       </div>

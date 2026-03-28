@@ -140,6 +140,18 @@ export const Share = {
 
     _showPrintDialog() {
         if (!this.game) return;
+        
+        // Sync print dialog toggle to match screen selection
+        const formatEls = document.querySelectorAll("#print-stats-format .segment-btn");
+        const currentFormat = Sheet.statsFormat || "cumulative";
+        formatEls.forEach(b => {
+            if (b.dataset.value === currentFormat) {
+                b.classList.add("active");
+            } else {
+                b.classList.remove("active");
+            }
+        });
+
         document.getElementById("print-overlay").classList.add("visible");
     },
 

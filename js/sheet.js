@@ -40,9 +40,9 @@ export const Sheet = {
             if (!this.isPrint) {
                 const toggle = container.querySelector("#sheet-stats-format-toggle");
                 if (toggle) {
-                    toggle.querySelectorAll(".segment-btn").forEach(btn => {
+                    toggle.querySelectorAll(".stats-toggle-link").forEach(btn => {
                         btn.addEventListener("click", (e) => {
-                            this.statsFormat = e.target.dataset.value;
+                            this.statsFormat = e.target.dataset.format;
                             this.render(game, false);
                         });
                     });
@@ -328,11 +328,13 @@ export const Sheet = {
 
         const title = document.createElement("h3");
         title.className = "sheet-section-title";
-        title.innerHTML = `Player Stats
-          <div class="stats-inline-toggle" id="sheet-stats-format-toggle" role="group">
-            <button class="segment-btn ${isCumulative ? 'active' : ''}" data-value="cumulative">Cumulative</button>
-            <button class="segment-btn ${!isCumulative ? 'active' : ''}" data-value="per-period">Per Period</button>
-          </div>
+        title.innerHTML = `
+          <span class="stats-inline-toggle" id="sheet-stats-format-toggle">
+            <span class="stats-toggle-link ${isCumulative ? 'active' : ''}" data-format="cumulative">CUMULATIVE</span>
+            <span class="stats-toggle-sep"> / </span>
+            <span class="stats-toggle-link ${!isCumulative ? 'active' : ''}" data-format="per-period">PER PERIOD</span>
+          </span>
+          PLAYER STATS
         `;
         section.appendChild(title);
 
