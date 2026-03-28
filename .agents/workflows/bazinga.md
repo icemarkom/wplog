@@ -8,37 +8,22 @@ When the user says **"bazinga"**, they want you to bootstrap your context for a 
 
 // turbo-all
 
-1. **Read `AGENTS.md`** — review the project summary, architecture, design decisions, current state, and agent notes at the top of the repo.
-2. **Read the codebase** — open and familiarize yourself with every source file listed in the Architecture section (`index.html`, `css/`, `js/`, `sw.js`, `manifest.json`). Understand the script load order and how screens are structured.
-3. **Prune stale branches** — run `git fetch --prune origin` to clean up any stale remote tracking references from previously merged branches.
-4. **Fetch open GitHub issues** — run `gh issue list --state open` to see all currently open issues. Read each issue's details with `gh issue view <N>` to understand scope and context.
-5. **Install license header pre-commit hook** — run:
-   ```sh
-   cat > .git/hooks/pre-commit << 'EOF'
-   #!/bin/sh
-   addlicense -check -c "Marko Milivojevic" -l apache -ignore '.github/**' -ignore '.agents/**' -ignore 'lib/**' .
-   EOF
-   chmod +x .git/hooks/pre-commit
-   ```
-6. **Start dev server** — run `go run tools/serve.go &` in the background. Do NOT use Python's `http.server` — it doesn't serve ES modules correctly.
-7. **Run all tests** — verify the test baseline before starting work.
-   a. **Node tests**: `./tools/test.sh` — note any failures or todos.
-   b. **Browser tests**: navigate to `http://localhost:8080/tests/browser/` and verify all tests pass (use browser subagent to capture screenshot).
-8. **Report readiness** — summarize what you've learned (project state, open issues, test results, any observations) and let the user know you're ready to work.
+- **Read `AGENTS.md`** and review previous convesations if needed.
+- **Read the codebase** — as needed read other documentation and code.
+- Ad-hoc or other Python scripts are off-limits. If a web server is needed, use serve.go.
+- You are never to install tools. If you need a tool, stop and ask the user for direction.
+- You are not allowed to write any files outside the workspace, including /tmp.
 
-> **Important:** Do NOT start making any code changes until the user gives a specific task after you report readiness.
+## Planning First
+All work — including new and iterative work  — **must** follow this pattern:
 
-## Plan-First Workflow
+- User requests a feature or change.
+- **Create a branch** for the work before making any changes. Never commit directly to `main`.
+- You create an **implementation plan** (artifact) describing the proposed approach.
+- You and the user **iterate and discuss** the plan until the user explicitly approves it.
+- Only **after approval**, you proceed with implementation on the branch.
 
-All new work — including work started in a bazinga-bootstrapped thread — **must** follow this pattern:
-
-1. User requests a feature or change.
-2. **Create a branch** for the work before making any changes. Never commit directly to `main`.
-3. You create an **implementation plan** (artifact) describing the proposed approach.
-4. You and the user **iterate and discuss** the plan until the user approves it.
-5. Only **after approval**, you proceed with implementation on the branch.
-
-> **CAUTION:** Never skip the planning and discussion phase for anything beyond the simplest, most obvious tasks (e.g., a trivial typo fix). When in doubt, plan first.
+> **CAUTION:** Never skip the planning and discussion phase for anything beyond the simplest, most obvious tasks (e.g., a trivial typo fix). Plan first.
 
 > **IMPORTANT:** User-facing documentation (`help.html`) is an integral part of feature delivery. Implementation plans for user-facing changes must include help content updates.
 

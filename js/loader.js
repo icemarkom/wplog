@@ -19,6 +19,7 @@
 // JS dependencies are resolved automatically via ES module imports.
 
 import { App } from './app.js';
+import { loadConfig } from './config.js';
 
 (async function () {
     const _cb = "?v=" + Date.now();
@@ -33,6 +34,21 @@ import { App } from './app.js';
         const res = await fetch(url);
         document.getElementById(target).innerHTML = await res.text();
     }));
+
+    // Inject QR code inline so it can be colored via native CSS variables
+    try {
+        const qrRes = await fetch("img/qr-wplog.svg" + _cb);
+        const qrSvgString = await qrRes.text();
+        const doc = new DOMParser().parseFromString(qrSvgString, "image/svg+xml");
+        const svgNode = doc.documentElement;
+        document.getElementById("qr-svg-fullscreen").appendChild(svgNode.cloneNode(true));
+        document.getElementById("qr-svg-share").appendChild(svgNode.cloneNode(true));
+    } catch (e) {
+        console.warn("Failed to load QR code SVG", e);
+    }
+
+    // Load external configuration before binding UI logic
+    await loadConfig();
 
     // DOMContentLoaded already fired, so manually init the app
     App.init();

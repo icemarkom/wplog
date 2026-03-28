@@ -1,5 +1,24 @@
 # wplog — Agent Handoff & Continuation Guide
 
+## Rules for Next Agent
+
+- **The user knows water polo deeply** — they're a referee. Trust their domain knowledge on events, rules, and terminology.
+- **Keep it simple** — the user deliberately chose "no framework, no build tools." Honor that.
+- **Event codes** — the user specifically chose codes like `"E-Game"` (not abbreviated). Don't change them without asking.
+- **The user is iterative** — expect inline comments on artifacts with specific feedback. Incorporate exactly what they say.
+- **Answer users's questions** — if the user asks a question, answer it. The user is seeking further understanding to make decisions. A question is not an instruction for you to do. It's an instruction for iteration. If the question is mixed with an instruction, determine whether to ask clarification on action, or do the action, but the question **must** be answered.
+- **Do not commit/push without confirmation** — always wait for the user to say it's ready before `git commit` and `git push`. Exception: "geronimo" = one-time blanket approval.
+- **Close issues manually** — auto-close is disabled. Use `gh issue close N -c "comment"` after pushing.
+- **Release to publish** — stable releases from `main`. Use `gh release create` to deploy to GitHub Pages. See the `branching` skill (`.agents/skills/branching/SKILL.md`) for the branching strategy.
+- **Game clock is M:SS** — max time is capped by period length (not hardcoded 9:59). Right-to-left digit entry. Start/end times remain HH:MM.
+- **Modal uses responsive breakpoints** — default is full-screen (mobile), `@media (min-width: 900px) and (min-height: 700px)` switches to desktop dialog.
+- **Personal fouls are config-driven** — use `isPersonalFoul: true` on events. Don't hardcode event codes for foul counting.
+- **MAM is a dual-trigger event** — `isPersonalFoul: true` + `autoFoulOut: 2`. This pattern was explicitly designed for NFHS/NCAA.
+- **Version system** — `APP_VERSION` lives in `config.js`. Default is `"dev"`. Deploy workflow injects release tag. Dev mode auto-detects file timestamp via `HEAD` requests. Don't hardcode versions elsewhere.
+- **About is an overlay** — not a screen/section. It uses the same `.overlay` pattern as `ConfirmDialog` and the foul-out popup.
+- **Always use `escapeHTML()`** — when building `innerHTML` templates with user-supplied data (team names, cap numbers, Game #, location, etc.), wrap them in `escapeHTML()`. This is mandatory — see `sanitize.js`.
+
+
 ## Project Summary
 
 **wplog** is a water polo secondary game log — a client-side-only PWA (Progressive Web App) built with **Vanilla HTML/CSS/JS** (no npm, no build tools). It lets a coach or volunteer log game events poolside and produce an official-looking game sheet.
@@ -106,14 +125,9 @@ These were explicitly discussed and agreed with the user:
 | **Timeout tracking** | Configurable limits (full + TO30) in config, overridable in setup. TOL display in live view. Warning on over-limit. |
 | **Game # replaces Rules on sheet** | Rules only relevant for setup; Game # shown on printed game sheet header. |
 | **Print = Share** | `window.print()` is the sharing mechanism. Mobile print dialogs offer Save as PDF + native share. |
-| **Paper size selector** | Print dialog popup with US Letter / A4 segmented control. Dynamic `@page` CSS injection sets print dimensions. |
-| **Multi-column game log** | Print log uses up to 4 columns (column-first fill). Each column is its own `<table>` in a CSS grid. Column count adapts to event count. |
-| **Row-based print pagination** | All print layout uses 18px rows. Page capacity: Letter 52 rows, A4 56 rows. Header = 12 rows. Available = PAGE_ROWS - HEADER_ROWS. |
-| **Section titles in print** | Each print section has its own title in the header: "Game Log", "Game Summary", "Game Stats". Replaces generic "Game Sheet". |
-| **Table splitting with continued** | Oversized tables split across pages. Each continuation chunk gets the title + " - continued" suffix and the thead repeated. |
-| **Anti-orphan logic** | Tables only start on a page if there's room for title + thead + at least 1 data row. Otherwise flushed to next page. |
-| **Sections start on own pages** | Game Log, Game Summary, and Game Stats each begin on a fresh page. |
-| **Print row height = 18px** | All table cells: `height: 18px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis`. No wrapping allowed in print — ensures pagination math is exact. Log tables use auto column sizing (no `table-layout: fixed`) so headers are never truncated; summary/stats tables use `table-layout: fixed`. |
+| **System paper size** | Paper size and orientation are entirely system-controlled via the native OS/browser print dialog. Works beautifully on any standard paper geometry. |
+| **Native CSS Print Layout** | 100% native CSS via `@media print`. No JS pagination or explicit layout math. Relies on standard browser flow with `break-inside: avoid` to gracefully preserve tabular data. |
+| **Dynamic Print Chunking** | Player Stats matrix dynamically expands from 11 columns on-screen to 22 columns via `window.beforeprint`/`afterprint` hooks to maximize ink density at print time without breaking responsive layouts. |
 | **USAWP + NFHS + NCAA supported** | USAWP (8-min default, 7-min, 6-min variants), NFHS Varsity (7-min, OT, MAM), NFHS JV (6-min, no OT), NCAA (8-min, OT, YRC). Additional rule sets added via inheritance. |
 | **Rule set inheritance** | `inherits` key chains parent→child. `addEvents`/`removeEvents` directives for per-ruleset event list mutations. `_base` and `_academic` are internal (hidden from dropdown). `STATS_EVENTS` auto-appended to all rule sets. |
 | **Cap flags** | `allowCoach`, `allowAssistant`, `allowBench` enable C/AC/B cap values. `allowPlayer` (default true) can be set false to block digit input. `allowNoCap` allows submitting without cap. `teamOnly` (renamed from `noPlayer`) hides cap field entirely. |
@@ -145,61 +159,26 @@ These were explicitly discussed and agreed with the user:
 | **Logging mode** | Collapsible section on setup screen with mode segmented control (Game Log Only / Both / Stats Only) and Stats Time Entry (Disabled / Optional / Required). Summary shown in foldable header. |
 | **Stats code = name** | Stats events omit `code` in config — auto-derived from `name`. Normalizer runs at load time for any event missing a code. Multi-word codes (e.g. "Field Block") are supported. |
 | **Stats buttons teal** | All stats buttons styled with `color: "teal"` (`#2dd4bf`). Visual separator between log and stats buttons. |
-| **Player Stats on sheet** | Single `<table>` per stat type with colspan White/Dark headers. Per-period columns (Q1, Q2, etc.) + bold Total. All events with cap numbers aggregated (not just statsOnly). Proper English pluralization for section titles. |
+| **Player Stats on sheet** | Inverted team-centric matrix layout. Teams form sections (White / Dark), Cap numbers form rows (Y-axis), and individual Stat categories form columns (X-axis). Grouped strictly into chunks of 11 stat columns padded with `null` structurally to form identical repeating 100% width tables without distorting CSS sizing properties. All events with cap numbers aggregated. |
 | **`statsOnly` flag** | Events with `statsOnly: true` skip foul-out checks, allow blank time, and are filtered from Progress of Game on sheet. |
 | **`statsTimeMode`** | Controls time field in modal: `"off"` = hidden, `"optional"` = shown but not required, `"on"` = required. Stored in game data model. |
 | **ES modules** | All JS files use native `import`/`export` (except `year.js` which is a standalone `<script defer>`). `loader.js` is loaded as `<script type="module">` and imports `app.js`, which imports all other modules. The browser resolves the dependency tree automatically — no manual load ordering. Service worker also uses `import` for `APP_VERSION` from `config.js`. |
 
-### USAWP Events
-
-| Name | Code | Flags |
-|---|---|---|
-| Goal | `G` | `color: "green"` |
-| Exclusion | `E` | `isPersonalFoul: true, color: "amber"` |
-| Penalty | `P` | `isPersonalFoul: true, color: "amber"` |
-| Timeout | `TO` | `teamOnly: true, color: "blue"` |
-| Timeout 30 | `TO30` | `teamOnly: true, color: "blue"` |
-| Yellow Card | `YC` | `color: "yellow", allowCoach: true, allowBench: true` |
-| Penalty-Exclusion | `P-E` | `isPersonalFoul: true, color: "amber"` |
-| Misconduct | `MC` | `autoFoulOut: 1, color: "red"` |
-| Brutality | `BR` | `autoFoulOut: 1, color: "red"` |
-| Red Card | `RC` | `color: "red", allowCoach: true, allowAssistant: true` |
-| Game Exclusion | `E-Game` | `autoFoulOut: 1, color: "red"` |
-| Shot | — | `statsOnly: true, color: "teal"` |
-| Assist | — | `statsOnly: true, color: "teal"` |
-| Offensive | — | `statsOnly: true, color: "teal"` |
-| Steal | — | `statsOnly: true, color: "teal"` |
-| Intercept | — | `statsOnly: true, color: "teal"` |
-| Turnover | — | `statsOnly: true, color: "teal"` |
-| Field Block | — | `statsOnly: true, color: "teal"` |
-| Save | — | `statsOnly: true, color: "teal"` |
-| Drawn Exclusion | — | `statsOnly: true, color: "teal"` |
-| Drawn Penalty | — | `statsOnly: true, color: "teal"` |
-| Sprint Won | — | `statsOnly: true, color: "teal"` |
-
-### NFHS Events (Varsity & JV)
-
-Inherits from `_academic` (shared base). Same log events as `_academic` plus stats. NFHS does not have Brutality.
-
-| Name | Code | Flags |
-|---|---|---|
-| Minor Act | `MAM` | `isPersonalFoul: true, autoFoulOut: 2` |
-| Flagrant Misconduct | `FM` | `autoFoulOut: 1` |
-
-### NCAA Events
-
-Inherits from `_academic` (8-min periods). Adds:
-
-| Name | Code | Flags |
-|---|---|---|
-| Yellow/Red Card | `YRC` | `color: "yellow", allowPlayer: false, allowCoach: true` |
-
 ---
 
-## Current State (as of 2026-03-21)
+## Current State (as of 2026-03-28)
 
 ### What's Done ✅
+- Externalized application configuration (`config.json`): decoupled game rules, events, and stats taxonomies from hardcoded application logic using an asynchronous boot loader.
+- Replaced JS-based pagination logic with a clean, fully native CSS `@media print` pipeline.
+- Added intelligent JavaScript print hook via `window.beforeprint`/`window.afterprint` to dynamically broaden the Player Stats matrix from 11 columns on screen to 22 columns on printed page without breaking responsive structure.
+- CSS consolidation: Eliminated obsolete CSS filter hacks, adopted explicit `--accent-blue`/`--text-on-accent` design tokens for native theme readiness, and stripped defunct `.toggle-row` selectors.
+- Unified `.dialog-card` styling architecture eliminating duplicate popup layouts.
+- Universal layout-aware keyboard event router for all overlay dialogs (`Escape` to close, `Enter` to confirm).
+- Dynamic SVG Injection: Replaced static `<img>` tags with asynchronous `DOMParser("image/svg+xml")` instantiations to bypass iOS Safari namespace bugs and support native `fill` targeting.
+- Ghost text interactive inline toggles for Player Stats view (`CUMULATIVE / PER PERIOD`), dynamically synced with Print dialog state and natively stripped during CSS printing.
 - Complete setup screen (rules, date, time, location, Game #, team names, OT/SO toggles, timeout overrides)
+- Player Stats grid refactored into a scalable inverted matrix (teams as sections, cap=Y-axis, stats=X-axis), chunked into perfectly padded 11-column widths that natively span to the right margin.
 - Setup guards during active game (disable Start/rules, lock OT/SO/period config/timeouts/logging mode, red END GAME button)
 - Live-save of editable setup fields during active game
 - Four rule sets: USAWP, NFHS Varsity, NFHS JV, NCAA (via inheritance-based config system)
@@ -226,12 +205,7 @@ Inherits from `_academic` (8-min periods). Adds:
 - Fractional SO scores (5.3–5.2 format, no floats — computed at render time)
 - SO events display without time (always 0:00, redundant)
 - Score column shows only on Goal events (live log + sheet)
-- Smart print layout: multi-column game log (up to 3 cols), row-based pagination, paper size selector (Letter/A4)
-- Print dialog popup: paper size segmented control (US Letter / A4), Print + Cancel buttons
-- Print sections: Game Log, Game Summary, Game Stats — each starts on own page with section title in header
-- Table splitting with thead repeated and " - continued" suffix on continuation pages
-- Anti-orphan logic: tables only start if title + thead + 1 data row fits
-- Fixed 18px row height for all print table cells (no wrapping, ellipsis truncation)
+- Native print delegation: directly calls `window.print()` bypassing custom configuration (paper size/geometry is entirely system-controlled)
 - Game header on every printed page (measured at 192px = 12 rows)
 - 3-row sheet header: Game#, Location, Date/Scheduled/Ended
 - Share screen with Print Game Sheet button and Download CSV button
@@ -312,35 +286,30 @@ Inherits from `_academic` (8-min periods). Adds:
 - End Period button moved from score bar to event grid: same size as event buttons, `grid-column: 3` pins it to rightmost column
 - End Game button disables after press: shows "Game Over" and prevents duplicate end-of-game events
 - Native ES modules: all JS files use `import`/`export` (except `year.js`). `loader.js` loaded as `<script type="module">`, browser resolves dependency tree automatically. Service worker uses `import` for `APP_VERSION`.
-- Sheet split: `sheet.js` (orchestrator + shared helpers), `sheet-screen.js` (screen rendering), `sheet-print.js` (print pagination) — isolates print debugging to one file
+- Sheet split: `sheet.js` (orchestrator + shared helpers), `sheet-screen.js` (screen rendering) — isolates screen layout to one file
 - Service worker registration in `loader.js` with `{ type: 'module' }` — enables offline caching, cache busting via `APP_VERSION`
 - Restart App handler awaits async cleanup (SW unregistration + cache deletion) before reload — fixes race condition
 - Help documentation kept current alongside feature delivery — geronimo and kraken workflows include help.html check steps, bazinga establishes doc-as-delivery principle
 - `Game` decoupled from `Storage`: mutation methods (`addEvent`, `deleteEvent`, `editEvent`, `advancePeriod`) no longer call `Storage.save()` — UI layer (`events.js`) owns persistence
 - Score formatting extracted: `formatFractionalScore()` exported from `game.js` as a pure utility
-- Sheet data builders extracted: `sheet-data.js` exports pure functions (`buildPeriodScores`, `buildPersonalFoulTable`, `buildTimeoutSummary`, `buildCardSummary`, `buildPlayerStats`) — `sheet.js` render methods are thin DOM wrappers
-- Pagination engine extracted: `pagination.js` exports pure functions (`filterLogEvents`, `buildLogPagePlan`, `buildSummaryDescriptors`, `buildStatsDescriptors`, `paginateItems`, `availableRows`) — all print layout math with zero DOM dependency
-- Stateless Sheet: `Sheet.game` removed, `Sheet.init()` replaced with `Sheet.render(game, paperSize)` — all render methods accept `game` as parameter
-- `sheet-print.js` refactored to DOM-only rendering layer — consumes pagination plans from `pagination.js`, no pagination arithmetic
+- Stateless Sheet: `Sheet.game` removed, `Sheet.init()` replaced with `Sheet.render(game)` — all render methods accept `game` as parameter
+- Legacy JS pagination engine, data builders, and `sheet-print.js` removed entirely in favor of native CSS printing
 - Time parsing extracted: `time.js` exports pure functions (`getMaxMinutes`, `parseTime`, `formatTimeDisplay`) — `events.js` delegates via thin wrappers
 - Export module extracted: `export.js` exports pure functions (`buildCSV`, `makeFilename`) — CSV/filename builders with zero DOM dependency
 - Input validation fixes: cap `"0"` rejected, time `"0:60"` rejected (seconds ≥ 60)
-- Unit test framework: 561 Node.js tests across 11 modules (`game`, `config`, `export`, `sheet-data`, `pagination`, `time`, `storage`)
-- Browser test suite: 115 tests across 6 DOM-dependent modules (`setup`, `events`, `confirm`, `share`, `sheet`, `app`)
-- Dev server: `tools/serve.go` (Go stdlib) with correct MIME types for ES modules and browser testing
+- Dev server: `tools/serve.go` (Go stdlib) with correct MIME types for ES modules
 - Test data: realistic game fixtures in `testdata/` (small/medium/large) for NCAA and NFHS rule sets
 
 ### Known Gaps / Future Work 📋
 - No substitution tracking (user hasn't decided)
 - Refactor tests to contract-based assertions (#151)
 
-
 ---
 
 ## How to Run
 
 Serve locally with any static file server. The app has no build step.
-Do NOT use Python's `http.server` — use the included dev server:
+Do NOT use Python's `http.server` — use the included dev server in the branch:
 
 ```sh
 go run tools/serve.go
@@ -349,21 +318,3 @@ go run tools/serve.go
 Then open `http://localhost:8080`.
 
 ---
-
-## Notes for Next Agent
-
-1. **The user knows water polo deeply** — they're a coach/referee. Trust their domain knowledge on events, rules, and terminology.
-2. **Keep it simple** — the user deliberately chose "no framework, no build tools." Honor that.
-3. **Event codes** — the user specifically chose codes like `"E-Game"` (not abbreviated). Don't change them without asking.
-4. **The user is iterative** — expect inline comments on artifacts with specific feedback. Incorporate exactly what they say.
-5. **Don't commit/push without confirmation** — always wait for the user to say it's ready before `git commit` and `git push`. Exception: "geronimo" = one-time blanket approval.
-6. **Close issues manually** — auto-close is disabled. Use `gh issue close N -c "comment"` after pushing.
-7. **Release to publish** — stable releases from `main`. Use `gh release create` to deploy to GitHub Pages. See the `branching` skill (`.agents/skills/branching/SKILL.md`) for the branching strategy.
-8. **Previous conversations** exist about a full water polo scoreboard/timer controller (WTTC-1) — this is a separate, simpler project.
-9. **Game clock is M:SS** — max time is capped by period length (not hardcoded 9:59). Right-to-left digit entry. Start/end times remain HH:MM.
-10. **Modal uses responsive breakpoints** — default is full-screen (mobile), `@media (min-width: 900px) and (min-height: 700px)` switches to desktop dialog.
-11. **Personal fouls are config-driven** — use `isPersonalFoul: true` on events. Don't hardcode event codes for foul counting.
-12. **MAM is a dual-trigger event** — `isPersonalFoul: true` + `autoFoulOut: 2`. This pattern was explicitly designed for NFHS/NCAA.
-13. **Version system** — `APP_VERSION` lives in `config.js`. Default is `"dev"`. Deploy workflow injects release tag. Dev mode auto-detects file timestamp via `HEAD` requests. Don't hardcode versions elsewhere.
-14. **About is an overlay** — not a screen/section. It uses the same `.overlay` pattern as `ConfirmDialog` and the foul-out popup.
-15. **Always use `escapeHTML()`** — when building `innerHTML` templates with user-supplied data (team names, cap numbers, Game #, location, etc.), wrap them in `escapeHTML()`. This is mandatory — see `sanitize.js`.

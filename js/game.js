@@ -370,4 +370,231 @@ export const Game = {
         }
         return { valid: true };
     },
+
+    /**
+     * Filter log events: exclude statsOnly events, keep period end markers.
+     * Used by game sheet to show Progress of Game without stat-only entries.
+     * @param {Array} log - Game log array
+     * @param {Object} rules - Resolved rules object
+     * @returns {Array} Filtered log entries
+     */
+    filterLogEvents(log, rules) {
+        return log.filter((entry) => {
+            if (entry.event === "---") return true;
+            const eventDef = rules.events.find((e) => e.code === entry.event);
+            return !eventDef || !eventDef.statsOnly;
+        });
+    },
+
+    // ── Game Data Aggregation ────────────────────────────────
+
+    /**
+     * Build period-by-period goal counts for both teams.
+     * @param {Object} game
+     * @returns {{ periods: string[], white: number[], dark: number[], totalWhite: string, totalDark: string }}
+     */
+    buildPeriodScores(game) {
+        const periods = this.getAllPeriods(game);
+        const white = [];
+        const dark = [];
+
+        for (const period of periods) {
+            const wGoals = game.log.filter(
+                (e) => e.event === "G" && e.team === "W" && e.period === period
+            ).length;
+            const dGoals = game.log.filter(
+                (e) => e.event === "G" && e.team === "D" && e.period === period
+            ).length;
+            white.push(wGoals);
+            dark.push(dGoals);
+        }
+
+        const displayScore = this.getDisplayScore(game);
+        return {
+            periods: periods.map((p) => this.getPeriodLabel(p)),
+            white,
+            dark,
+            totalWhite: displayScore.white,
+            totalDark: displayScore.dark,
+        };
+    },
+
+    /**
+     * Build personal foul table: per-player foul details + fouled-out flag.
+     * @param {Object} game
+     * @returns {Array<{ team: string, cap: string, count: number, fouledOut: boolean, details: Array }>}
+     */
+    buildPersonalFoulTable(game) {
+        const rules = RULES[game.rules];
+        const foulCodes = rules.events
+            .filter((e) => e.isPersonalFoul || e.autoFoulOut)
+            .map((e) => e.code);
+
+        const playerFouls = {};
+
+        for (const entry of game.log) {
+            if (foulCodes.includes(entry.event) && entry.cap) {
+                const key = entry.team + "#" + entry.cap;
+                if (!playerFouls[key]) {
+                    playerFouls[key] = { team: entry.team, cap: entry.cap, fouls: [] };
+                }
+                const eventDef = rules.events.find((e) => e.code === entry.event);
+                playerFouls[key].fouls.push({
+                    period: entry.period,
+                    time: entry.time,
+                    event: eventDef ? eventDef.name : entry.event,
+                    code: entry.event,
+                });
+            }
+        }
+
+        const result = [];
+        for (const [, player] of Object.entries(playerFouls)) {
+            const personalFoulCount = player.fouls.filter((f) => {
+                const def = rules.events.find((e) => e.name === f.event);
+                return def && def.isPersonalFoul;
+            }).length;
+            // Check auto-foul-out: group fouls by event code, check if any event's
+            // occurrence count meets or exceeds its autoFoulOut threshold.
+            // autoFoulOut: 1 = immediate (MC, BR, E-Game, FM)
+            // autoFoulOut: 2 = 2nd occurrence (MAM in NFHS)
+            let hasAutoFoulOut = false;
+            const foulsByCode = {};
+            for (const f of player.fouls) {
+                foulsByCode[f.code] = (foulsByCode[f.code] || 0) + 1;
+            }
+            for (const [code, count] of Object.entries(foulsByCode)) {
+                const def = rules.events.find((e) => e.code === code);
+                if (def && def.autoFoulOut && count >= def.autoFoulOut) {
+                    hasAutoFoulOut = true;
+                    break;
+                }
+            }
+            const fouledOut = personalFoulCount >= rules.foulOutLimit || hasAutoFoulOut;
+
+            result.push({
+                team: player.team,
+                cap: player.cap,
+                count: player.fouls.length,
+                fouledOut,
+                details: player.fouls.map((f) => ({
+                    period: f.period,
+                    time: f.time,
+                    event: f.event,
+                    code: f.code,
+                })),
+            });
+        }
+        return result;
+    },
+
+    /**
+     * Build timeout summary: list of all TO/TO30 events with display info.
+     * @param {Object} game
+     * @returns {Array<{ team: string, period: string, time: string, type: string }>}
+     */
+    buildTimeoutSummary(game) {
+        const rules = RULES[game.rules];
+        const timeouts = game.log.filter((e) => e.event === "TO" || e.event === "TO30");
+
+        return timeouts.map((entry) => {
+            const eventDef = rules.events.find((e) => e.code === entry.event);
+            const team = entry.team === "W" ? "White"
+                : entry.team === "D" ? "Dark"
+                : entry.team === "" ? "Official"
+                : "—";
+            return {
+                team,
+                period: this.getPeriodLabel(entry.period),
+                time: entry.time.replace(/^0(\d:)/, "$1"),
+                type: eventDef ? eventDef.name : entry.event,
+            };
+        });
+    },
+
+    /**
+     * Build card summary: list of all YC/RC events with display info.
+     * @param {Object} game
+     * @returns {Array<{ team: string, cap: string, period: string, time: string, type: string }>}
+     */
+    buildCardSummary(game) {
+        const rules = RULES[game.rules];
+        const cards = game.log.filter((e) => e.event === "YC" || e.event === "RC");
+
+        return cards.map((entry) => {
+            const eventDef = rules.events.find((e) => e.code === entry.event);
+            return {
+                team: entry.team === "W" ? "White" : entry.team === "D" ? "Dark" : "—",
+                cap: entry.cap || "—",
+                period: this.getPeriodLabel(entry.period),
+                time: entry.time.replace(/^0(\d:)/, "$1"),
+                type: eventDef ? eventDef.name : entry.event,
+            };
+        });
+    },
+
+    /**
+     * Build player stats: per-cap, per-stat counts grouped by team.
+     * @param {Object} game
+     * @returns {{ statTypes: Array, activeStatCodes: Array, activePeriods: Array, stats: Object, totals: Object, statsPerPeriod: Object, totalsPerPeriod: Object } | null}
+     */
+    buildPlayerStats(game) {
+        const rules = RULES[game.rules];
+        const statTypes = rules.events
+            .filter((e) => !e.teamOnly && (game.enableStats || !e.statsOnly))
+            .map((e) => ({ code: e.code, name: e.name }));
+
+        const activeStatCodesSet = new Set();
+        const stats = { W: {}, D: {} };
+        const totals = { W: {}, D: {} };
+        const statsPerPeriod = { W: {}, D: {} };
+        const totalsPerPeriod = { W: {}, D: {} };
+
+        for (const entry of game.log) {
+            if (!entry.cap || !entry.team) continue;
+            if (!statTypes.some(st => st.code === entry.event)) continue;
+
+            const team = entry.team;
+            if (team !== "W" && team !== "D") continue;
+
+            if (!stats[team][entry.cap]) {
+                stats[team][entry.cap] = {};
+                statsPerPeriod[team][entry.cap] = {};
+            }
+            if (!statsPerPeriod[team][entry.cap][entry.event]) {
+                statsPerPeriod[team][entry.cap][entry.event] = {};
+            }
+            if (!totalsPerPeriod[team][entry.event]) {
+                totalsPerPeriod[team][entry.event] = {};
+            }
+
+            const periodStr = this.getPeriodLabel(entry.period);
+
+            stats[team][entry.cap][entry.event] = (stats[team][entry.cap][entry.event] || 0) + 1;
+            totals[team][entry.event] = (totals[team][entry.event] || 0) + 1;
+
+            statsPerPeriod[team][entry.cap][entry.event][periodStr] = (statsPerPeriod[team][entry.cap][entry.event][periodStr] || 0) + 1;
+            totalsPerPeriod[team][entry.event][periodStr] = (totalsPerPeriod[team][entry.event][periodStr] || 0) + 1;
+
+            activeStatCodesSet.add(entry.event);
+        }
+
+        if (activeStatCodesSet.size === 0) return null;
+
+        // Print ALL available stats all the time for consistent layout and muscle memory
+        const activeStatCodes = statTypes.map(st => st.code);
+        
+        // Active periods for headers
+        const activePeriods = this.getAllPeriods(game).map(p => this.getPeriodLabel(p));
+
+        return {
+            statTypes,
+            activeStatCodes,
+            activePeriods,
+            stats,
+            totals,
+            statsPerPeriod,
+            totalsPerPeriod,
+        };
+    },
 };

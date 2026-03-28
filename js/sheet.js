@@ -17,93 +17,43 @@
 import { RULES } from './config.js';
 import { Game } from './game.js';
 import { escapeHTML } from './sanitize.js';
-import { buildPeriodScores, buildPersonalFoulTable, buildTimeoutSummary, buildCardSummary, buildPlayerStats } from './sheet-data.js';
 import { renderScreen } from './sheet-screen.js';
-import {
-    availableRows,
-    filterLogEvents,
-    buildLogPagePlan,
-    buildSummaryDescriptors,
-    buildStatsDescriptors,
-    paginateItems,
-} from './pagination.js';
-import { renderLogPages, renderSummaryPages, renderStatsPages } from './sheet-print.js';
 
-// wplog — Game Sheet (Stateless Orchestrator + Shared Render Helpers)
+// wplog — Game Sheet (Stateless Orchestrator + Render Helpers)
 //
 // Sheet does not hold game state. All methods receive `game` as a parameter.
-// Pure pagination logic lives in pagination.js; DOM rendering in sheet-print.js.
+// Data aggregation lives in game.js; this file handles DOM rendering only.
 
 export const Sheet = {
 
     // ── Main entry point ─────────────────────────────────────────
 
-    render(game, paperSize) {
+    render(game, isPrint = false) {
+        this.isPrint = isPrint;
+        if (!this.statsFormat) this.statsFormat = "cumulative"; // default
         const container = document.getElementById("sheet-content");
-        container.innerHTML = "";
-
-        const isPrint = !!paperSize;
-
-        if (!isPrint) {
-            renderScreen(game, this, container);
-            return;
-        }
-
-        // Print mode: paginated, multi-column log, sections on own pages
-        const avail = availableRows(paperSize);
-        const rules = RULES[game.rules];
-
-        // === Section 1: Game Log ===
-        const filteredLog = filterLogEvents(game.log, rules);
-        const logPlan = buildLogPagePlan(filteredLog.length, avail);
-        const logPages = renderLogPages(logPlan, filteredLog, game, rules, avail);
-
-        // === Section 2: Game Summary ===
-        const summaryDescriptors = buildSummaryDescriptors(game);
-        const summaryPlan = paginateItems(summaryDescriptors, avail);
-        const summaryPages = renderSummaryPages(summaryPlan, summaryDescriptors, game);
-
-        // === Section 3: Game Stats (optional) ===
-        let statsPages = [];
-        if (game.enableStats) {
-            const statsDescriptors = buildStatsDescriptors(game);
-            if (statsDescriptors.length > 0) {
-                const statsPlan = paginateItems(statsDescriptors, avail);
-                statsPages = renderStatsPages(statsPlan, statsDescriptors, game);
-            }
-        }
-
-        // Collect all sections
-        const sections = [
-            { title: "Game Log", pages: logPages },
-            { title: "Game Summary", pages: summaryPages },
-        ];
-        if (statsPages.length > 0) {
-            sections.push({ title: "Game Stats", pages: statsPages });
-        }
-
-        // Count total pages
-        const totalPages = sections.reduce((sum, s) => sum + s.pages.length, 0);
-
-        // Render all pages
-        let pageNum = 0;
-        for (const section of sections) {
-            for (const page of section.pages) {
-                pageNum++;
-                const pageDiv = document.createElement("div");
-                pageDiv.className = "sheet-page" + (pageNum > 1 ? " sheet-page-break" : "");
-                pageDiv.appendChild(this._renderHeader(game, section.title, pageNum, totalPages));
-                for (const el of page.elements) {
-                    pageDiv.appendChild(el);
+        if (container) {
+            container.innerHTML = "";
+            renderScreen(game, this, container, isPrint);
+            
+            // Re-bind inline toggle if on screen
+            if (!this.isPrint) {
+                const toggle = container.querySelector("#sheet-stats-format-toggle");
+                if (toggle) {
+                    toggle.querySelectorAll(".stats-toggle-link").forEach(btn => {
+                        btn.addEventListener("click", (e) => {
+                            this.statsFormat = e.target.dataset.format;
+                            this.render(game, false);
+                        });
+                    });
                 }
-                container.appendChild(pageDiv);
             }
         }
     },
 
     // ── Header ───────────────────────────────────────────────────
 
-    _renderHeader(game, title, pageNum, totalPages) {
+    _renderHeader(game, title) {
         const header = document.createElement("div");
         header.className = "sheet-header";
 
@@ -111,14 +61,9 @@ export const Sheet = {
         const darkName = game.dark.name === "Dark" ? "" : game.dark.name;
         const score = Game.getDisplayScore(game);
 
-        const pageInfo = (pageNum && totalPages)
-            ? `<span class="sheet-page-number">Page ${pageNum} / ${totalPages}</span>`
-            : "";
-
         header.innerHTML = `
       <div class="sheet-title-row">
         <span class="sheet-title">${escapeHTML(title)}</span>
-        ${pageInfo}
       </div>
       <div class="sheet-meta">
         <div class="sheet-meta-row">
@@ -148,11 +93,11 @@ export const Sheet = {
         return header;
     },
 
-    // ── Existing render helpers (used by both screen + print) ────
+    // ── Section renderers ────────────────────────────────────────
 
     _renderProgressOfGame(game) {
         const section = document.createElement("div");
-        section.className = "sheet-section";
+        section.className = "sheet-section sheet-progress-section";
 
         const title = document.createElement("h3");
         title.className = "sheet-section-title";
@@ -176,8 +121,7 @@ export const Sheet = {
 
         const tbody = document.createElement("tbody");
         const rules = RULES[game.rules];
-
-        const logEntries = filterLogEvents(game.log, rules);
+        const logEntries = Game.filterLogEvents(game.log, rules);
 
         for (const entry of logEntries) {
             const tr = document.createElement("tr");
@@ -205,9 +149,9 @@ export const Sheet = {
     },
 
     _renderPeriodScores(game) {
-        const data = buildPeriodScores(game);
+        const data = Game.buildPeriodScores(game);
         const section = document.createElement("div");
-        section.className = "sheet-section";
+        section.className = "sheet-section sheet-period-scores-section";
 
         const title = document.createElement("h3");
         title.className = "sheet-section-title";
@@ -242,9 +186,9 @@ export const Sheet = {
     },
 
     _renderFoulSummary(game) {
-        const data = buildPersonalFoulTable(game);
+        const data = Game.buildPersonalFoulTable(game);
         const section = document.createElement("div");
-        section.className = "sheet-section";
+        section.className = "sheet-section sheet-fouls-section";
 
         const title = document.createElement("h3");
         title.className = "sheet-section-title";
@@ -292,9 +236,9 @@ export const Sheet = {
     },
 
     _renderTimeoutSummary(game) {
-        const data = buildTimeoutSummary(game);
+        const data = Game.buildTimeoutSummary(game);
         const section = document.createElement("div");
-        section.className = "sheet-section";
+        section.className = "sheet-section sheet-timeouts-section";
 
         const title = document.createElement("h3");
         title.className = "sheet-section-title";
@@ -335,9 +279,9 @@ export const Sheet = {
     },
 
     _renderCardSummary(game) {
-        const data = buildCardSummary(game);
+        const data = Game.buildCardSummary(game);
         const section = document.createElement("div");
-        section.className = "sheet-section";
+        section.className = "sheet-section sheet-cards-section";
         section.innerHTML = `<div class="sheet-section-title">Cards</div>`;
 
         if (data.length === 0) {
@@ -375,13 +319,23 @@ export const Sheet = {
     },
 
     _renderPlayerStats(game) {
-        const data = buildPlayerStats(game);
+        const data = Game.buildPlayerStats(game);
         const section = document.createElement("div");
-        section.className = "sheet-section";
+        section.className = "sheet-section sheet-player-stats-section";
+
+        const formatStr = this.statsFormat || "cumulative";
+        const isCumulative = formatStr === "cumulative";
 
         const title = document.createElement("h3");
         title.className = "sheet-section-title";
-        title.textContent = "Player Stats";
+        title.innerHTML = `
+          <span class="stats-inline-toggle" id="sheet-stats-format-toggle">
+            <span class="stats-toggle-link ${isCumulative ? 'active' : ''}" data-format="cumulative">CUMULATIVE</span>
+            <span class="stats-toggle-sep"> / </span>
+            <span class="stats-toggle-link ${!isCumulative ? 'active' : ''}" data-format="per-period">PER PERIOD</span>
+          </span>
+          PLAYER STATS
+        `;
         section.appendChild(title);
 
         if (!data) {
@@ -392,91 +346,144 @@ export const Sheet = {
             return section;
         }
 
-        const colsPerTeam = 1 + data.periodLabels.length + 1;
+        const wName = game.white.name === "White" ? "White" : `White (${game.white.name})`;
+        const dName = game.dark.name === "Dark" ? "Dark" : `Dark (${game.dark.name})`;
 
-        for (const st of data.statTypes) {
-            const wCaps = Object.keys(data.stats[st.code].W).sort((a, b) => (parseInt(a) || 0) - (parseInt(b) || 0));
-            const dCaps = Object.keys(data.stats[st.code].D).sort((a, b) => (parseInt(a) || 0) - (parseInt(b) || 0));
-            if (wCaps.length === 0 && dCaps.length === 0) continue;
+        const wWrapper = this._renderTeamStatsTable(wName, data.stats.W, data.totals.W, data.statsPerPeriod.W, data.totalsPerPeriod.W, data.activeStatCodes, data.statTypes, data.activePeriods, formatStr);
+        section.appendChild(wWrapper);
 
-            const tableWrapper = this._renderStatTypeTable(st, wCaps, dCaps, data.stats[st.code], data.periods, data.periodLabels, colsPerTeam);
-            section.appendChild(tableWrapper);
-        }
+        const dWrapper = this._renderTeamStatsTable(dName, data.stats.D, data.totals.D, data.statsPerPeriod.D, data.totalsPerPeriod.D, data.activeStatCodes, data.statTypes, data.activePeriods, formatStr);
+        section.appendChild(dWrapper);
 
         return section;
     },
 
-    _renderStatTypeTable(st, wCaps, dCaps, data, periodOrder, periodHeaders, colsPerTeam) {
+    _renderTeamStatsTable(teamName, teamData, teamTotals, teamDataPerPeriod, teamTotalsPerPeriod, activeStatCodes, statTypes, activePeriods, formatStr) {
         const wrapper = document.createElement("div");
         wrapper.className = "sheet-section";
 
-        // Title as h3 above table — same style as summary sections
         const title = document.createElement("h3");
         title.className = "sheet-section-title";
-        title.textContent = st.name;
+        title.textContent = teamName;
         wrapper.appendChild(title);
 
-        const totalCols = colsPerTeam * 2;
-        const table = document.createElement("table");
-        table.className = "sheet-table sheet-table-compact sheet-table-stats";
+        const caps = Object.keys(teamData).sort((a, b) => (parseInt(a) || 0) - (parseInt(b) || 0));
+        const isPerPeriod = formatStr === "per-period";
+        const numPeriods = activePeriods.length || 1;
 
-        const thead = document.createElement("thead");
-        const periodCols = periodHeaders.map((h) => `<th>${h}</th>`).join("");
-        thead.innerHTML = `
-          <tr>
-            <th colspan="${colsPerTeam}" class="sheet-team-header">White</th>
-            <th colspan="${colsPerTeam}" class="sheet-team-header">Dark</th>
-          </tr>
-          <tr>
-            <th>Cap</th>${periodCols}<th>Tot</th>
-            <th>Cap</th>${periodCols}<th>Tot</th>
-          </tr>
-        `;
-        table.appendChild(thead);
+        // Group into chunks of 11 (or 22 for print) internally.
+        // If per-period, one stat has \`numPeriods\` columns, so we scale down the chunk.
+        let targetColsCount = this.isPrint ? 22 : 11;
+        let chunkSize = isPerPeriod ? Math.max(1, Math.floor(targetColsCount / numPeriods)) : targetColsCount;
 
-        const maxRows = Math.max(wCaps.length, dCaps.length);
-        const tbody = document.createElement("tbody");
-        for (let i = 0; i < maxRows; i++) {
-            const tr = document.createElement("tr");
-            let cells = "";
+        for (let i = 0; i < activeStatCodes.length; i += chunkSize) {
+            const chunkCodes = activeStatCodes.slice(i, i + chunkSize);
 
-            // White half
-            if (i < wCaps.length) {
-                const cap = wCaps[i];
-                const capData = data.W[cap];
-                let total = 0;
-                cells += `<td>${escapeHTML(cap)}</td>`;
-                for (const period of periodOrder) {
-                    const val = capData[period] || 0;
-                    total += val;
-                    cells += `<td>${val || ""}</td>`;
-                }
-                cells += `<td><strong>${total}</strong></td>`;
-            } else {
-                cells += `<td></td>`.repeat(colsPerTeam);
+            // Pad the final chunk so it structurally identical to previous chunks (User requested)
+            while (chunkCodes.length < chunkSize) {
+                chunkCodes.push(null);
             }
 
-            // Dark half
-            if (i < dCaps.length) {
-                const cap = dCaps[i];
-                const capData = data.D[cap];
-                let total = 0;
-                cells += `<td>${escapeHTML(cap)}</td>`;
-                for (const period of periodOrder) {
-                    const val = capData[period] || 0;
-                    total += val;
-                    cells += `<td>${val || ""}</td>`;
+            const table = document.createElement("table");
+            table.className = "sheet-table sheet-table-compact sheet-stats-table";
+
+            const thead = document.createElement("thead");
+            if (isPerPeriod) {
+                table.classList.add("sheet-table-per-period");
+                
+                let tr1 = `<tr><th class="col-cap" rowspan="2">Cap</th>`;
+                let tr2 = `<tr class="sheet-stat-subheader">`;
+                
+                for (const code of chunkCodes) {
+                    if (code === null) {
+                        tr1 += `<th class="sheet-stat-header-horizontal col-stat" colspan="${numPeriods}"><span></span></th>`;
+                        for (let p=0; p<numPeriods; p++) tr2 += `<th></th>`;
+                    } else {
+                        const st = statTypes.find(s => s.code === code);
+                        tr1 += `<th class="sheet-stat-header-horizontal col-stat" colspan="${numPeriods}"><span>${escapeHTML(st.name)}</span></th>`;
+                        for (const p of activePeriods) {
+                            tr2 += `<th>${escapeHTML(p)}</th>`;
+                        }
+                    }
                 }
-                cells += `<td><strong>${total}</strong></td>`;
+                tr1 += `</tr>`;
+                tr2 += `</tr>`;
+                thead.innerHTML = tr1 + tr2;
             } else {
-                cells += `<td></td>`.repeat(colsPerTeam);
+                let theadHtml = `<tr><th class="col-cap">Cap</th>`;
+                for (const code of chunkCodes) {
+                    if (code === null) {
+                        theadHtml += `<th class="sheet-stat-header col-stat"><span></span></th>`;
+                    } else {
+                        const st = statTypes.find(s => s.code === code);
+                        theadHtml += `<th class="sheet-stat-header col-stat"><span>${escapeHTML(st.name)}</span></th>`;
+                    }
+                }
+                theadHtml += `</tr>`;
+                thead.innerHTML = document.createRange().createContextualFragment(theadHtml).textContent === "" ? theadHtml : theadHtml; 
+                // The quick assignment works best with outerHTML structure via innerHTML.
             }
 
-            tr.innerHTML = cells;
-            tbody.appendChild(tr);
+            table.appendChild(thead);
+
+            const tbody = document.createElement("tbody");
+            
+            for (const cap of caps) {
+                let rowHtml = `<td class="col-cap">${escapeHTML(cap)}</td>`;
+                for (const code of chunkCodes) {
+                    if (code === null) {
+                        const cols = isPerPeriod ? numPeriods : 1;
+                        for (let c=0; c<cols; c++) rowHtml += `<td class="col-stat"></td>`;
+                    } else {
+                        if (isPerPeriod) {
+                            for (const p of activePeriods) {
+                                let count = 0;
+                                if (teamDataPerPeriod[cap] && teamDataPerPeriod[cap][code] && teamDataPerPeriod[cap][code][p]) {
+                                    count = teamDataPerPeriod[cap][code][p];
+                                }
+                                rowHtml += `<td class="col-stat">${count || ""}</td>`;
+                            }
+                        } else {
+                            const count = teamData[cap][code] || 0;
+                            rowHtml += `<td class="col-stat">${count || ""}</td>`;
+                        }
+                    }
+                }
+                const tr = document.createElement("tr");
+                tr.innerHTML = rowHtml;
+                tbody.appendChild(tr);
+            }
+
+            // Total row
+            const tfTr = document.createElement("tr");
+            tfTr.className = "sheet-total-row";
+            let tfHtml = `<td class="col-cap">Total</td>`;
+            for (const code of chunkCodes) {
+                if (code === null) {
+                    const cols = isPerPeriod ? numPeriods : 1;
+                    for (let c=0; c<cols; c++) tfHtml += `<td class="col-stat"></td>`;
+                } else {
+                    if (isPerPeriod) {
+                        for (const p of activePeriods) {
+                            let count = 0;
+                            if (teamTotalsPerPeriod[code] && teamTotalsPerPeriod[code][p]) {
+                                count = teamTotalsPerPeriod[code][p];
+                            }
+                            tfHtml += `<td class="col-stat"><strong>${count || ""}</strong></td>`;
+                        }
+                    } else {
+                        const count = teamTotals[code] || 0;
+                        tfHtml += `<td class="col-stat"><strong>${count || ""}</strong></td>`;
+                    }
+                }
+            }
+            tfTr.innerHTML = tfHtml;
+            tbody.appendChild(tfTr);
+
+            table.appendChild(tbody);
+            wrapper.appendChild(table);
         }
-        table.appendChild(tbody);
-        wrapper.appendChild(table);
+
         return wrapper;
     },
 };

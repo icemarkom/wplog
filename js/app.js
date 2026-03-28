@@ -22,6 +22,7 @@ import { Events } from './events.js';
 import { Sheet } from './sheet.js';
 import { Share } from './share.js';
 
+
 // wplog — App Initialization + Screen Navigation
 
 export const App = {
@@ -133,62 +134,27 @@ export const App = {
             document.getElementById("qr-overlay").classList.remove("visible");
         });
 
-        // Keyboard: Escape/Enter to close overlays (priority: innermost first)
+        // Universal Keyboard Overlay Router (innermost first)
         document.addEventListener("keydown", (e) => {
             if (e.key !== "Escape" && e.key !== "Enter") return;
 
-            // Print dialog (Escape=cancel, Enter=print)
-            if (document.getElementById("print-overlay").classList.contains("visible")) {
-                e.preventDefault();
-                if (e.key === "Escape") {
-                    Share._closePrintDialog();
-                } else if (e.key === "Enter") {
-                    Share._closePrintDialog();
-                    Share._doPrint();
-                }
-                return;
-            }
+            const visibleOverlays = Array.from(document.querySelectorAll(".overlay.visible"));
+            if (visibleOverlays.length === 0) return;
 
-            // CSV export overlay
-            if (document.getElementById("csv-overlay").classList.contains("visible")) {
-                e.preventDefault();
-                if (e.key === "Escape") {
-                    Share._closeCSVDialog();
-                } else if (e.key === "Enter") {
-                    Share._closeCSVDialog();
-                    Share._doExport();
-                }
-                return;
-            }
+            e.preventDefault();
+            const activeOverlay = visibleOverlays.pop(); // Last in DOM structurally stacks on top
 
-            // Privacy overlay (stacked on About)
-            if (document.getElementById("privacy-overlay").classList.contains("visible")) {
-                e.preventDefault();
-                document.getElementById("privacy-overlay").classList.remove("visible");
-                document.getElementById("about-overlay").classList.add("visible");
-                return;
-            }
-
-            // License overlay (stacked on About)
-            if (document.getElementById("license-overlay").classList.contains("visible")) {
-                e.preventDefault();
-                document.getElementById("license-overlay").classList.remove("visible");
-                document.getElementById("about-overlay").classList.add("visible");
-                return;
-            }
-
-            // About overlay
-            if (document.getElementById("about-overlay").classList.contains("visible")) {
-                e.preventDefault();
-                document.getElementById("about-overlay").classList.remove("visible");
-                return;
-            }
-
-            // QR overlay
-            if (document.getElementById("qr-overlay").classList.contains("visible")) {
-                e.preventDefault();
-                document.getElementById("qr-overlay").classList.remove("visible");
-                return;
+            if (e.key === "Escape") {
+                // Priority 1: True cancel buttons
+                // Priority 2: Dismiss standard OK-only info overlays
+                const target = activeOverlay.querySelector(".btn-link, .btn-outline") || activeOverlay.querySelector(".btn-primary");
+                if (target) target.click();
+                else activeOverlay.classList.remove("visible"); // Fallback
+            } else if (e.key === "Enter") {
+                // Priority 1: Primary submission or confirm logic
+                const target = activeOverlay.querySelector(".btn-primary, #confirm-ok");
+                if (target && !target.disabled) target.click();
+                else if (!target) activeOverlay.classList.remove("visible"); // Fallback
             }
         });
 
@@ -251,6 +217,7 @@ export const App = {
             }
         });
 
+
         document.getElementById("nav-share").addEventListener("click", () => {
             this.showScreen("share");
             Share.init(this.game);
@@ -273,6 +240,18 @@ export const App = {
                 } catch {
                     el.innerHTML = "<p>Could not load help content.</p>";
                 }
+            }
+        });
+
+        // Intercept native print to adjust layout dynamically
+        window.addEventListener("beforeprint", () => {
+            if (this.game && document.getElementById("sheet-container")) {
+                Sheet.render(this.game, true);
+            }
+        });
+        window.addEventListener("afterprint", () => {
+            if (this.game && document.getElementById("sheet-container")) {
+                Sheet.render(this.game, false);
             }
         });
 
