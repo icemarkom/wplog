@@ -39,9 +39,7 @@ When the user says **"kraken"**, they want to prepare and publish a new release.
 
 // turbo-all
 
-   a. **Run all tests** — this is a gate; if any tests fail, stop and fix before proceeding.
-      - **Node tests**: `./tools/test.sh` — all must pass (todo is OK, fail is not).
-      - **Browser tests**: navigate to `http://localhost:8080/tests/browser/` and verify all tests pass (use browser subagent to capture screenshot). Dev server must be running.
+   a. **Run tests** — execute `./tools/test.sh`. This must pass before proceeding.
    b. Fix license headers: `addlicense -c "Marko Milivojevic" -l apache -ignore '.github/**' -ignore '.agents/**' -ignore 'lib/**' .`
    c. Commit the `AGENTS.md` update on the current branch: `git add AGENTS.md && git commit -m "docs: update AGENTS.md for vX.Y.Z release"`
    d. Push and merge to main via GitHub:

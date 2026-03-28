@@ -17,9 +17,7 @@ When the user says **"geronimo"**, they are giving **one-time approval** to run 
    - Update the date in the section header
    - Remove completed items from "Known Gaps / Future Work 📋" if applicable
 3. **Fix license headers** — run `addlicense -c "Marko Milivojevic" -l apache -ignore '.github/**' -ignore '.agents/**' -ignore 'lib/**' .` to add any missing headers.
-4. **Run all tests** — this is a gate; if any tests fail, stop and fix before committing.
-   a. **Node tests**: `./tools/test.sh` — all must pass (todo is OK, fail is not).
-   b. **Browser tests**: navigate to `http://localhost:8080/tests/browser/` and verify all tests pass (use browser subagent to capture screenshot). Dev server must be running.
+4. **Run tests** — execute `./tools/test.sh`. This must pass before committing.
    > If tests fail, fix the issue and re-run. Do NOT proceed to commit with failing tests.
 5. **Commit** the staged/changed files with an appropriate commit message referencing the issue number.
    > **Signed commits:** All commits in this repo are signed. The commit command will trigger a passphrase prompt. When this happens, **pause and instruct the user to enter the passphrase in the IDE** — it is handled by an extension the agent cannot interact with. Wait for the commit to complete before proceeding.

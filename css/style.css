@@ -1285,6 +1285,28 @@ select.form-input {
   text-align: left;
 }
 
+.stats-toggle-link {
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: color var(--transition);
+}
+
+.stats-toggle-link:hover {
+  color: var(--accent-blue);
+  opacity: 0.8;
+}
+
+.stats-toggle-link.active {
+  color: var(--accent-blue);
+  font-weight: 700;
+  pointer-events: none;
+}
+
+.stats-toggle-sep {
+  color: var(--text-muted);
+  font-weight: 300;
+}
+
 .sheet-table {
   width: 100%;
   border-collapse: collapse;
@@ -1337,6 +1359,23 @@ select.form-input {
   transform: rotate(180deg);
   white-space: nowrap;
   display: inline-block;
+}
+
+.sheet-stat-header-horizontal {
+  vertical-align: bottom;
+  padding: 8px 4px !important;
+}
+
+.sheet-stat-subheader th {
+  font-size: 10px;
+  color: var(--text-muted);
+  font-weight: 500;
+  border-top: 1px dotted var(--border) !important;
+  padding: 4px 2px !important;
+}
+
+.stats-inline-toggle {
+  margin-right: 6px;
 }
 
 .sheet-stats-table {
@@ -1477,12 +1516,25 @@ select.form-input {
   gap: 12px;
 }
 
-/* Download Dialog */
-.download-card {
+/* Shared Dialog Components */
+.dialog-card {
   max-width: 380px;
+}
+
+.dialog-title {
+  margin-bottom: 20px;
   text-align: center;
 }
 
+.dialog-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  align-items: center;
+  margin-top: 20px;
+}
+
+/* Download Dialog specific */
 .download-filename {
   font-family: var(--font-mono);
   font-size: 13px;
@@ -1491,20 +1543,8 @@ select.form-input {
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
   padding: 10px 12px;
-  margin-bottom: 20px;
   width: 100%;
   box-sizing: border-box;
-}
-
-.download-title {
-  margin-bottom: 20px;
-}
-
-.download-actions {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  align-items: center;
 }
 
 .btn-link {
@@ -1521,12 +1561,24 @@ select.form-input {
   color: var(--text-primary);
 }
 
+/* Print Dialog specific */
+.print-form-group {
+  margin-bottom: 20px;
+  text-align: left;
+}
+
+.print-form-group label {
+  text-align: left;
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  margin-bottom: 8px;
+}
+
 /* ============================
    About Dialog
    ============================ */
-.about-card {
-  max-width: 380px;
-}
 
 .about-title {
   font-size: 28px;

@@ -18,6 +18,10 @@
    Print Layout (Native CSS)
    ============================ */
 @media print {
+  @page {
+    margin: 0.5in;
+  }
+  
   :root {
     /* ── Print Light Theme Override ── */
     --bg-primary: #ffffff;
@@ -127,5 +131,30 @@
   
   .sheet-title-row {
     font-size: 16px;
+  }
+
+  /* Dynamic Print Selectors */
+  body.print-hide-log .sheet-progress-section {
+    display: none !important;
+  }
+
+  body.print-hide-log .sheet-period-scores-section,
+  body.print-hide-log .sheet-fouls-section,
+  body.print-hide-log .sheet-timeouts-section,
+  body.print-hide-log .sheet-cards-section {
+    display: none !important;
+  }
+
+  body.print-hide-stats .sheet-player-stats-section {
+    display: none !important;
+  }
+
+  .stats-toggle-link:not(.active),
+  .stats-toggle-sep {
+    display: none !important;
+  }
+
+  .stats-toggle-link.active {
+    color: #000000 !important;
   }
 }

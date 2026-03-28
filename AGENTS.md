@@ -2,20 +2,21 @@
 
 ## Rules for Next Agent
 
-1. **The user knows water polo deeply** — they're a referee. Trust their domain knowledge on events, rules, and terminology.
-2. **Keep it simple** — the user deliberately chose "no framework, no build tools." Honor that.
-3. **Event codes** — the user specifically chose codes like `"E-Game"` (not abbreviated). Don't change them without asking.
-4. **The user is iterative** — expect inline comments on artifacts with specific feedback. Incorporate exactly what they say.
-5. **Do not commit/push without confirmation** — always wait for the user to say it's ready before `git commit` and `git push`. Exception: "geronimo" = one-time blanket approval.
-6. **Close issues manually** — auto-close is disabled. Use `gh issue close N -c "comment"` after pushing.
-7. **Release to publish** — stable releases from `main`. Use `gh release create` to deploy to GitHub Pages. See the `branching` skill (`.agents/skills/branching/SKILL.md`) for the branching strategy.
-8. **Game clock is M:SS** — max time is capped by period length (not hardcoded 9:59). Right-to-left digit entry. Start/end times remain HH:MM.
-9. **Modal uses responsive breakpoints** — default is full-screen (mobile), `@media (min-width: 900px) and (min-height: 700px)` switches to desktop dialog.
-10. **Personal fouls are config-driven** — use `isPersonalFoul: true` on events. Don't hardcode event codes for foul counting.
-11. **MAM is a dual-trigger event** — `isPersonalFoul: true` + `autoFoulOut: 2`. This pattern was explicitly designed for NFHS/NCAA.
-12. **Version system** — `APP_VERSION` lives in `config.js`. Default is `"dev"`. Deploy workflow injects release tag. Dev mode auto-detects file timestamp via `HEAD` requests. Don't hardcode versions elsewhere.
-13. **About is an overlay** — not a screen/section. It uses the same `.overlay` pattern as `ConfirmDialog` and the foul-out popup.
-15. **Always use `escapeHTML()`** — when building `innerHTML` templates with user-supplied data (team names, cap numbers, Game #, location, etc.), wrap them in `escapeHTML()`. This is mandatory — see `sanitize.js`.
+- **The user knows water polo deeply** — they're a referee. Trust their domain knowledge on events, rules, and terminology.
+- **Keep it simple** — the user deliberately chose "no framework, no build tools." Honor that.
+- **Event codes** — the user specifically chose codes like `"E-Game"` (not abbreviated). Don't change them without asking.
+- **The user is iterative** — expect inline comments on artifacts with specific feedback. Incorporate exactly what they say.
+- **Answer users's questions** — if the user asks a question, answer it. The user is seeking further understanding to make decisions. A question is not an instruction for you to do. It's an instruction for iteration. If the question is mixed with an instruction, determine whether to ask clarification on action, or do the action, but the question **must** be answered.
+- **Do not commit/push without confirmation** — always wait for the user to say it's ready before `git commit` and `git push`. Exception: "geronimo" = one-time blanket approval.
+- **Close issues manually** — auto-close is disabled. Use `gh issue close N -c "comment"` after pushing.
+- **Release to publish** — stable releases from `main`. Use `gh release create` to deploy to GitHub Pages. See the `branching` skill (`.agents/skills/branching/SKILL.md`) for the branching strategy.
+- **Game clock is M:SS** — max time is capped by period length (not hardcoded 9:59). Right-to-left digit entry. Start/end times remain HH:MM.
+- **Modal uses responsive breakpoints** — default is full-screen (mobile), `@media (min-width: 900px) and (min-height: 700px)` switches to desktop dialog.
+- **Personal fouls are config-driven** — use `isPersonalFoul: true` on events. Don't hardcode event codes for foul counting.
+- **MAM is a dual-trigger event** — `isPersonalFoul: true` + `autoFoulOut: 2`. This pattern was explicitly designed for NFHS/NCAA.
+- **Version system** — `APP_VERSION` lives in `config.js`. Default is `"dev"`. Deploy workflow injects release tag. Dev mode auto-detects file timestamp via `HEAD` requests. Don't hardcode versions elsewhere.
+- **About is an overlay** — not a screen/section. It uses the same `.overlay` pattern as `ConfirmDialog` and the foul-out popup.
+- **Always use `escapeHTML()`** — when building `innerHTML` templates with user-supplied data (team names, cap numbers, Game #, location, etc.), wrap them in `escapeHTML()`. This is mandatory — see `sanitize.js`.
 
 
 ## Project Summary
@@ -172,7 +173,10 @@ These were explicitly discussed and agreed with the user:
 - Replaced JS-based pagination logic with a clean, fully native CSS `@media print` pipeline.
 - Added intelligent JavaScript print hook via `window.beforeprint`/`window.afterprint` to dynamically broaden the Player Stats matrix from 11 columns on screen to 22 columns on printed page without breaking responsive structure.
 - CSS consolidation: Eliminated obsolete CSS filter hacks, adopted explicit `--accent-blue`/`--text-on-accent` design tokens for native theme readiness, and stripped defunct `.toggle-row` selectors.
+- Unified `.dialog-card` styling architecture eliminating duplicate popup layouts.
+- Universal layout-aware keyboard event router for all overlay dialogs (`Escape` to close, `Enter` to confirm).
 - Dynamic SVG Injection: Replaced static `<img>` tags with asynchronous `DOMParser("image/svg+xml")` instantiations to bypass iOS Safari namespace bugs and support native `fill` targeting.
+- Ghost text interactive inline toggles for Player Stats view (`CUMULATIVE / PER PERIOD`), dynamically synced with Print dialog state and natively stripped during CSS printing.
 - Complete setup screen (rules, date, time, location, Game #, team names, OT/SO toggles, timeout overrides)
 - Player Stats grid refactored into a scalable inverted matrix (teams as sections, cap=Y-axis, stats=X-axis), chunked into perfectly padded 11-column widths that natively span to the right margin.
 - Setup guards during active game (disable Start/rules, lock OT/SO/period config/timeouts/logging mode, red END GAME button)
@@ -293,9 +297,7 @@ These were explicitly discussed and agreed with the user:
 - Time parsing extracted: `time.js` exports pure functions (`getMaxMinutes`, `parseTime`, `formatTimeDisplay`) — `events.js` delegates via thin wrappers
 - Export module extracted: `export.js` exports pure functions (`buildCSV`, `makeFilename`) — CSV/filename builders with zero DOM dependency
 - Input validation fixes: cap `"0"` rejected, time `"0:60"` rejected (seconds ≥ 60)
-- Unit test framework: 561 Node.js tests across 11 modules (`game`, `config`, `export`, `sheet-data`, `pagination`, `time`, `storage`)
-- Browser test suite: 115 tests across 6 DOM-dependent modules (`setup`, `events`, `confirm`, `share`, `sheet`, `app`)
-- Dev server: `tools/serve.go` (Go stdlib) with correct MIME types for ES modules and browser testing
+- Dev server: `tools/serve.go` (Go stdlib) with correct MIME types for ES modules
 - Test data: realistic game fixtures in `testdata/` (small/medium/large) for NCAA and NFHS rule sets
 
 ### Known Gaps / Future Work 📋

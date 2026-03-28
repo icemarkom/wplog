@@ -37,18 +37,6 @@ export const ConfirmDialog = {
         document.getElementById("confirm-overlay").addEventListener("click", (e) => {
             if (e.target === e.currentTarget) this._close(false);
         });
-
-        // Keyboard: Escape = cancel, Enter = confirm
-        document.addEventListener("keydown", (e) => {
-            if (!document.getElementById("confirm-overlay").classList.contains("visible")) return;
-            if (e.key === "Escape") {
-                e.preventDefault();
-                this._close(false);
-            } else if (e.key === "Enter") {
-                e.preventDefault();
-                this._close(true);
-            }
-        });
     },
 
     show({ title, message, confirmLabel = "OK", cancelLabel = "Cancel", type = "danger" }) {

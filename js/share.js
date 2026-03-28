@@ -15,6 +15,7 @@
  */
 
 import { buildFilename, buildCSV } from './export.js';
+import { Sheet } from './sheet.js';
 
 // wplog — Share / Export
 
@@ -36,7 +37,7 @@ export const Share = {
         if (!this._bound) {
             if (printBtn) {
                 printBtn.addEventListener("click", () => {
-                    if (this.game) window.print();
+                    if (this.game) this._showPrintDialog();
                 });
             }
 
@@ -64,9 +65,101 @@ export const Share = {
                 if (e.target === e.currentTarget) this._closeDownloadDialog();
             });
 
+            // Print UI Event Delegation
+            this._setupPrintDialogOnce();
+
             this._bound = true;
         }
     },
+
+    // ── Print Dialog ────────────────────────────────────────
+
+    _setupPrintDialogOnce() {
+        const sectionsEls = document.querySelectorAll("#print-sections-mode .segment-btn");
+        const formatGroup = document.getElementById("print-stats-format-group");
+
+        const hideStatsControls = () => {
+            const activeSection = document.querySelector("#print-sections-mode .segment-btn.active").dataset.value;
+            if (activeSection === "log") {
+                formatGroup.style.opacity = "0.3";
+                formatGroup.style.pointerEvents = "none";
+            } else {
+                formatGroup.style.opacity = "1";
+                formatGroup.style.pointerEvents = "auto";
+            }
+        };
+
+        sectionsEls.forEach(btn => {
+            btn.addEventListener("click", (e) => {
+                sectionsEls.forEach(b => b.classList.remove("active"));
+                e.target.classList.add("active");
+                hideStatsControls();
+            });
+        });
+
+        const formatEls = document.querySelectorAll("#print-stats-format .segment-btn");
+        formatEls.forEach(btn => {
+            btn.addEventListener("click", (e) => {
+                formatEls.forEach(b => b.classList.remove("active"));
+                e.target.classList.add("active");
+            });
+        });
+
+        document.getElementById("print-confirm").addEventListener("click", () => {
+            const activeSection = document.querySelector("#print-sections-mode .segment-btn.active").dataset.value;
+            const activeFormat = document.querySelector("#print-stats-format .segment-btn.active").dataset.value;
+
+            if (activeSection === "stats") {
+                document.body.classList.add("print-hide-log");
+            } else if (activeSection === "log") {
+                document.body.classList.add("print-hide-stats");
+            }
+
+            const origFormat = Sheet.statsFormat;
+            Sheet.statsFormat = activeFormat;
+            Sheet.render(this.game, true); 
+
+            // Defer print briefly to allow DOM layout
+            setTimeout(() => {
+                window.print();
+                document.body.classList.remove("print-hide-log", "print-hide-stats");
+                Sheet.statsFormat = origFormat;
+                Sheet.render(this.game, false);
+                this._closePrintDialog();
+            }, 50);
+        });
+
+        document.getElementById("print-cancel").addEventListener("click", () => {
+            this._closePrintDialog();
+        });
+
+        document.getElementById("print-overlay").addEventListener("click", (e) => {
+            if (e.target === e.currentTarget) this._closePrintDialog();
+        });
+    },
+
+    _showPrintDialog() {
+        if (!this.game) return;
+        
+        // Sync print dialog toggle to match screen selection
+        const formatEls = document.querySelectorAll("#print-stats-format .segment-btn");
+        const currentFormat = Sheet.statsFormat || "cumulative";
+        formatEls.forEach(b => {
+            if (b.dataset.value === currentFormat) {
+                b.classList.add("active");
+            } else {
+                b.classList.remove("active");
+            }
+        });
+
+        document.getElementById("print-overlay").classList.add("visible");
+    },
+
+    _closePrintDialog() {
+        document.getElementById("print-overlay").classList.remove("visible");
+    },
+
+
 
     // ── Download Dialog (shared by CSV and JSON) ────────────
 
