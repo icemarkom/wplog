@@ -34,6 +34,16 @@ import { App } from './app.js';
         document.getElementById(target).innerHTML = await res.text();
     }));
 
+    // Inject QR code inline so it can be colored via native CSS variables
+    try {
+        const qrRes = await fetch("img/qr-wplog.svg");
+        const qrSvg = await qrRes.text();
+        document.getElementById("qr-svg-fullscreen").innerHTML = qrSvg;
+        document.getElementById("qr-svg-share").innerHTML = qrSvg;
+    } catch (e) {
+        console.warn("Failed to load QR code SVG", e);
+    }
+
     // DOMContentLoaded already fired, so manually init the app
     App.init();
 
