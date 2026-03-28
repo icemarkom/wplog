@@ -541,7 +541,7 @@ export const Game = {
     buildPlayerStats(game) {
         const rules = RULES[game.rules];
         const statTypes = rules.events
-            .filter((e) => !e.teamOnly)
+            .filter((e) => !e.teamOnly && (game.enableStats || !e.statsOnly))
             .map((e) => ({ code: e.code, name: e.name }));
 
         const activeStatCodesSet = new Set();

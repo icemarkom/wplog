@@ -173,7 +173,10 @@ These were explicitly discussed and agreed with the user:
 - Replaced JS-based pagination logic with a clean, fully native CSS `@media print` pipeline.
 - Added intelligent JavaScript print hook via `window.beforeprint`/`window.afterprint` to dynamically broaden the Player Stats matrix from 11 columns on screen to 22 columns on printed page without breaking responsive structure.
 - CSS consolidation: Eliminated obsolete CSS filter hacks, adopted explicit `--accent-blue`/`--text-on-accent` design tokens for native theme readiness, and stripped defunct `.toggle-row` selectors.
+- Unified `.dialog-card` styling architecture eliminating duplicate popup layouts.
+- Universal layout-aware keyboard event router for all overlay dialogs (`Escape` to close, `Enter` to confirm).
 - Dynamic SVG Injection: Replaced static `<img>` tags with asynchronous `DOMParser("image/svg+xml")` instantiations to bypass iOS Safari namespace bugs and support native `fill` targeting.
+- Ghost text interactive inline toggles for Player Stats view (`CUMULATIVE / PER PERIOD`), dynamically synced with Print dialog state and natively stripped during CSS printing.
 - Complete setup screen (rules, date, time, location, Game #, team names, OT/SO toggles, timeout overrides)
 - Player Stats grid refactored into a scalable inverted matrix (teams as sections, cap=Y-axis, stats=X-axis), chunked into perfectly padded 11-column widths that natively span to the right margin.
 - Setup guards during active game (disable Start/rules, lock OT/SO/period config/timeouts/logging mode, red END GAME button)
