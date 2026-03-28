@@ -93,6 +93,7 @@ describe("Events — live log screen", () => {
         Game = gameMod.Game;
 
         const configMod = await import("/js/config.js");
+        await configMod.loadConfig();
         RULES = configMod.RULES;
 
         const storageMod = await import("/js/storage.js");

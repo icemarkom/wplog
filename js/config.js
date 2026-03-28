@@ -45,140 +45,53 @@ export const APP_VERSION = "dev";
 //
 // Stats events are defined once in STATS_EVENTS and auto-appended to all rule sets.
 
-export const STATS_EVENTS = [
-    { name: "Shot", color: "teal", statsOnly: true },
-    { name: "Assist", color: "teal", statsOnly: true },
-    { name: "Offensive", color: "teal", statsOnly: true },
-    { name: "Steal", color: "teal", statsOnly: true },
-    { name: "Intercept", color: "teal", statsOnly: true },
-    { name: "Turnover", color: "teal", statsOnly: true },
-    { name: "Field Block", color: "teal", statsOnly: true },
-    { name: "Save", color: "teal", statsOnly: true },
-    { name: "Drawn Exclusion", color: "teal", statsOnly: true },
-    { name: "Drawn Penalty", color: "teal", statsOnly: true },
-    { name: "Sprint Won", color: "teal", statsOnly: true },
-];
+export let STATS_EVENTS = [];
+export let RULES = {};
 
-export const RULES = {
-    _base: {
-        periods: 4,
-        foulOutLimit: 3,
-    },
-    USAWP: {
-        inherits: "_base",
-        name: "USA Water Polo",
-        periodLength: 8,
-        overtime: false,
-        shootout: true,
-        events: [
-            { name: "Goal", code: "G", color: "green", align: "left" },
-            { name: "Exclusion", code: "E", color: "amber", align: "right", isPersonalFoul: true },
-            { name: "Penalty", code: "P", color: "amber", align: "right", isPersonalFoul: true },
-            { name: "Timeout", code: "TO", color: "blue", teamOnly: true, allowOfficial: true, align: "center" },
-            { name: "Timeout 30", code: "TO30", color: "blue", align: "center", teamOnly: true },
-            { name: "Yellow Card", code: "YC", color: "yellow", align: "center", allowCoach: true, allowAssistant: false, allowBench: true },
-            { name: "Penalty-Exclusion", code: "P-E", color: "amber", align: "right", isPersonalFoul: true },
-            { name: "Misconduct", code: "MC", color: "red", align: "right", autoFoulOut: 1 },
-            { name: "Brutality", code: "BR", color: "red", align: "right", autoFoulOut: 1 },
-            { name: "Red Card", code: "RC", color: "red", align: "center", allowCoach: true, allowAssistant: true },
-            { name: "Game Exclusion", code: "E-Game", color: "red", align: "right", autoFoulOut: 1 },
-        ],
-        timeouts: { full: 2, to30: 0 },
-    },
-    USAWP7: {
-        inherits: "USAWP",
-        name: "USA Water Polo (7 min)",
-        periodLength: 7,
-    },
-    USAWP6: {
-        inherits: "USAWP",
-        name: "USA Water Polo (6 min)",
-        periodLength: 6,
-    },
-    _academic: {
-        inherits: "_base",
-        periodLength: 7,
-        otPeriodLength: 3,
-        overtime: true,
-        shootout: false,
-        events: [
-            { name: "Goal", code: "G", color: "green", align: "left" },
-            { name: "Exclusion", code: "E", color: "amber", align: "right", isPersonalFoul: true },
-            { name: "Penalty", code: "P", color: "amber", align: "right", isPersonalFoul: true },
-            { name: "Minor Act", code: "MAM", color: "amber", align: "right", isPersonalFoul: true, autoFoulOut: 2 },
-            { name: "Penalty-Exclusion", code: "P-E", color: "amber", align: "right", isPersonalFoul: true },
-            { name: "Yellow Card", code: "YC", color: "yellow", align: "center", allowCoach: true, allowAssistant: false, allowBench: true },
-            { name: "Timeout", code: "TO", color: "blue", teamOnly: true, allowOfficial: true, align: "center" },
-            { name: "Timeout 30", code: "TO30", color: "blue", align: "center", teamOnly: true },
-            { name: "Misconduct", code: "MC", color: "red", align: "right", autoFoulOut: 1 },
-            { name: "Game Exclusion", code: "E-Game", color: "red", align: "right", autoFoulOut: 1 },
-            { name: "Flagrant Misconduct", code: "FM", color: "red", align: "right", autoFoulOut: 1 },
-            { name: "Red Card", code: "RC", color: "red", align: "center", allowCoach: true, allowAssistant: true },
-        ],
-        timeouts: { full: 3, to30: 1 },
-    },
-    NFHSVA: {
-        inherits: "_academic",
-        name: "NFHS Varsity",
-    },
-    NFHSJV: {
-        inherits: "_academic",
-        name: "NFHS Junior Varsity",
-        periodLength: 6,
-        overtime: false,
-    },
-    NCAA: {
-        inherits: "_academic",
-        name: "NCAA",
-        periodLength: 8,
-        addEvents: [
-            { before: "RC", event: { name: "Yellow/Red Card", code: "YRC", color: "yellow", align: "right", allowPlayer: false, allowCoach: true, allowAssistant: false } },
-        ],
-    },
-};
-
-// --- Inheritance Resolver ---
+// --- Configuration Loader & Normalizer ---
 
 function _deepCopy(obj) {
     return JSON.parse(JSON.stringify(obj));
 }
 
-function _resolveRules() {
+function _resolveRules(rulesObj, statsArr) {
     // 1. Detect circular inheritance chains
-    for (const key of Object.keys(RULES)) {
+    for (const key of Object.keys(rulesObj)) {
         const seen = new Set();
         let cur = key;
-        while (RULES[cur]?.inherits) {
+        while (rulesObj[cur]?.inherits) {
             if (seen.has(cur)) {
                 throw new Error("Circular inheritance: " + [...seen, cur].join(" \u2192 "));
             }
             seen.add(cur);
-            cur = RULES[cur].inherits;
+            cur = rulesObj[cur].inherits;
         }
     }
     // 2. Resolve in dependency order (parents first)
     const resolved = new Set();
     function resolve(key) {
         if (resolved.has(key)) return;
-        const rule = RULES[key];
+        const rule = rulesObj[key];
         if (rule.inherits) {
             resolve(rule.inherits);
-            RULES[key] = { ..._deepCopy(RULES[rule.inherits]), ...rule };
-            delete RULES[key].inherits;
+            rulesObj[key] = { ..._deepCopy(rulesObj[rule.inherits]), ...rule };
+            delete rulesObj[key].inherits;
         }
         resolved.add(key);
     }
-    for (const key of Object.keys(RULES)) resolve(key);
+    for (const key of Object.keys(rulesObj)) resolve(key);
+    
     // 3. Apply removeEvents / addEvents directives
-    for (const [key, rule] of Object.entries(RULES)) {
+    for (const [key, rule] of Object.entries(rulesObj)) {
+        rule.events = rule.events || [];
         if (rule.removeEvents) {
-            rule.events = (rule.events || []).filter(e => !rule.removeEvents.includes(e.code));
+            rule.events = rule.events.filter(e => !rule.removeEvents.includes(e.code));
             delete rule.removeEvents;
         }
         if (rule.addEvents) {
             for (const directive of rule.addEvents) {
                 const anchorCode = directive.after || directive.before;
-                const idx = (rule.events || []).findIndex(e => e.code === anchorCode);
+                const idx = rule.events.findIndex(e => e.code === anchorCode);
                 if (idx === -1) throw new Error(key + ": addEvents anchor '" + anchorCode + "' not found");
                 const pos = directive.after ? idx + 1 : idx;
                 rule.events.splice(pos, 0, directive.event);
@@ -186,15 +99,74 @@ function _resolveRules() {
             delete rule.addEvents;
         }
     }
+    
     // 4. Append STATS_EVENTS to every rule set
-    for (const rule of Object.values(RULES)) {
-        rule.events = [...(rule.events || []), ...STATS_EVENTS];
+    for (const rule of Object.values(rulesObj)) {
+        rule.events = [...(rule.events || []), ...statsArr];
     }
+    
     // 5. Auto-derive code from name for any event missing one
-    for (const rule of Object.values(RULES)) {
+    for (const rule of Object.values(rulesObj)) {
         for (const evt of rule.events) {
             if (!evt.code) evt.code = evt.name;
         }
     }
 }
-_resolveRules();
+
+function _getSafeMode() {
+    return {
+        STATS_EVENTS: [],
+        RULES: {
+            "SAFE": {
+                name: "Safe Mode (Config Error)",
+                periods: 4,
+                periodLength: 8,
+                foulOutLimit: 3,
+                events: [
+                    { name: "Goal", code: "G", color: "green", align: "left" },
+                    { name: "Exclusion", code: "E", color: "amber", align: "right", isPersonalFoul: true },
+                    { name: "Timeout", code: "TO", color: "blue", align: "center", teamOnly: true }
+                ]
+            }
+        }
+    };
+}
+
+export async function loadConfig() {
+    let data;
+    try {
+        const res = await fetch('config.json?v=' + Date.now());
+        if (!res.ok) throw new Error("config.json not found (" + res.status + ")");
+        data = await res.json();
+    } catch (e) {
+        console.warn("Failed to load or parse config.json, falling back to safe mode.", e);
+        data = _getSafeMode();
+    }
+
+    // Defensive normalization
+    if (!data.RULES || typeof data.RULES !== 'object') {
+        data = _getSafeMode();
+    }
+    const resolvedStats = Array.isArray(data.STATS_EVENTS) ? data.STATS_EVENTS : [];
+
+    for (const v of Object.values(data.RULES)) {
+        if (typeof v !== 'object') continue;
+        if (!v.events && !v.inherits) v.events = [];
+        if (v.events && !Array.isArray(v.events)) v.events = [];
+        if (!v.periodLength && !v.inherits) v.periodLength = 8;
+        if (!v.periods && !v.inherits) v.periods = 4;
+        if (!v.foulOutLimit && !v.inherits) v.foulOutLimit = 3;
+    }
+
+    try {
+        _resolveRules(data.RULES, resolvedStats);
+        RULES = data.RULES;
+        STATS_EVENTS = resolvedStats;
+    } catch (e) {
+        console.error("Error resolving inheritance rules, falling back to safe mode.", e);
+        const safe = _getSafeMode();
+        _resolveRules(safe.RULES, safe.STATS_EVENTS);
+        RULES = safe.RULES;
+        STATS_EVENTS = safe.STATS_EVENTS;
+    }
+}
