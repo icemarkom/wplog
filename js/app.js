@@ -266,6 +266,18 @@ export const App = {
             }
         });
 
+        // Intercept native print to adjust layout dynamically
+        window.addEventListener("beforeprint", () => {
+            if (this.game && document.getElementById("sheet-container")) {
+                Sheet.render(this.game, true);
+            }
+        });
+        window.addEventListener("afterprint", () => {
+            if (this.game && document.getElementById("sheet-container")) {
+                Sheet.render(this.game, false);
+            }
+        });
+
     },
 
     // ── Version Display ──────────────────────────────────────
