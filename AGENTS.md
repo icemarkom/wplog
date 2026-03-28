@@ -106,14 +106,9 @@ These were explicitly discussed and agreed with the user:
 | **Timeout tracking** | Configurable limits (full + TO30) in config, overridable in setup. TOL display in live view. Warning on over-limit. |
 | **Game # replaces Rules on sheet** | Rules only relevant for setup; Game # shown on printed game sheet header. |
 | **Print = Share** | `window.print()` is the sharing mechanism. Mobile print dialogs offer Save as PDF + native share. |
-| **Paper size selector** | Print dialog popup with US Letter / A4 segmented control. Dynamic `@page` CSS injection sets print dimensions. |
-| **Multi-column game log** | Print log uses up to 4 columns (column-first fill). Each column is its own `<table>` in a CSS grid. Column count adapts to event count. |
-| **Row-based print pagination** | All print layout uses 18px rows. Page capacity: Letter 52 rows, A4 56 rows. Header = 12 rows. Available = PAGE_ROWS - HEADER_ROWS. |
-| **Section titles in print** | Each print section has its own title in the header: "Game Log", "Game Summary", "Game Stats". Replaces generic "Game Sheet". |
-| **Table splitting with continued** | Oversized tables split across pages. Each continuation chunk gets the title + " - continued" suffix and the thead repeated. |
-| **Anti-orphan logic** | Tables only start on a page if there's room for title + thead + at least 1 data row. Otherwise flushed to next page. |
-| **Sections start on own pages** | Game Log, Game Summary, and Game Stats each begin on a fresh page. |
-| **Print row height = 18px** | All table cells: `height: 18px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis`. No wrapping allowed in print — ensures pagination math is exact. Log tables use auto column sizing (no `table-layout: fixed`) so headers are never truncated; summary/stats tables use `table-layout: fixed`. |
+| **System paper size** | Paper size and orientation are entirely system-controlled via the native OS/browser print dialog. Works beautifully on any standard paper geometry. |
+| **Native CSS Print Layout** | 100% native CSS via `@media print`. No JS pagination or explicit layout math. Relies on standard browser flow with `break-inside: avoid` to gracefully preserve tabular data. |
+| **Dynamic Print Chunking** | Player Stats matrix dynamically expands from 11 columns on-screen to 22 columns via `window.beforeprint`/`afterprint` hooks to maximize ink density at print time without breaking responsive layouts. |
 | **USAWP + NFHS + NCAA supported** | USAWP (8-min default, 7-min, 6-min variants), NFHS Varsity (7-min, OT, MAM), NFHS JV (6-min, no OT), NCAA (8-min, OT, YRC). Additional rule sets added via inheritance. |
 | **Rule set inheritance** | `inherits` key chains parent→child. `addEvents`/`removeEvents` directives for per-ruleset event list mutations. `_base` and `_academic` are internal (hidden from dropdown). `STATS_EVENTS` auto-appended to all rule sets. |
 | **Cap flags** | `allowCoach`, `allowAssistant`, `allowBench` enable C/AC/B cap values. `allowPlayer` (default true) can be set false to block digit input. `allowNoCap` allows submitting without cap. `teamOnly` (renamed from `noPlayer`) hides cap field entirely. |
@@ -231,12 +226,7 @@ Inherits from `_academic` (8-min periods). Adds:
 - Fractional SO scores (5.3–5.2 format, no floats — computed at render time)
 - SO events display without time (always 0:00, redundant)
 - Score column shows only on Goal events (live log + sheet)
-- Smart print layout: multi-column game log (up to 3 cols), row-based pagination, paper size selector (Letter/A4)
-- Print dialog popup: paper size segmented control (US Letter / A4), Print + Cancel buttons
-- Print sections: Game Log, Game Summary, Game Stats — each starts on own page with section title in header
-- Table splitting with thead repeated and " - continued" suffix on continuation pages
-- Anti-orphan logic: tables only start if title + thead + 1 data row fits
-- Fixed 18px row height for all print table cells (no wrapping, ellipsis truncation)
+- Native print delegation: directly calls `window.print()` bypassing custom configuration (paper size/geometry is entirely system-controlled)
 - Game header on every printed page (measured at 192px = 12 rows)
 - 3-row sheet header: Game#, Location, Date/Scheduled/Ended
 - Share screen with Print Game Sheet button and Download CSV button
@@ -317,16 +307,14 @@ Inherits from `_academic` (8-min periods). Adds:
 - End Period button moved from score bar to event grid: same size as event buttons, `grid-column: 3` pins it to rightmost column
 - End Game button disables after press: shows "Game Over" and prevents duplicate end-of-game events
 - Native ES modules: all JS files use `import`/`export` (except `year.js`). `loader.js` loaded as `<script type="module">`, browser resolves dependency tree automatically. Service worker uses `import` for `APP_VERSION`.
-- Sheet split: `sheet.js` (orchestrator + shared helpers), `sheet-screen.js` (screen rendering), `sheet-print.js` (print pagination) — isolates print debugging to one file
+- Sheet split: `sheet.js` (orchestrator + shared helpers), `sheet-screen.js` (screen rendering) — isolates screen layout to one file
 - Service worker registration in `loader.js` with `{ type: 'module' }` — enables offline caching, cache busting via `APP_VERSION`
 - Restart App handler awaits async cleanup (SW unregistration + cache deletion) before reload — fixes race condition
 - Help documentation kept current alongside feature delivery — geronimo and kraken workflows include help.html check steps, bazinga establishes doc-as-delivery principle
 - `Game` decoupled from `Storage`: mutation methods (`addEvent`, `deleteEvent`, `editEvent`, `advancePeriod`) no longer call `Storage.save()` — UI layer (`events.js`) owns persistence
 - Score formatting extracted: `formatFractionalScore()` exported from `game.js` as a pure utility
-- Sheet data builders extracted: `sheet-data.js` exports pure functions (`buildPeriodScores`, `buildPersonalFoulTable`, `buildTimeoutSummary`, `buildCardSummary`, `buildPlayerStats`) — `sheet.js` render methods are thin DOM wrappers
-- Pagination engine extracted: `pagination.js` exports pure functions (`filterLogEvents`, `buildLogPagePlan`, `buildSummaryDescriptors`, `buildStatsDescriptors`, `paginateItems`, `availableRows`) — all print layout math with zero DOM dependency
-- Stateless Sheet: `Sheet.game` removed, `Sheet.init()` replaced with `Sheet.render(game, paperSize)` — all render methods accept `game` as parameter
-- `sheet-print.js` refactored to DOM-only rendering layer — consumes pagination plans from `pagination.js`, no pagination arithmetic
+- Stateless Sheet: `Sheet.game` removed, `Sheet.init()` replaced with `Sheet.render(game)` — all render methods accept `game` as parameter
+- Legacy JS pagination engine, data builders, and `sheet-print.js` removed entirely in favor of native CSS printing
 - Time parsing extracted: `time.js` exports pure functions (`getMaxMinutes`, `parseTime`, `formatTimeDisplay`) — `events.js` delegates via thin wrappers
 - Export module extracted: `export.js` exports pure functions (`buildCSV`, `makeFilename`) — CSV/filename builders with zero DOM dependency
 - Input validation fixes: cap `"0"` rejected, time `"0:60"` rejected (seconds ≥ 60)
