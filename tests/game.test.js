@@ -967,8 +967,7 @@ describe("Game.buildPlayerStats", () => {
         Game.addEvent(g, { period: 2, time: "5:00", team: "W", cap: "7", event: "Shot" });
         const result = Game.buildPlayerStats(g);
         ok(result !== null);
-        strictEqual(result.stats["Shot"].W["7"][1], 2);
-        strictEqual(result.stats["Shot"].W["7"][2], 1);
+        strictEqual(result.stats.W["7"]["Shot"], 3);
     });
 
     it("separates by team", () => {
@@ -978,29 +977,10 @@ describe("Game.buildPlayerStats", () => {
         Game.addEvent(g, { period: 1, time: "6:00", team: "D", cap: "3", event: "Shot" });
         const result = Game.buildPlayerStats(g);
         ok(result !== null);
-        strictEqual(result.stats["Shot"].W["7"][1], 1);
-        strictEqual(result.stats["Shot"].D["3"][1], 1);
+        strictEqual(result.stats.W["7"]["Shot"], 1);
+        strictEqual(result.stats.D["3"]["Shot"], 1);
     });
 
-    it("includes period labels", () => {
-        const g = Game.create("USAWP");
-        g.enableStats = true;
-        Game.addEvent(g, { period: 1, time: "7:00", team: "W", cap: "7", event: "Shot" });
-        Game.addEvent(g, { period: 3, time: "5:00", team: "W", cap: "7", event: "Shot" });
-        const result = Game.buildPlayerStats(g);
-        ok(result.periodLabels.includes("Q1"));
-        ok(result.periodLabels.includes("Q3"));
-    });
-
-    it("pluralizes stat names correctly", () => {
-        const g = Game.create("USAWP");
-        g.enableStats = true;
-        Game.addEvent(g, { period: 1, time: "7:00", team: "W", cap: "7", event: "Shot" });
-        const result = Game.buildPlayerStats(g);
-        const shotType = result.statTypes.find(st => st.code === "Shot");
-        ok(shotType);
-        strictEqual(shotType.name, "Shots");
-    });
 
     it("ignores events without cap or team", () => {
         const g = Game.create("USAWP");
@@ -1009,7 +989,7 @@ describe("Game.buildPlayerStats", () => {
         Game.addEvent(g, { period: 1, time: "6:00", team: "", event: "TO" });
         const result = Game.buildPlayerStats(g);
         ok(result !== null);
-        strictEqual(Object.keys(result.stats["Shot"].W).length, 1);
+        strictEqual(Object.keys(result.stats.W).length, 1);
     });
 
     it("handles multiple stat types", () => {
@@ -1020,9 +1000,9 @@ describe("Game.buildPlayerStats", () => {
         Game.addEvent(g, { period: 1, time: "5:00", team: "D", cap: "3", event: "Steal" });
         const result = Game.buildPlayerStats(g);
         ok(result !== null);
-        strictEqual(result.stats["Shot"].W["7"][1], 1);
-        strictEqual(result.stats["Assist"].W["7"][1], 1);
-        strictEqual(result.stats["Steal"].D["3"][1], 1);
+        strictEqual(result.stats.W["7"]["Shot"], 1);
+        strictEqual(result.stats.W["7"]["Assist"], 1);
+        strictEqual(result.stats.D["3"]["Steal"], 1);
     });
 });
 
@@ -1084,9 +1064,9 @@ describe("Game data builders with test data", () => {
                 const result = Game.buildPlayerStats(gameData);
                 if (result !== null) {
                     ok(Array.isArray(result.statTypes));
-                    ok(Array.isArray(result.periods));
-                    ok(Array.isArray(result.periodLabels));
+                    ok(Array.isArray(result.activeStatCodes));
                     ok(typeof result.stats === "object");
+                    ok(typeof result.totals === "object");
                 }
             });
         });

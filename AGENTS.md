@@ -145,7 +145,7 @@ These were explicitly discussed and agreed with the user:
 | **Logging mode** | Collapsible section on setup screen with mode segmented control (Game Log Only / Both / Stats Only) and Stats Time Entry (Disabled / Optional / Required). Summary shown in foldable header. |
 | **Stats code = name** | Stats events omit `code` in config — auto-derived from `name`. Normalizer runs at load time for any event missing a code. Multi-word codes (e.g. "Field Block") are supported. |
 | **Stats buttons teal** | All stats buttons styled with `color: "teal"` (`#2dd4bf`). Visual separator between log and stats buttons. |
-| **Player Stats on sheet** | Single `<table>` per stat type with colspan White/Dark headers. Per-period columns (Q1, Q2, etc.) + bold Total. All events with cap numbers aggregated (not just statsOnly). Proper English pluralization for section titles. |
+| **Player Stats on sheet** | Inverted team-centric matrix layout. Teams form sections (White / Dark), Cap numbers form rows (Y-axis), and individual Stat categories form columns (X-axis). Grouped strictly into chunks of 11 stat columns padded with `null` structurally to form identical repeating 100% width tables without distorting CSS sizing properties. All events with cap numbers aggregated. |
 | **`statsOnly` flag** | Events with `statsOnly: true` skip foul-out checks, allow blank time, and are filtered from Progress of Game on sheet. |
 | **`statsTimeMode`** | Controls time field in modal: `"off"` = hidden, `"optional"` = shown but not required, `"on"` = required. Stored in game data model. |
 | **ES modules** | All JS files use native `import`/`export` (except `year.js` which is a standalone `<script defer>`). `loader.js` is loaded as `<script type="module">` and imports `app.js`, which imports all other modules. The browser resolves the dependency tree automatically — no manual load ordering. Service worker also uses `import` for `APP_VERSION` from `config.js`. |
@@ -202,6 +202,7 @@ Inherits from `_academic` (8-min periods). Adds:
 - CSS consolidation: Eliminated obsolete CSS filter hacks, adopted explicit `--accent-blue`/`--text-on-accent` design tokens for native theme readiness, and stripped defunct `.toggle-row` selectors.
 - Dynamic SVG Injection: Replaced static `<img>` tags with asynchronous `DOMParser("image/svg+xml")` instantiations to bypass iOS Safari namespace bugs and support native `fill` targeting.
 - Complete setup screen (rules, date, time, location, Game #, team names, OT/SO toggles, timeout overrides)
+- Player Stats grid refactored into a scalable inverted matrix (teams as sections, cap=Y-axis, stats=X-axis), chunked into perfectly padded 11-column widths that natively span to the right margin.
 - Setup guards during active game (disable Start/rules, lock OT/SO/period config/timeouts/logging mode, red END GAME button)
 - Live-save of editable setup fields during active game
 - Four rule sets: USAWP, NFHS Varsity, NFHS JV, NCAA (via inheritance-based config system)

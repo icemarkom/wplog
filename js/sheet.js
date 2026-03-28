@@ -319,89 +319,93 @@ export const Sheet = {
             return section;
         }
 
-        const colsPerTeam = 1 + data.periodLabels.length + 1;
+        const wName = game.white.name === "White" ? "White" : `White (${game.white.name})`;
+        const dName = game.dark.name === "Dark" ? "Dark" : `Dark (${game.dark.name})`;
 
-        for (const st of data.statTypes) {
-            const wCaps = Object.keys(data.stats[st.code].W).sort((a, b) => (parseInt(a) || 0) - (parseInt(b) || 0));
-            const dCaps = Object.keys(data.stats[st.code].D).sort((a, b) => (parseInt(a) || 0) - (parseInt(b) || 0));
-            if (wCaps.length === 0 && dCaps.length === 0) continue;
+        const wWrapper = this._renderTeamStatsTable(wName, data.stats.W, data.totals.W, data.activeStatCodes, data.statTypes);
+        section.appendChild(wWrapper);
 
-            const tableWrapper = this._renderStatTypeTable(st, wCaps, dCaps, data.stats[st.code], data.periods, data.periodLabels, colsPerTeam);
-            section.appendChild(tableWrapper);
-        }
+        const dWrapper = this._renderTeamStatsTable(dName, data.stats.D, data.totals.D, data.activeStatCodes, data.statTypes);
+        section.appendChild(dWrapper);
 
         return section;
     },
 
-    _renderStatTypeTable(st, wCaps, dCaps, data, periodOrder, periodHeaders, colsPerTeam) {
+    _renderTeamStatsTable(teamName, teamData, teamTotals, activeStatCodes, statTypes) {
         const wrapper = document.createElement("div");
         wrapper.className = "sheet-section";
 
         const title = document.createElement("h3");
         title.className = "sheet-section-title";
-        title.textContent = st.name;
+        title.textContent = teamName;
         wrapper.appendChild(title);
 
-        const table = document.createElement("table");
-        table.className = "sheet-table sheet-table-compact";
+        const caps = Object.keys(teamData).sort((a, b) => (parseInt(a) || 0) - (parseInt(b) || 0));
 
-        const thead = document.createElement("thead");
-        const periodCols = periodHeaders.map((h) => `<th>${h}</th>`).join("");
-        thead.innerHTML = `
-          <tr>
-            <th colspan="${colsPerTeam}" class="sheet-team-header">White</th>
-            <th colspan="${colsPerTeam}" class="sheet-team-header">Dark</th>
-          </tr>
-          <tr>
-            <th>Cap</th>${periodCols}<th>Tot</th>
-            <th>Cap</th>${periodCols}<th>Tot</th>
-          </tr>
-        `;
-        table.appendChild(thead);
+        // Group into chunks of 11 to perfectly fill the space marked in red
+        const chunkSize = 11;
+        for (let i = 0; i < activeStatCodes.length; i += chunkSize) {
+            const chunkCodes = activeStatCodes.slice(i, i + chunkSize);
 
-        const maxRows = Math.max(wCaps.length, dCaps.length);
-        const tbody = document.createElement("tbody");
-        for (let i = 0; i < maxRows; i++) {
-            const tr = document.createElement("tr");
-            let cells = "";
-
-            // White half
-            if (i < wCaps.length) {
-                const cap = wCaps[i];
-                const capData = data.W[cap];
-                let total = 0;
-                cells += `<td>${escapeHTML(cap)}</td>`;
-                for (const period of periodOrder) {
-                    const val = capData[period] || 0;
-                    total += val;
-                    cells += `<td>${val || ""}</td>`;
-                }
-                cells += `<td><strong>${total}</strong></td>`;
-            } else {
-                cells += `<td></td>`.repeat(colsPerTeam);
+            // Pad the final chunk so it structurally identical to previous chunks (User requested)
+            while (chunkCodes.length < chunkSize) {
+                chunkCodes.push(null);
             }
 
-            // Dark half
-            if (i < dCaps.length) {
-                const cap = dCaps[i];
-                const capData = data.D[cap];
-                let total = 0;
-                cells += `<td>${escapeHTML(cap)}</td>`;
-                for (const period of periodOrder) {
-                    const val = capData[period] || 0;
-                    total += val;
-                    cells += `<td>${val || ""}</td>`;
+            const table = document.createElement("table");
+            table.className = "sheet-table sheet-table-compact sheet-stats-table";
+
+            let theadHtml = `<tr><th class="col-cap">Cap</th>`;
+            for (const code of chunkCodes) {
+                if (code === null) {
+                    theadHtml += `<th class="sheet-stat-header col-stat"><span></span></th>`;
+                } else {
+                    const st = statTypes.find(s => s.code === code);
+                    theadHtml += `<th class="sheet-stat-header col-stat"><span>${escapeHTML(st.name)}</span></th>`;
                 }
-                cells += `<td><strong>${total}</strong></td>`;
-            } else {
-                cells += `<td></td>`.repeat(colsPerTeam);
+            }
+            theadHtml += `</tr>`;
+
+            const thead = document.createElement("thead");
+            thead.innerHTML = theadHtml;
+            table.appendChild(thead);
+
+            const tbody = document.createElement("tbody");
+            
+            for (const cap of caps) {
+                let rowHtml = `<td class="col-cap">${escapeHTML(cap)}</td>`;
+                for (const code of chunkCodes) {
+                    if (code === null) {
+                        rowHtml += `<td class="col-stat"></td>`;
+                    } else {
+                        const count = teamData[cap][code] || 0;
+                        rowHtml += `<td class="col-stat">${count || ""}</td>`;
+                    }
+                }
+                const tr = document.createElement("tr");
+                tr.innerHTML = rowHtml;
+                tbody.appendChild(tr);
             }
 
-            tr.innerHTML = cells;
-            tbody.appendChild(tr);
+            // Total row
+            const tfTr = document.createElement("tr");
+            tfTr.className = "sheet-total-row";
+            let tfHtml = `<td class="col-cap">Total</td>`;
+            for (const code of chunkCodes) {
+                if (code === null) {
+                    tfHtml += `<td class="col-stat"></td>`;
+                } else {
+                    const count = teamTotals[code] || 0;
+                    tfHtml += `<td class="col-stat"><strong>${count || ""}</strong></td>`;
+                }
+            }
+            tfTr.innerHTML = tfHtml;
+            tbody.appendChild(tfTr);
+
+            table.appendChild(tbody);
+            wrapper.appendChild(table);
         }
-        table.appendChild(tbody);
-        wrapper.appendChild(table);
+
         return wrapper;
     },
 };

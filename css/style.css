@@ -1285,15 +1285,6 @@ select.form-input {
   text-align: left;
 }
 
-.sheet-team-header {
-  font-size: 12px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: var(--letter-spacing-caps);
-  text-align: center;
-  border-bottom: 1px solid var(--border);
-}
-
 .sheet-table {
   width: 100%;
   border-collapse: collapse;
@@ -1334,6 +1325,33 @@ select.form-input {
 .sheet-table-compact th {
   text-align: center;
   padding: 4px 8px;
+}
+
+.sheet-stat-header {
+  vertical-align: bottom;
+  padding: 8px 4px !important;
+}
+
+.sheet-stat-header span {
+  writing-mode: vertical-rl;
+  transform: rotate(180deg);
+  white-space: nowrap;
+  display: inline-block;
+}
+
+.sheet-stats-table {
+  width: 100%;
+  table-layout: fixed;
+}
+
+.sheet-stats-table .col-cap {
+  width: 56px;
+}
+
+.sheet-stats-table .col-stat {
+  width: auto;
+  padding-left: 0 !important;
+  padding-right: 0 !important;
 }
 
 .sheet-team-cell {
