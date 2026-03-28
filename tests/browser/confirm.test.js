@@ -33,7 +33,7 @@ const CONFIRM_HTML = `
 </div>`;
 
 // Inject overlay into sandbox (display:none, but DOM accessible)
-const sandbox = document.getElementById("test-sandbox");
+let sandbox;
 
 // We need to dynamically import ConfirmDialog once and reuse.
 // Because init() binds event listeners, we do it once.
@@ -42,6 +42,7 @@ let ConfirmDialog;
 describe("ConfirmDialog", () => {
 
     it("can import and init", async () => {
+        sandbox = document.getElementById("test-sandbox");
         sandbox.innerHTML = CONFIRM_HTML;
         // Move overlay to document body so getElementById finds it
         const overlay = sandbox.querySelector("#confirm-overlay");

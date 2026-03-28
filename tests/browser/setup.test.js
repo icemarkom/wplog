@@ -73,6 +73,7 @@ describe("Setup screen", () => {
         Game = gameMod.Game;
 
         const configMod = await import("/js/config.js");
+        await configMod.loadConfig();
         RULES = configMod.RULES;
     });
 
