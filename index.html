@@ -35,7 +35,6 @@
     href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Source+Code+Pro:wght@400;600;700&display=swap"
     rel="stylesheet">
   <link rel="stylesheet" href="css/style.css">
-  <link rel="stylesheet" href="css/print.css" media="print">
 </head>
 
 <body>
@@ -112,31 +111,13 @@
     </div>
   </div>
 
-  <!-- Print Dialog -->
-  <div id="print-overlay" class="overlay">
-    <div class="overlay-content print-card">
-      <div class="overlay-title print-title">Print Game Sheet</div>
-      <div class="form-group">
-        <label id="label-paper-size">Paper Size</label>
-        <div id="print-paper-size" class="segment-control" aria-labelledby="label-paper-size">
-          <button type="button" class="segment-btn active" data-value="letter">US Letter</button>
-          <button type="button" class="segment-btn" data-value="a4">A4</button>
-        </div>
-      </div>
-      <div class="print-dialog-actions">
-        <button id="print-confirm" class="btn btn-primary btn-large">Print</button>
-        <button id="print-cancel" class="btn-link">Cancel</button>
-      </div>
-    </div>
-  </div>
-
   <!-- Download Dialog (shared by CSV and JSON exports) -->
   <div id="download-overlay" class="overlay">
-    <div class="overlay-content print-card">
-      <div id="download-title" class="overlay-title print-title">Download</div>
+    <div class="overlay-content download-card">
+      <div id="download-title" class="overlay-title download-title">Download</div>
       <label for="download-filename" class="sr-only">Filename</label>
-      <input type="text" id="download-filename" class="csv-filename" spellcheck="false" autocomplete="off">
-      <div class="print-dialog-actions">
+      <input type="text" id="download-filename" class="download-filename" spellcheck="false" autocomplete="off">
+      <div class="download-actions">
         <button id="download-confirm" class="btn btn-primary btn-large">Download</button>
         <button id="download-cancel" class="btn-link">Cancel</button>
       </div>

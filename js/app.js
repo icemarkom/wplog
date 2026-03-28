@@ -22,6 +22,7 @@ import { Events } from './events.js';
 import { Sheet } from './sheet.js';
 import { Share } from './share.js';
 
+
 // wplog — App Initialization + Screen Navigation
 
 export const App = {
@@ -137,26 +138,14 @@ export const App = {
         document.addEventListener("keydown", (e) => {
             if (e.key !== "Escape" && e.key !== "Enter") return;
 
-            // Print dialog (Escape=cancel, Enter=print)
-            if (document.getElementById("print-overlay").classList.contains("visible")) {
+            // Download dialog (Escape=cancel, Enter=download)
+            if (document.getElementById("download-overlay").classList.contains("visible")) {
                 e.preventDefault();
                 if (e.key === "Escape") {
-                    Share._closePrintDialog();
+                    Share._closeDownloadDialog();
                 } else if (e.key === "Enter") {
-                    Share._closePrintDialog();
-                    Share._doPrint();
-                }
-                return;
-            }
-
-            // CSV export overlay
-            if (document.getElementById("csv-overlay").classList.contains("visible")) {
-                e.preventDefault();
-                if (e.key === "Escape") {
-                    Share._closeCSVDialog();
-                } else if (e.key === "Enter") {
-                    Share._closeCSVDialog();
-                    Share._doExport();
+                    Share._doDownload();
+                    Share._closeDownloadDialog();
                 }
                 return;
             }
@@ -250,6 +239,7 @@ export const App = {
                 Sheet.render(this.game);
             }
         });
+
 
         document.getElementById("nav-share").addEventListener("click", () => {
             this.showScreen("share");

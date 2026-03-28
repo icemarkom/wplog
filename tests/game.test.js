@@ -14,8 +14,13 @@
 
 import { describe, it } from "node:test";
 import { strictEqual, deepStrictEqual, ok } from "node:assert";
+import { readFileSync } from "node:fs";
 import { Game, formatFractionalScore } from "../js/game.js";
 import { RULES } from "../js/config.js";
+
+function loadTestData(name) {
+    return JSON.parse(readFileSync(`testdata/${name}`, "utf8"));
+}
 
 // All public rule sets — tests iterate over these.
 const publicKeys = Object.keys(RULES).filter(k => !k.startsWith("_"));
@@ -718,4 +723,372 @@ describe("Game.validateTime", () => {
         const result = Game.validateTime(g, 2, "7:00");
         strictEqual(result.valid, true);
     });
+});
+
+// ── Game Data Aggregation ────────────────────────────────────
+
+// ── filterLogEvents ──────────────────────────────────────────
+
+describe("Game.filterLogEvents", () => {
+    it("keeps non-stats events", () => {
+        const g = Game.create("USAWP");
+        Game.addEvent(g, { period: 1, time: "7:00", team: "W", cap: "5", event: "G" });
+        Game.addEvent(g, { period: 1, time: "6:00", team: "D", cap: "3", event: "E" });
+        const rules = RULES[g.rules];
+        const result = Game.filterLogEvents(g.log, rules);
+        strictEqual(result.length, 2);
+    });
+
+    it("filters out statsOnly events", () => {
+        const g = Game.create("USAWP");
+        Game.addEvent(g, { period: 1, time: "7:00", team: "W", cap: "5", event: "G" });
+        Game.addEvent(g, { period: 1, time: "6:00", team: "W", cap: "5", event: "Shot" });
+        const rules = RULES[g.rules];
+        const result = Game.filterLogEvents(g.log, rules);
+        strictEqual(result.length, 1);
+        strictEqual(result[0].event, "G");
+    });
+
+    it("keeps period end markers", () => {
+        const g = Game.create("USAWP");
+        Game.addEvent(g, { period: 1, time: "7:00", team: "W", cap: "5", event: "G" });
+        Game.addEvent(g, { period: 1, time: "", team: "", cap: "", event: "---" });
+        const rules = RULES[g.rules];
+        const result = Game.filterLogEvents(g.log, rules);
+        strictEqual(result.length, 2);
+        strictEqual(result[1].event, "---");
+    });
+});
+
+// ── buildPeriodScores ────────────────────────────────────────
+
+describe("Game.buildPeriodScores", () => {
+    it("counts goals correctly per period", () => {
+        const g = Game.create("USAWP");
+        Game.addEvent(g, { period: 1, time: "7:00", team: "W", cap: "5", event: "G" });
+        Game.addEvent(g, { period: 1, time: "6:00", team: "D", cap: "3", event: "G" });
+        Game.addEvent(g, { period: 1, time: "", team: "", cap: "", event: "---" });
+        Game.addEvent(g, { period: 2, time: "7:00", team: "W", cap: "5", event: "G" });
+        Game.addEvent(g, { period: 2, time: "6:00", team: "W", cap: "7", event: "G" });
+        const result = Game.buildPeriodScores(g);
+        strictEqual(result.white[0], 1);
+        strictEqual(result.dark[0], 1);
+        strictEqual(result.white[1], 2);
+        strictEqual(result.dark[1], 0);
+    });
+
+    it("returns correct totals", () => {
+        const g = Game.create("USAWP");
+        Game.addEvent(g, { period: 1, time: "7:00", team: "W", cap: "5", event: "G" });
+        Game.addEvent(g, { period: 1, time: "6:00", team: "D", cap: "3", event: "G" });
+        const result = Game.buildPeriodScores(g);
+        strictEqual(result.totalWhite, "1");
+        strictEqual(result.totalDark, "1");
+    });
+
+    it("uses period labels (Q1, Q2, etc.)", () => {
+        const g = Game.create("USAWP");
+        Game.addEvent(g, { period: 1, time: "7:00", team: "W", cap: "5", event: "G" });
+        Game.addEvent(g, { period: 1, time: "", team: "", cap: "", event: "---" });
+        Game.addEvent(g, { period: 2, time: "7:00", team: "W", cap: "5", event: "G" });
+        const result = Game.buildPeriodScores(g);
+        strictEqual(result.periods[0], "Q1");
+        strictEqual(result.periods[1], "Q2");
+    });
+
+    it("handles game with no goals", () => {
+        const g = Game.create("USAWP");
+        Game.addEvent(g, { period: 1, time: "7:00", team: "W", cap: "5", event: "E" });
+        const result = Game.buildPeriodScores(g);
+        strictEqual(result.white[0], 0);
+        strictEqual(result.dark[0], 0);
+        strictEqual(result.totalWhite, "0");
+        strictEqual(result.totalDark, "0");
+    });
+});
+
+// ── buildPersonalFoulTable ───────────────────────────────────
+
+describe("Game.buildPersonalFoulTable", () => {
+    it("returns empty array for game with no fouls", () => {
+        const g = Game.create("USAWP");
+        Game.addEvent(g, { period: 1, time: "7:00", team: "W", cap: "5", event: "G" });
+        const result = Game.buildPersonalFoulTable(g);
+        strictEqual(result.length, 0);
+    });
+
+    it("returns one entry per player-team combo", () => {
+        const g = Game.create("USAWP");
+        Game.addEvent(g, { period: 1, time: "7:00", team: "W", cap: "5", event: "E" });
+        Game.addEvent(g, { period: 1, time: "6:00", team: "W", cap: "5", event: "E" });
+        Game.addEvent(g, { period: 1, time: "5:00", team: "D", cap: "3", event: "E" });
+        const result = Game.buildPersonalFoulTable(g);
+        strictEqual(result.length, 2);
+    });
+
+    it("aggregates foul count per player", () => {
+        const g = Game.create("USAWP");
+        Game.addEvent(g, { period: 1, time: "7:00", team: "W", cap: "5", event: "E" });
+        Game.addEvent(g, { period: 2, time: "6:00", team: "W", cap: "5", event: "E" });
+        const result = Game.buildPersonalFoulTable(g);
+        strictEqual(result[0].count, 2);
+    });
+
+    it("marks fouled-out when personal foul limit reached", () => {
+        const g = Game.create("USAWP");
+        for (let i = 0; i < 3; i++) {
+            Game.addEvent(g, { period: 1, time: `${7-i}:00`, team: "W", cap: "5", event: "E" });
+        }
+        const result = Game.buildPersonalFoulTable(g);
+        strictEqual(result[0].fouledOut, true);
+    });
+
+    it("marks fouled-out for auto-foul-out events", () => {
+        const g = Game.create("USAWP");
+        Game.addEvent(g, { period: 1, time: "7:00", team: "W", cap: "5", event: "MC" });
+        const result = Game.buildPersonalFoulTable(g);
+        strictEqual(result[0].fouledOut, true);
+    });
+
+    it("does not mark fouled-out for single personal foul", () => {
+        const g = Game.create("USAWP");
+        Game.addEvent(g, { period: 1, time: "7:00", team: "W", cap: "5", event: "E" });
+        const result = Game.buildPersonalFoulTable(g);
+        strictEqual(result[0].fouledOut, false);
+    });
+
+    it("includes event details", () => {
+        const g = Game.create("USAWP");
+        Game.addEvent(g, { period: 1, time: "7:00", team: "W", cap: "5", event: "E" });
+        const result = Game.buildPersonalFoulTable(g);
+        strictEqual(result[0].details.length, 1);
+        strictEqual(result[0].details[0].period, 1);
+        strictEqual(result[0].details[0].time, "7:00");
+        strictEqual(result[0].details[0].event, "Exclusion");
+    });
+
+    it("NFHS MAM 2nd occurrence triggers fouled out", () => {
+        const g = Game.create("NFHSVA");
+        Game.addEvent(g, { period: 1, time: "7:00", team: "W", cap: "5", event: "MAM" });
+        let result = Game.buildPersonalFoulTable(g);
+        strictEqual(result[0].fouledOut, false);
+        Game.addEvent(g, { period: 2, time: "6:00", team: "W", cap: "5", event: "MAM" });
+        result = Game.buildPersonalFoulTable(g);
+        strictEqual(result[0].fouledOut, true);
+    });
+});
+
+// ── buildTimeoutSummary ──────────────────────────────────────
+
+describe("Game.buildTimeoutSummary", () => {
+    it("returns empty array when no timeouts", () => {
+        const g = Game.create("USAWP");
+        Game.addEvent(g, { period: 1, time: "7:00", team: "W", cap: "5", event: "G" });
+        const result = Game.buildTimeoutSummary(g);
+        strictEqual(result.length, 0);
+    });
+
+    it("returns timeout entries with team and type", () => {
+        const g = Game.create("USAWP");
+        Game.addEvent(g, { period: 1, time: "7:00", team: "W", event: "TO" });
+        Game.addEvent(g, { period: 2, time: "6:00", team: "D", event: "TO30" });
+        const result = Game.buildTimeoutSummary(g);
+        strictEqual(result.length, 2);
+        strictEqual(result[0].team, "White");
+        strictEqual(result[0].type, "Timeout");
+        strictEqual(result[1].team, "Dark");
+        strictEqual(result[1].type, "Timeout 30");
+    });
+
+    it("handles official timeouts", () => {
+        const g = Game.create("USAWP");
+        Game.addEvent(g, { period: 1, time: "7:00", team: "", event: "TO" });
+        const result = Game.buildTimeoutSummary(g);
+        strictEqual(result[0].team, "Official");
+    });
+
+    it("formats time by stripping leading zero", () => {
+        const g = Game.create("USAWP");
+        Game.addEvent(g, { period: 1, time: "07:00", team: "W", event: "TO" });
+        const result = Game.buildTimeoutSummary(g);
+        strictEqual(result[0].time, "7:00");
+    });
+});
+
+// ── buildCardSummary ─────────────────────────────────────────
+
+describe("Game.buildCardSummary", () => {
+    it("returns empty array when no cards", () => {
+        const g = Game.create("USAWP");
+        Game.addEvent(g, { period: 1, time: "7:00", team: "W", cap: "5", event: "G" });
+        const result = Game.buildCardSummary(g);
+        strictEqual(result.length, 0);
+    });
+
+    it("returns card entries with all fields", () => {
+        const g = Game.create("USAWP");
+        Game.addEvent(g, { period: 1, time: "7:00", team: "W", cap: "C", event: "YC" });
+        Game.addEvent(g, { period: 3, time: "5:00", team: "D", cap: "AC", event: "RC" });
+        const result = Game.buildCardSummary(g);
+        strictEqual(result.length, 2);
+        strictEqual(result[0].team, "White");
+        strictEqual(result[0].cap, "C");
+        strictEqual(result[0].period, "Q1");
+        strictEqual(result[0].type, "Yellow Card");
+        strictEqual(result[1].team, "Dark");
+        strictEqual(result[1].cap, "AC");
+        strictEqual(result[1].period, "Q3");
+        strictEqual(result[1].type, "Red Card");
+    });
+
+    it("uses dash for missing cap", () => {
+        const g = Game.create("USAWP");
+        Game.addEvent(g, { period: 1, time: "7:00", team: "W", cap: "", event: "YC" });
+        const result = Game.buildCardSummary(g);
+        strictEqual(result[0].cap, "—");
+    });
+});
+
+// ── buildPlayerStats ─────────────────────────────────────────
+
+describe("Game.buildPlayerStats", () => {
+    it("returns null for game with no stats", () => {
+        const g = Game.create("USAWP");
+        Game.addEvent(g, { period: 1, time: "7:00", team: "W", event: "TO" });
+        const result = Game.buildPlayerStats(g);
+        strictEqual(result, null);
+    });
+
+    it("aggregates single stat type", () => {
+        const g = Game.create("USAWP");
+        g.enableStats = true;
+        Game.addEvent(g, { period: 1, time: "7:00", team: "W", cap: "7", event: "Shot" });
+        Game.addEvent(g, { period: 1, time: "6:00", team: "W", cap: "7", event: "Shot" });
+        Game.addEvent(g, { period: 2, time: "5:00", team: "W", cap: "7", event: "Shot" });
+        const result = Game.buildPlayerStats(g);
+        ok(result !== null);
+        strictEqual(result.stats["Shot"].W["7"][1], 2);
+        strictEqual(result.stats["Shot"].W["7"][2], 1);
+    });
+
+    it("separates by team", () => {
+        const g = Game.create("USAWP");
+        g.enableStats = true;
+        Game.addEvent(g, { period: 1, time: "7:00", team: "W", cap: "7", event: "Shot" });
+        Game.addEvent(g, { period: 1, time: "6:00", team: "D", cap: "3", event: "Shot" });
+        const result = Game.buildPlayerStats(g);
+        ok(result !== null);
+        strictEqual(result.stats["Shot"].W["7"][1], 1);
+        strictEqual(result.stats["Shot"].D["3"][1], 1);
+    });
+
+    it("includes period labels", () => {
+        const g = Game.create("USAWP");
+        g.enableStats = true;
+        Game.addEvent(g, { period: 1, time: "7:00", team: "W", cap: "7", event: "Shot" });
+        Game.addEvent(g, { period: 3, time: "5:00", team: "W", cap: "7", event: "Shot" });
+        const result = Game.buildPlayerStats(g);
+        ok(result.periodLabels.includes("Q1"));
+        ok(result.periodLabels.includes("Q3"));
+    });
+
+    it("pluralizes stat names correctly", () => {
+        const g = Game.create("USAWP");
+        g.enableStats = true;
+        Game.addEvent(g, { period: 1, time: "7:00", team: "W", cap: "7", event: "Shot" });
+        const result = Game.buildPlayerStats(g);
+        const shotType = result.statTypes.find(st => st.code === "Shot");
+        ok(shotType);
+        strictEqual(shotType.name, "Shots");
+    });
+
+    it("ignores events without cap or team", () => {
+        const g = Game.create("USAWP");
+        g.enableStats = true;
+        Game.addEvent(g, { period: 1, time: "7:00", team: "W", cap: "7", event: "Shot" });
+        Game.addEvent(g, { period: 1, time: "6:00", team: "", event: "TO" });
+        const result = Game.buildPlayerStats(g);
+        ok(result !== null);
+        strictEqual(Object.keys(result.stats["Shot"].W).length, 1);
+    });
+
+    it("handles multiple stat types", () => {
+        const g = Game.create("USAWP");
+        g.enableStats = true;
+        Game.addEvent(g, { period: 1, time: "7:00", team: "W", cap: "7", event: "Shot" });
+        Game.addEvent(g, { period: 1, time: "6:00", team: "W", cap: "7", event: "Assist" });
+        Game.addEvent(g, { period: 1, time: "5:00", team: "D", cap: "3", event: "Steal" });
+        const result = Game.buildPlayerStats(g);
+        ok(result !== null);
+        strictEqual(result.stats["Shot"].W["7"][1], 1);
+        strictEqual(result.stats["Assist"].W["7"][1], 1);
+        strictEqual(result.stats["Steal"].D["3"][1], 1);
+    });
+});
+
+// ── Test data files ──────────────────────────────────────────
+
+describe("Game data builders with test data", () => {
+    for (const file of ["small-game.json", "medium-game.json", "large-game.json"]) {
+        describe(file, () => {
+            const gameData = loadTestData(file);
+
+            it("buildPeriodScores returns consistent totals", () => {
+                const result = Game.buildPeriodScores(gameData);
+                const hasSO = gameData.log.some(e => e.period === "SO");
+                if (!hasSO) {
+                    const whiteSum = result.white.reduce((a, b) => a + b, 0);
+                    const darkSum = result.dark.reduce((a, b) => a + b, 0);
+                    strictEqual(result.totalWhite, String(whiteSum));
+                    strictEqual(result.totalDark, String(darkSum));
+                }
+                ok(result.periods.length > 0);
+            });
+
+            it("buildPersonalFoulTable returns array", () => {
+                const result = Game.buildPersonalFoulTable(gameData);
+                ok(Array.isArray(result));
+                for (const entry of result) {
+                    ok(entry.team === "W" || entry.team === "D");
+                    ok(typeof entry.cap === "string");
+                    ok(typeof entry.count === "number");
+                    ok(typeof entry.fouledOut === "boolean");
+                    ok(Array.isArray(entry.details));
+                }
+            });
+
+            it("buildTimeoutSummary returns array", () => {
+                const result = Game.buildTimeoutSummary(gameData);
+                ok(Array.isArray(result));
+                for (const entry of result) {
+                    ok(typeof entry.team === "string");
+                    ok(typeof entry.period === "string");
+                    ok(typeof entry.time === "string");
+                    ok(typeof entry.type === "string");
+                }
+            });
+
+            it("buildCardSummary returns array", () => {
+                const result = Game.buildCardSummary(gameData);
+                ok(Array.isArray(result));
+                for (const entry of result) {
+                    ok(typeof entry.team === "string");
+                    ok(typeof entry.cap === "string");
+                    ok(typeof entry.period === "string");
+                    ok(typeof entry.time === "string");
+                    ok(typeof entry.type === "string");
+                }
+            });
+
+            it("buildPlayerStats returns consistent shape", () => {
+                const result = Game.buildPlayerStats(gameData);
+                if (result !== null) {
+                    ok(Array.isArray(result.statTypes));
+                    ok(Array.isArray(result.periods));
+                    ok(Array.isArray(result.periodLabels));
+                    ok(typeof result.stats === "object");
+                }
+            });
+        });
+    }
 });
