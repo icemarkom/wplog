@@ -27,14 +27,32 @@
     --bg-input: #ffffff;
     
     --text-primary: #000000;
-    --text-secondary: #333333;
-    --text-muted: #555555;
+    --text-secondary: #000000;
+    --text-muted: #333333;
     --text-on-light: #000000;
     --text-on-accent: #000000;
     
-    --border: #cccccc;
+    --border: #000000;
     
     --overlay-bg: transparent;
+
+    /* Force all accent and team colors to monochrome for print */
+    --accent-blue: #000000;
+    --accent-indigo: #000000;
+    --accent-indigo-light: #000000;
+    --white-team: #000000;
+    --dark-team: #000000;
+    --danger: #000000;
+    --danger-dark: #000000;
+    --warning-amber: #000000;
+    --success: #000000;
+    --event-goal: #000000;
+    --event-exclusion: #000000;
+    --event-penalty: #000000;
+    --event-timeout: #000000;
+    --event-yellow: #000000;
+    --event-red: #000000;
+    --event-stat: #000000;
   }
 
   /* Reset document for flow */
@@ -72,11 +90,11 @@
 
   /* Page handling */
   .sheet-section {
-    break-inside: avoid;
-    page-break-inside: avoid;
     margin-bottom: 24px;
+    /* Removed break-inside: avoid; because it caused the first page to be blank */
   }
 
+  /* Keep rows together */
   tr {
     break-inside: avoid;
     page-break-inside: avoid;
@@ -84,12 +102,27 @@
 
   .sheet-header {
     margin-bottom: 24px;
+    break-inside: avoid;
+    page-break-inside: avoid;
   }
 
-  /* Optional spacing adjustments for print */
+  /* Specific Table Print Adjustments */
+  .sheet-table {
+    border-collapse: collapse;
+    width: 100%;
+  }
+
   .sheet-table th, .sheet-table td {
     padding: 4px 6px;
     font-size: 11px;
+    border: 1px solid #000000;
+  }
+
+  .sheet-table th {
+    background-color: #e0e0e0 !important;
+    color: #000000 !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
   }
   
   .sheet-title-row {
