@@ -1,0 +1,131 @@
+/**
+ * Copyright 2026 Marko Milivojevic
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+/* ============================
+   Print Layout (Native CSS)
+   ============================ */
+@media print {
+  :root {
+    /* ── Print Light Theme Override ── */
+    --bg-primary: #ffffff;
+    --bg-secondary: #ffffff;
+    --bg-card: #ffffff;
+    --bg-elevated: #ffffff;
+    --bg-input: #ffffff;
+    
+    --text-primary: #000000;
+    --text-secondary: #000000;
+    --text-muted: #333333;
+    --text-on-light: #000000;
+    --text-on-accent: #000000;
+    
+    --border: #000000;
+    
+    --overlay-bg: transparent;
+
+    /* Force all accent and team colors to monochrome for print */
+    --accent-blue: #000000;
+    --accent-indigo: #000000;
+    --accent-indigo-light: #000000;
+    --white-team: #000000;
+    --dark-team: #000000;
+    --danger: #000000;
+    --danger-dark: #000000;
+    --warning-amber: #000000;
+    --success: #000000;
+    --event-goal: #000000;
+    --event-exclusion: #000000;
+    --event-penalty: #000000;
+    --event-timeout: #000000;
+    --event-yellow: #000000;
+    --event-red: #000000;
+    --event-stat: #000000;
+  }
+
+  /* Reset document for flow */
+  html, body {
+    background: #ffffff !important;
+    color: #000000 !important;
+    height: auto !important;
+    min-height: auto;
+    overflow: visible !important;
+  }
+
+  /* Hide app shell */
+  .nav-bar,
+  .app-footer,
+  #toast-container,
+  .overlay {
+    display: none !important;
+  }
+
+  /* Only show the active sheet, absolutely hide other screens */
+  .screen {
+    display: none !important;
+    padding-bottom: 0 !important;
+  }
+  #screen-sheet {
+    display: block !important;
+  }
+  
+  /* Reset container constraints */
+  .screen-content {
+    max-width: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  /* Page handling */
+  .sheet-section {
+    margin-bottom: 24px;
+    /* Removed break-inside: avoid; because it caused the first page to be blank */
+  }
+
+  /* Keep rows together */
+  tr {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  .sheet-header {
+    margin-bottom: 24px;
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  /* Specific Table Print Adjustments */
+  .sheet-table {
+    border-collapse: collapse;
+    width: 100%;
+  }
+
+  .sheet-table th, .sheet-table td {
+    padding: 4px 6px;
+    font-size: 11px;
+    border: 1px solid #000000;
+  }
+
+  .sheet-table th {
+    background-color: #e0e0e0 !important;
+    color: #000000 !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  
+  .sheet-title-row {
+    font-size: 16px;
+  }
+}

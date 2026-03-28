@@ -28,10 +28,13 @@ export const Sheet = {
 
     // ── Main entry point ─────────────────────────────────────────
 
-    render(game) {
+    render(game, isPrint = false) {
+        this.isPrint = isPrint;
         const container = document.getElementById("sheet-content");
-        container.innerHTML = "";
-        renderScreen(game, this, container);
+        if (container) {
+            container.innerHTML = "";
+            renderScreen(game, this, container, isPrint);
+        }
     },
 
     // ── Header ───────────────────────────────────────────────────
@@ -342,8 +345,8 @@ export const Sheet = {
 
         const caps = Object.keys(teamData).sort((a, b) => (parseInt(a) || 0) - (parseInt(b) || 0));
 
-        // Group into chunks of 11 to perfectly fill the space marked in red
-        const chunkSize = 11;
+        // Group into chunks of 11 (or 22 for print) to perfectly fill the space
+        const chunkSize = this.isPrint ? 22 : 11;
         for (let i = 0; i < activeStatCodes.length; i += chunkSize) {
             const chunkCodes = activeStatCodes.slice(i, i + chunkSize);
 

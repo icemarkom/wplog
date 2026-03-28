@@ -80,6 +80,7 @@ describe("Share screen", () => {
         Share._bound = false;
         Share.init(null);
 
+        ok(document.getElementById("print-sheet-btn").disabled, "Print button should be disabled");
         ok(document.getElementById("export-csv-btn").disabled, "CSV button should be disabled");
         ok(document.getElementById("export-json-btn").disabled, "JSON button should be disabled");
     });
@@ -90,6 +91,7 @@ describe("Share screen", () => {
         Share._bound = false;
         Share.init(game);
 
+        ok(!document.getElementById("print-sheet-btn").disabled, "Print button should be enabled");
         ok(!document.getElementById("export-csv-btn").disabled, "CSV button should be enabled");
         ok(!document.getElementById("export-json-btn").disabled, "JSON button should be enabled");
     });
