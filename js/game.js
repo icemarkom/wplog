@@ -565,10 +565,8 @@ export const Game = {
 
         if (activeStatCodesSet.size === 0) return null;
 
-        // Preserve order from rules config
-        const activeStatCodes = statTypes
-            .map(st => st.code)
-            .filter(code => activeStatCodesSet.has(code));
+        // Print ALL available stats all the time for consistent layout and muscle memory
+        const activeStatCodes = statTypes.map(st => st.code);
 
         return {
             statTypes,

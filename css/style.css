@@ -1340,7 +1340,7 @@ select.form-input {
 }
 
 .sheet-stats-table {
-  width: auto;
+  width: 100%;
   table-layout: fixed;
 }
 
@@ -1349,7 +1349,7 @@ select.form-input {
 }
 
 .sheet-stats-table .col-stat {
-  width: 34px;
+  width: auto;
   padding-left: 0 !important;
   padding-right: 0 !important;
 }

@@ -342,18 +342,27 @@ export const Sheet = {
 
         const caps = Object.keys(teamData).sort((a, b) => (parseInt(a) || 0) - (parseInt(b) || 0));
 
-        // Group into chunks of 10 to avoid horizontal scroll on narrow screens
-        const chunkSize = 10;
+        // Group into chunks of 11 to perfectly fill the space marked in red
+        const chunkSize = 11;
         for (let i = 0; i < activeStatCodes.length; i += chunkSize) {
             const chunkCodes = activeStatCodes.slice(i, i + chunkSize);
+
+            // Pad the final chunk so it structurally identical to previous chunks (User requested)
+            while (chunkCodes.length < chunkSize) {
+                chunkCodes.push(null);
+            }
 
             const table = document.createElement("table");
             table.className = "sheet-table sheet-table-compact sheet-stats-table";
 
             let theadHtml = `<tr><th class="col-cap">Cap</th>`;
             for (const code of chunkCodes) {
-                const st = statTypes.find(s => s.code === code);
-                theadHtml += `<th class="sheet-stat-header col-stat"><span>${escapeHTML(st.name)}</span></th>`;
+                if (code === null) {
+                    theadHtml += `<th class="sheet-stat-header col-stat"><span></span></th>`;
+                } else {
+                    const st = statTypes.find(s => s.code === code);
+                    theadHtml += `<th class="sheet-stat-header col-stat"><span>${escapeHTML(st.name)}</span></th>`;
+                }
             }
             theadHtml += `</tr>`;
 
@@ -366,8 +375,12 @@ export const Sheet = {
             for (const cap of caps) {
                 let rowHtml = `<td class="col-cap">${escapeHTML(cap)}</td>`;
                 for (const code of chunkCodes) {
-                    const count = teamData[cap][code] || 0;
-                    rowHtml += `<td class="col-stat">${count || ""}</td>`;
+                    if (code === null) {
+                        rowHtml += `<td class="col-stat"></td>`;
+                    } else {
+                        const count = teamData[cap][code] || 0;
+                        rowHtml += `<td class="col-stat">${count || ""}</td>`;
+                    }
                 }
                 const tr = document.createElement("tr");
                 tr.innerHTML = rowHtml;
@@ -379,8 +392,12 @@ export const Sheet = {
             tfTr.className = "sheet-total-row";
             let tfHtml = `<td class="col-cap">Total</td>`;
             for (const code of chunkCodes) {
-                const count = teamTotals[code] || 0;
-                tfHtml += `<td class="col-stat"><strong>${count || ""}</strong></td>`;
+                if (code === null) {
+                    tfHtml += `<td class="col-stat"></td>`;
+                } else {
+                    const count = teamTotals[code] || 0;
+                    tfHtml += `<td class="col-stat"><strong>${count || ""}</strong></td>`;
+                }
             }
             tfTr.innerHTML = tfHtml;
             tbody.appendChild(tfTr);
