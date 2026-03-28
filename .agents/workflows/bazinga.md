@@ -8,19 +8,20 @@ When the user says **"bazinga"**, they want you to bootstrap your context for a 
 
 // turbo-all
 
-1. **Read `AGENTS.md`** and review previous convesations if needed.
-2. **Read the codebase** — as needed read other documentation and code.
-3. Ad-hoc or other Python scripts are off-limits. If a web server is needed, use serve.go.
-4. You are never to install tools. If you need a tool, stop and ask the user for direction.
+- **Read `AGENTS.md`** and review previous convesations if needed.
+- **Read the codebase** — as needed read other documentation and code.
+- Ad-hoc or other Python scripts are off-limits. If a web server is needed, use serve.go.
+- You are never to install tools. If you need a tool, stop and ask the user for direction.
+- You are not allowed to write any files outside the workspace, including /tmp.
 
 ## Planning First
 All work — including new and iterative work  — **must** follow this pattern:
 
-1. User requests a feature or change.
-2. **Create a branch** for the work before making any changes. Never commit directly to `main`.
-3. You create an **implementation plan** (artifact) describing the proposed approach.
-4. You and the user **iterate and discuss** the plan until the user explicitly approves it.
-5. Only **after approval**, you proceed with implementation on the branch.
+- User requests a feature or change.
+- **Create a branch** for the work before making any changes. Never commit directly to `main`.
+- You create an **implementation plan** (artifact) describing the proposed approach.
+- You and the user **iterate and discuss** the plan until the user explicitly approves it.
+- Only **after approval**, you proceed with implementation on the branch.
 
 > **CAUTION:** Never skip the planning and discussion phase for anything beyond the simplest, most obvious tasks (e.g., a trivial typo fix). Plan first.
 
