@@ -113,7 +113,7 @@ These were explicitly discussed and agreed with the user:
 | **No roster/player entry** | Cap numbers are entered per-event, not pre-game. No player names. |
 | **Team names in UI vs reports** | UI always shows "White"/"Dark". Game sheet shows "White (Team Name)" when custom name set. |
 | **Cap numbers are strings** | Support goalie modifiers: `"1A"`, `"1B"`, `"1C"` (max C). Input via 4-column numpad (digits + A/B/C column). |
-| **Game clock time format** | `M:SS` (single-digit minutes). Digits fill right-to-left (S2→S1→M). Stored as `"4:53"`. NOT `MM:SS`. Max time is capped by period length (e.g., 8:00 for 8-min quarters). Start/end times are `HH:MM` (separate). |
+| **Game clock time format** | `M:SS` or `MM:SS` (dynamic 3 or 4 digits). Digits fill right-to-left. Stored as `"4:53"` or `"10:00"`. NOT rigid `MM:SS` for short periods. Max time capped by config (up to 20:00). Start/end times remain `HH:MM` (separate wall clock). |
 | **`rules` not `competition`** | Field is named `rules` in the data model. Config constant is `RULES`. |
 | **Period End code** | Uses `"---"` (non-alphanumeric) to avoid collision with real event codes. |
 | **OT/SO mutually exclusive** | Only one can be enabled per game. |
@@ -166,9 +166,10 @@ These were explicitly discussed and agreed with the user:
 
 ---
 
-## Current State (as of 2026-03-28)
+## Current State (as of 2026-03-29)
 
 ### What's Done ✅
+- Dynamic 10+ minute game clock support natively scales Numpad limit/UI dash format between 3-digit `M:SS` and 4-digit `MM:SS` modes depending on rule set, expanding config boundaries up to 20-minute periods/halves.
 - Externalized application configuration (`config.json`): decoupled game rules, events, and stats taxonomies from hardcoded application logic using an asynchronous boot loader.
 - Replaced JS-based pagination logic with a clean, fully native CSS `@media print` pipeline.
 - Added intelligent JavaScript print hook via `window.beforeprint`/`window.afterprint` to dynamically broaden the Player Stats matrix from 11 columns on screen to 22 columns on printed page without breaking responsive structure.

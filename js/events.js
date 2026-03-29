@@ -183,17 +183,18 @@ export const Events = {
 
     _handleNumpad(val) {
         if (this._numpadTarget === "time") {
+            const maxLen = this._getMaxMinutes() >= 10 ? 4 : 3;
             if (val === "clear") {
                 this._timeRaw = this._timeRaw.slice(0, -1);
             } else if (["A", "B", "C"].includes(val)) {
                 return; // letters not valid for time
-            } else if (this._timeRaw.length < 3) {
+            } else if (this._timeRaw.length < maxLen) {
                 this._timeRaw += val;
             }
             document.getElementById("time-display").innerHTML = this._formatTimeDisplay(this._timeRaw);
 
-            // Auto-advance to cap after 3 digits (M:SS complete)
-            if (this._timeRaw.length >= 3 && !this._isTeamOnly()) {
+            // Auto-advance to cap after complete input length
+            if (this._timeRaw.length >= maxLen && !this._isTeamOnly()) {
                 this._setNumpadTarget("cap");
             }
         } else {

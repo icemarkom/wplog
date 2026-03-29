@@ -48,12 +48,15 @@ export function getMaxMinutes(period, periodLength, otPeriodLength) {
 export function parseTime(digits, maxMinutes) {
     if (digits.length === 0) return null;
 
-    // Right-justify into 3 positions: M S1 S2
-    const padded = digits.padStart(3, "0");
-    const minutes = parseInt(padded[0]);
-    const seconds = parseInt(padded.slice(1));
+    const isLong = maxMinutes >= 10;
+    const targetLen = isLong ? 4 : 3;
 
-    if (seconds > 59 || minutes > 9) return null;
+    // Right-justify into positions
+    const padded = digits.padStart(targetLen, "0");
+    const minutes = parseInt(padded.slice(0, targetLen - 2));
+    const seconds = parseInt(padded.slice(-2));
+
+    if (seconds > 59) return null;
 
     // Cap at period length
     if (minutes > maxMinutes || (minutes === maxMinutes && seconds > 0)) return null;
@@ -73,12 +76,15 @@ export function parseTime(digits, maxMinutes) {
  * @param {string} digits - Raw digit string (0-3 chars)
  * @returns {string} HTML string with placeholder spans
  */
-export function formatTimeDisplay(digits) {
-    // Right-to-left fill into M:S1S2 — placeholder is -:--
-    const padded = digits.padStart(3, "\0"); // pad with nulls
+export function formatTimeDisplay(digits, maxMinutes = 9) {
+    const isLong = maxMinutes >= 10;
+    const targetLen = isLong ? 4 : 3;
+
+    // Right-to-left fill into target positions
+    const padded = digits.padStart(targetLen, "\0"); // pad with nulls
     const parts = [];
 
-    for (let i = 0; i < 3; i++) {
+    for (let i = 0; i < targetLen; i++) {
         if (padded[i] === "\0") {
             parts.push(`<span class="time-placeholder">-</span>`);
         } else {
@@ -89,6 +95,10 @@ export function formatTimeDisplay(digits) {
     // Colon is dim only when no digits entered
     const colonClass = digits.length > 0 ? "" : ' class="time-placeholder"';
 
-    // Minutes placeholder shows for 0-2 digits, hidden when 3 digits (minutes filled)
-    return `<span class="time-formatted">${parts[0]}<span${colonClass}>:</span>${parts[1]}${parts[2]}</span>`;
+    if (isLong) {
+        return `<span class="time-formatted">${parts[0]}${parts[1]}<span${colonClass}>:</span>${parts[2]}${parts[3]}</span>`;
+    } else {
+        // Minutes placeholder shows for 0-2 digits, hidden when 3 digits (minutes filled)
+        return `<span class="time-formatted">${parts[0]}<span${colonClass}>:</span>${parts[1]}${parts[2]}</span>`;
+    }
 }
