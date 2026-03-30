@@ -583,9 +583,9 @@ export const Setup = {
     },
 
     _showLoadError(message) {
-        const overlay = document.getElementById("foulout-overlay");
-        document.getElementById("foulout-title").textContent = "Load Failed";
-        document.getElementById("foulout-message").textContent = message;
-        overlay.classList.add("visible");
+        const dialog = document.getElementById("alert-dialog");
+        document.getElementById("alert-title").textContent = "Load Failed";
+        document.getElementById("alert-message").textContent = message;
+        dialog.showModal();
     },
 };
