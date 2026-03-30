@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 
+import { initDialog } from './dialog.js';
+
 // wplog — Custom Confirmation Dialog
 // Replaces system confirm() which can be suppressed on mobile browsers.
 //
@@ -30,12 +32,16 @@ export const ConfirmDialog = {
     _resolve: null,
 
     init() {
-        document.getElementById("confirm-cancel").addEventListener("click", () => this._close(false));
+        const dialog = initDialog("confirm-dialog", {
+            dismissId: "confirm-cancel",
+            onClose: () => this._close(false),
+        });
         document.getElementById("confirm-ok").addEventListener("click", () => this._close(true));
 
-        // Backdrop click = cancel
-        document.getElementById("confirm-overlay").addEventListener("click", (e) => {
-            if (e.target === e.currentTarget) this._close(false);
+        // Native Escape = cancel
+        dialog.addEventListener("cancel", (e) => {
+            e.preventDefault();
+            this._close(false);
         });
     },
 
@@ -50,7 +56,7 @@ export const ConfirmDialog = {
         const cancelBtn = document.getElementById("confirm-cancel");
         cancelBtn.textContent = cancelLabel;
 
-        document.getElementById("confirm-overlay").classList.add("visible");
+        document.getElementById("confirm-dialog").showModal();
 
         return new Promise((resolve) => {
             this._resolve = resolve;
@@ -58,7 +64,8 @@ export const ConfirmDialog = {
     },
 
     _close(result) {
-        document.getElementById("confirm-overlay").classList.remove("visible");
+        const dialog = document.getElementById("confirm-dialog");
+        if (dialog.open) dialog.close();
         if (this._resolve) {
             this._resolve(result);
             this._resolve = null;

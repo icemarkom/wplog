@@ -16,6 +16,7 @@
 
 import { buildFilename, buildCSV } from './export.js';
 import { Sheet } from './sheet.js';
+import { initDialog } from './dialog.js';
 
 // wplog — Share / Export
 
@@ -55,14 +56,9 @@ export const Share = {
                 this._closeDownloadDialog();
             });
 
-            // Download cancel
-            document.getElementById("download-cancel").addEventListener("click", () => {
-                this._closeDownloadDialog();
-            });
-
-            // Download backdrop click = cancel
-            document.getElementById("download-overlay").addEventListener("click", (e) => {
-                if (e.target === e.currentTarget) this._closeDownloadDialog();
+            initDialog("download-dialog", {
+                dismissId: "download-cancel",
+                onClose: () => this._closeDownloadDialog(),
             });
 
             // Print UI Event Delegation
@@ -129,12 +125,9 @@ export const Share = {
             }, 50);
         });
 
-        document.getElementById("print-cancel").addEventListener("click", () => {
-            this._closePrintDialog();
-        });
-
-        document.getElementById("print-overlay").addEventListener("click", (e) => {
-            if (e.target === e.currentTarget) this._closePrintDialog();
+        initDialog("print-dialog", {
+            dismissId: "print-cancel",
+            onClose: () => this._closePrintDialog(),
         });
     },
 
@@ -152,11 +145,11 @@ export const Share = {
             }
         });
 
-        document.getElementById("print-overlay").classList.add("visible");
+        document.getElementById("print-dialog").showModal();
     },
 
     _closePrintDialog() {
-        document.getElementById("print-overlay").classList.remove("visible");
+        document.getElementById("print-dialog").close();
     },
 
 
@@ -171,13 +164,13 @@ export const Share = {
         document.getElementById("download-title").textContent = title;
         const input = document.getElementById("download-filename");
         input.value = buildFilename(this.game, ext);
-        document.getElementById("download-overlay").classList.add("visible");
+        document.getElementById("download-dialog").showModal();
         input.focus();
         input.select();
     },
 
     _closeDownloadDialog() {
-        document.getElementById("download-overlay").classList.remove("visible");
+        document.getElementById("download-dialog").close();
         this._pendingFormat = null;
     },
 

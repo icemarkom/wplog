@@ -15,7 +15,7 @@
 - **Personal fouls are config-driven** — use `isPersonalFoul: true` on events. Don't hardcode event codes for foul counting.
 - **MAM is a dual-trigger event** — `isPersonalFoul: true` + `autoFoulOut: 2`. This pattern was explicitly designed for NFHS/NCAA.
 - **Version system** — `APP_VERSION` lives in `config.js`. Default is `"dev"`. Deploy workflow injects release tag. Dev mode auto-detects file timestamp via `HEAD` requests. Don't hardcode versions elsewhere.
-- **About is an overlay** — not a screen/section. It uses the same `.overlay` pattern as `ConfirmDialog` and the foul-out popup.
+- **About is a native dialog** — not a screen/section. Uses native `<dialog>` element with `showModal()`/`close()`. All overlays (About, Confirm, Alert, Content, Download, Print, QR, Event Modal) are native `<dialog>` elements.
 - **Always use `escapeHTML()`** — when building `innerHTML` templates with user-supplied data (team names, cap numbers, Game #, location, etc.), wrap them in `escapeHTML()`. This is mandatory — see `sanitize.js`.
 
 
@@ -34,7 +34,7 @@
 
 ```
 wplog/
-├── index.html          # App shell (overlays, nav, empty screen placeholders + async loader)
+├── index.html          # App shell (native dialogs, nav, empty screen placeholders + async loader)
 ├── screens/
 │   ├── setup.html      # Setup screen content (rules, date, teams, etc.)
 │   ├── live.html       # Live log screen content (score bar, event buttons, log)
@@ -50,7 +50,8 @@ wplog/
 │   ├── loader.js      # App shell loader — fetches screens, imports app module, inits app
 │   ├── year.js        # Copyright year display (standalone script, shared by all pages)
 │   ├── config.js       # APP_VERSION + DEFAULTS + RULES definitions (USAWP, NFHS Varsity, NFHS JV, NCAA)
-│   ├── confirm.js      # Custom confirmation dialog (replaces native confirm())
+│   ├── confirm.js      # Custom confirmation dialog (replaces native confirm(), uses dialog.js)
+│   ├── dialog.js       # Shared dialog utilities (initDialog — backdrop click + dismiss button)
 │   ├── storage.js      # localStorage wrapper (with schema validation)
 │   ├── game.js         # Core data model + game logic (pure — no Storage dependency)
 │   ├── setup.js        # Setup screen (with active-game guards)
@@ -134,7 +135,7 @@ These were explicitly discussed and agreed with the user:
 | **`allowOfficial` flag** | Config-driven flag (valid on `teamOnly` events only). Shows a third "OFFICIAL" team toggle button in the modal. Selecting it stores `team: ""` — no new team code. TOL counting naturally excludes official timeouts. `O` keyboard shortcut. Button order: WHITE → OFFICIAL → DARK (Dark stays rightmost for muscle memory). |
 | **No `#` in Cap display** | Cap numbers shown without `#` prefix everywhere (modal, live log, sheet tables). |
 | **Score on Goals only** | Score column in game log (live + sheet) only shows on Goal events. Other events leave it empty. |
-| **Responsive modal** | Full-screen on mobile (default), fixed centered dialog on desktop (`@media min-width:900px and min-height:700px`). |
+| **Responsive modal** | Compact content-sized on mobile (default), fixed centered 480px dialog on desktop (`@media min-width:900px and min-height:700px`). Numpad button height capped at 72px for landscape aspect ratio. |
 | **Numpad layout** | 4 columns: digits 1-9/0, A/B/C in rightmost column, backspace next to 0. |
 | **Auto-close disabled** | GitHub auto-close via commit messages is disabled in this repo. Close issues manually with `gh issue close`. |
 | **Don't commit without confirmation** | Always wait for user to confirm before committing and pushing. |
@@ -143,9 +144,9 @@ These were explicitly discussed and agreed with the user:
 | **Help docs as delivery** | User-facing documentation (`help.html`) is part of feature delivery. Bazinga establishes the principle; geronimo and kraken enforce it with check steps. |
 | **Branching strategy** | Single-track: all work uses short-lived `fix/<name>` or `feature/<name>` branches off `main`. No parallel development branches. See the `branching` skill (`.agents/skills/branching/SKILL.md`). |
 | **Auto-clear on refocus** | Tapping a filled time/cap field in the modal auto-clears it for re-entry. Only on user clicks, not auto-advance. |
-| **Custom dialogs** | All `confirm()` calls replaced with `ConfirmDialog` (overlay-based). Supports `danger` (red) and `warning` (amber) types. |
+| **Custom dialogs** | All UI overlays use native HTML5 `<dialog>` elements with `showModal()`/`close()`. Shared `initDialog()` utility in `dialog.js` handles backdrop-click-to-close and dismiss-button wiring. No manual z-index, `.visible` class toggling, or position:fixed stacking. |
 | **Version system** | `APP_VERSION = "dev"` in `config.js`. Deploy workflow injects the release tag. In dev, runtime auto-detects latest file modification timestamp via `Last-Modified` HTTP headers → displays `dev-YYYYMMDD-HHMM`. No git or build step needed at runtime. |
-| **About dialog** | Overlay popup (not a screen) accessible via footer "About" link. Shows version, license, author, source link. |
+| **About dialog** | Native `<dialog>` popup (not a screen) accessible via footer "About" link. Shows version, license, author, source link. Privacy and License open as stacked content dialogs on top. |
 | **SW cache = version** | Service worker cache name is `"wplog-" + APP_VERSION`. Each release busts stale caches automatically. |
 | **SW dev vs prod** | Service worker uses network-first strategy in dev mode (no stale cache issues) and cache-first in production (offline reliability). |
 | **QR code sharing** | Single SVG (`img/qr-wplog.svg`) with white modules on transparent background. CSS `filter: invert(1)` for high-contrast overlay. Share screen always accessible. |
@@ -169,7 +170,7 @@ These were explicitly discussed and agreed with the user:
 
 ---
 
-## Current State (as of 2026-03-30)
+## Current State (as of 2026-03-31)
 
 ### What's Done ✅
 - Dynamic 10+ minute game clock support natively scales Numpad limit/UI dash format between 3-digit `M:SS` and 4-digit `MM:SS` modes depending on rule set, expanding config boundaries up to 20-minute periods/halves.
@@ -178,7 +179,11 @@ These were explicitly discussed and agreed with the user:
 - Added intelligent JavaScript print hook via `window.beforeprint`/`window.afterprint` to dynamically broaden the Player Stats matrix from 11 columns on screen to 22 columns on printed page without breaking responsive structure.
 - CSS consolidation: Eliminated obsolete CSS filter hacks, adopted explicit `--accent-blue`/`--text-on-accent` design tokens for native theme readiness, and stripped defunct `.toggle-row` selectors.
 - Unified `.dialog-card` styling architecture eliminating duplicate popup layouts.
-- Universal layout-aware keyboard event router for all overlay dialogs (`Escape` to close, `Enter` to confirm).
+- Native `<dialog>` migration: all 9 overlays converted from custom `<div class="overlay">` to native `<dialog>` elements with `showModal()`/`close()`, eliminating manual z-index stacking, `.visible` class toggling, and position:fixed management.
+- Shared `initDialog()` utility in `dialog.js`: centralizes backdrop-click-to-close and dismiss-button wiring — used by 6 dialogs (About, Content, Alert, Confirm, Download, Print).
+- Privacy and License dialogs consolidated into a single reusable `content-dialog` with cached content fetching — stacks natively on top of About dialog.
+- Compact event modal on mobile: content-sized height (no forced 100dvh), numpad buttons capped at 72px for landscape aspect ratio.
+- Modal auto-focus fix: `tabindex="-1" autofocus` on content wrapper absorbs `showModal()` focus, preventing spurious focus rings on first button.
 - Dynamic SVG Injection: Replaced static `<img>` tags with asynchronous `DOMParser("image/svg+xml")` instantiations to bypass iOS Safari namespace bugs and support native `fill` targeting.
 - Ghost text interactive inline toggles for Player Stats view (`CUMULATIVE / PER PERIOD`), dynamically synced with Print dialog state and natively stripped during CSS printing.
 - Complete setup screen (rules, date, time, location, Game #, team names, OT/SO toggles, timeout overrides)
@@ -222,7 +227,7 @@ These were explicitly discussed and agreed with the user:
 - "Geronimo" workflow for quick commit/push/close
 - Custom confirmation dialog (`ConfirmDialog`) replacing all native `confirm()` calls
 - Version display in footer (`APP_VERSION` with auto dev timestamp detection)
-- About dialog (overlay popup from footer link: version, license, author, source)
+- About dialog (native `<dialog>` popup from footer link: version, license, author, source)
 - Service worker cache name tied to `APP_VERSION` for automatic cache busting
 - Deploy-time version injection via `sed` in `deploy.yml`
 - QR code on Share screen for app URL sharing (single SVG, CSS-controlled colors)
@@ -236,7 +241,7 @@ These were explicitly discussed and agreed with the user:
 - File-per-screen architecture: `index.html` is app shell, content in `screens/*.html` loaded via async loader
 - Shared `css/standalone.css` for standalone pages (`privacy.html`, `help.html`)
 - Unified `.fetched-content` class for privacy + help content styles
-- Shared `.overlay-title`/`.overlay-message` base classes for all overlay dialogs
+- Shared `.overlay-title`/`.overlay-message` base classes for dialog content
 - Consistent `letter-spacing: 0.04em` on all uppercase labels app-wide
 - Consistent `opacity: 0.3` on all disabled elements
 - Version link in About dialog: links to GitHub release page in production, plain text in dev
@@ -280,7 +285,7 @@ These were explicitly discussed and agreed with the user:
 - JSON export: Download Game Data button on Share screen (compact JSON, shared filename dialog with CSV)
 - Load Game: button on Setup screen (visible when no game active), file picker for JSON, 5-layer validation
 - Input validation: `validateGameData()` in `storage.js` — file size limit (128 KB), schema checks, property stripping, allowlisted fields only
-- Error dialog for invalid load files (foul-out overlay pattern with specific error messages)
+- Error dialog for invalid load files (alert-dialog pattern with specific error messages)
 - Screen persistence: active screen restored across page reloads via `sessionStorage`
 - Game Setup section uses stepper controls for period length, OT length, and timeout limits (with ∞ option)
 - Stepper boundary protection: dec disabled at min, inc disabled at max (non-unlimited), defensive min/max guards in click handlers, init ordering ensures disable states aren't overwritten

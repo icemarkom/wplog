@@ -21,6 +21,7 @@ import { Setup } from './setup.js';
 import { Events } from './events.js';
 import { Sheet } from './sheet.js';
 import { Share } from './share.js';
+import { initDialog } from './dialog.js';
 
 
 // wplog — App Initialization + Screen Navigation
@@ -39,123 +40,65 @@ export const App = {
         // Footer "About" link
         document.getElementById("footer-about-link").addEventListener("click", (e) => {
             e.preventDefault();
-            document.getElementById("about-overlay").classList.add("visible");
+            document.getElementById("about-dialog").showModal();
         });
 
-        // About dismiss
-        document.getElementById("about-dismiss").addEventListener("click", () => {
-            document.getElementById("about-overlay").classList.remove("visible");
-        });
-        document.getElementById("about-overlay").addEventListener("click", (e) => {
-            if (e.target === e.currentTarget) {
-                document.getElementById("about-overlay").classList.remove("visible");
-            }
-        });
+        initDialog("about-dialog", { dismissId: "about-dismiss" });
 
-        // Privacy Policy overlay (opened from About dialog)
-        document.getElementById("about-privacy-link").addEventListener("click", async (e) => {
-            e.preventDefault();
-            document.getElementById("about-overlay").classList.remove("visible");
+        // Shared content dialog (privacy, license — stacks on top of About)
+        const contentDialog = document.getElementById("content-dialog");
+        const contentBody = document.getElementById("content-body");
+        const _contentCache = {};
 
-            // Load content from privacy.html (single source of truth)
-            const body = document.getElementById("privacy-body");
-            if (!body.innerHTML) {
+        const _openContentDialog = async (key, fetchFn) => {
+            if (!_contentCache[key]) {
                 try {
-                    const res = await fetch("privacy.html");
-                    const html = await res.text();
-                    const doc = new DOMParser().parseFromString(html, "text/html");
-                    body.innerHTML = doc.querySelector(".container").innerHTML;
-                    // Remove the back link — not needed in overlay
-                    const backLink = body.querySelector(".back-link");
-                    if (backLink) backLink.remove();
-                    // Remove the footer — not needed in overlay
-                    const footer = body.querySelector(".footer");
-                    if (footer) footer.remove();
+                    _contentCache[key] = await fetchFn();
                 } catch {
-                    body.innerHTML = "<p>Could not load privacy policy.</p>";
+                    _contentCache[key] = "<p>Could not load content.</p>";
                 }
             }
+            contentBody.innerHTML = _contentCache[key];
+            contentDialog.showModal();
+            contentDialog.scrollTop = 0;
+        };
 
-            document.getElementById("privacy-overlay").classList.add("visible");
-        });
-
-        document.getElementById("privacy-dismiss").addEventListener("click", () => {
-            document.getElementById("privacy-overlay").classList.remove("visible");
-            document.getElementById("about-overlay").classList.add("visible");
-        });
-        document.getElementById("privacy-overlay").addEventListener("click", (e) => {
-            if (e.target === e.currentTarget) {
-                document.getElementById("privacy-overlay").classList.remove("visible");
-                document.getElementById("about-overlay").classList.add("visible");
-            }
-        });
-
-        // License overlay (opened from About dialog)
-        document.getElementById("about-license-link").addEventListener("click", async (e) => {
+        document.getElementById("about-privacy-link").addEventListener("click", (e) => {
             e.preventDefault();
-            document.getElementById("about-overlay").classList.remove("visible");
-
-            // Load content from LICENSE (plain text)
-            const body = document.getElementById("license-body");
-            if (!body.innerHTML) {
-                try {
-                    const res = await fetch("LICENSE");
-                    const raw = await res.text();
-                    // Split into paragraphs (blank-line separated), join hard-wrapped lines
-                    const paragraphs = raw.trim().split(/\n\s*\n/).map(p =>
-                        p.split("\n").map(l => l.trimStart()).join(" ")
-                    );
-                    body.innerHTML = "<h1>License</h1>" +
-                        paragraphs.map(p => "<p>" + p.replace(/</g, "&lt;").replace(/>/g, "&gt;") + "</p>").join("");
-                } catch {
-                    body.innerHTML = "<p>Could not load license.</p>";
-                }
-            }
-
-            document.getElementById("license-overlay").classList.add("visible");
+            _openContentDialog("privacy", async () => {
+                const res = await fetch("privacy.html");
+                const html = await res.text();
+                const doc = new DOMParser().parseFromString(html, "text/html");
+                const container = doc.querySelector(".container");
+                const backLink = container.querySelector(".back-link");
+                if (backLink) backLink.remove();
+                const footer = container.querySelector(".footer");
+                if (footer) footer.remove();
+                return container.innerHTML;
+            });
         });
 
-        document.getElementById("license-dismiss").addEventListener("click", () => {
-            document.getElementById("license-overlay").classList.remove("visible");
-            document.getElementById("about-overlay").classList.add("visible");
-        });
-        document.getElementById("license-overlay").addEventListener("click", (e) => {
-            if (e.target === e.currentTarget) {
-                document.getElementById("license-overlay").classList.remove("visible");
-                document.getElementById("about-overlay").classList.add("visible");
-            }
+        document.getElementById("about-license-link").addEventListener("click", (e) => {
+            e.preventDefault();
+            _openContentDialog("license", async () => {
+                const res = await fetch("LICENSE");
+                const raw = await res.text();
+                const paragraphs = raw.trim().split(/\n\s*\n/).map(p =>
+                    p.split("\n").map(l => l.trimStart()).join(" ")
+                );
+                return "<h1>License</h1>" +
+                    paragraphs.map(p => "<p>" + p.replace(/</g, "&lt;").replace(/>/g, "&gt;") + "</p>").join("");
+            });
         });
 
-        // QR code full-screen overlay
+        initDialog("content-dialog", { dismissId: "content-dismiss" });
+
+        // QR code full-screen dialog
         document.querySelector(".qr-code").addEventListener("click", () => {
-            document.getElementById("qr-overlay").classList.add("visible");
+            document.getElementById("qr-dialog").showModal();
         });
-        document.getElementById("qr-overlay").addEventListener("click", () => {
-            document.getElementById("qr-overlay").classList.remove("visible");
-        });
-
-        // Universal Keyboard Overlay Router (innermost first)
-        document.addEventListener("keydown", (e) => {
-            if (e.key !== "Escape" && e.key !== "Enter") return;
-
-            const visibleOverlays = Array.from(document.querySelectorAll(".overlay.visible"));
-            if (visibleOverlays.length === 0) return;
-
-            e.preventDefault();
-            const activeOverlay = visibleOverlays.pop(); // Last in DOM structurally stacks on top
-
-            if (e.key === "Escape") {
-                // Priority 1: True cancel buttons
-                // Priority 2: Dismiss standard OK-only info overlays
-                const target = activeOverlay.querySelector(".btn-link, .btn-outline") || activeOverlay.querySelector(".btn-primary");
-                if (target) target.click();
-                else activeOverlay.classList.remove("visible"); // Fallback
-            } else if (e.key === "Enter") {
-                // Priority 1: Primary submission or confirm logic
-                const target = activeOverlay.querySelector(".btn-primary, #confirm-ok");
-                if (target && !target.disabled) target.click();
-                else if (!target) activeOverlay.classList.remove("visible"); // Fallback
-            }
+        document.getElementById("qr-dialog").addEventListener("click", () => {
+            document.getElementById("qr-dialog").close();
         });
 
         // Try to restore saved game

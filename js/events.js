@@ -18,6 +18,7 @@ import { RULES } from './config.js';
 import { ConfirmDialog } from './confirm.js';
 import { Game } from './game.js';
 import { escapeHTML } from './sanitize.js';
+import { initDialog } from './dialog.js';
 import { Storage } from './storage.js';
 import { getMaxMinutes, parseTime, formatTimeDisplay } from './time.js';
 
@@ -83,12 +84,22 @@ export const Events = {
     // ── Modal Controls ──────────────────────────────────────
 
     _bindModalEvents() {
+        // Alert dialog (foul-out / load error popups)
+        initDialog("alert-dialog", { dismissId: "alert-dismiss" });
+
         // Cancel
         document.getElementById("event-modal-cancel").addEventListener("click", () => this._closeModal());
 
-        // Backdrop
-        document.getElementById("event-modal").addEventListener("click", (e) => {
-            if (e.target === e.currentTarget) this._closeModal();
+        // Backdrop — click outside modal content
+        const modal = document.getElementById("event-modal");
+        modal.addEventListener("click", (e) => {
+            if (e.target === modal) this._closeModal();
+        });
+
+        // Native Escape = cancel
+        modal.addEventListener("cancel", (e) => {
+            e.preventDefault();
+            this._closeModal();
         });
 
         // Team toggle
@@ -110,7 +121,7 @@ export const Events = {
 
         // Keyboard input — desktop support
         document.addEventListener("keydown", (e) => {
-            if (!document.getElementById("event-modal").classList.contains("visible")) return;
+            if (!document.getElementById("event-modal").open) return;
 
             const key = e.key;
 
@@ -175,23 +186,6 @@ export const Events = {
                     this._confirmEvent();
                 }
                 return;
-            }
-
-            // Escape = cancel
-            if (key === "Escape") {
-                e.preventDefault();
-                this._closeModal();
-                return;
-            }
-        });
-
-        // Keyboard: Escape/Enter to dismiss foul-out overlay
-        document.addEventListener("keydown", (e) => {
-            if (!document.getElementById("foulout-overlay").classList.contains("visible")) return;
-            if (document.getElementById("event-modal").classList.contains("visible")) return;
-            if (e.key === "Escape" || e.key === "Enter") {
-                e.preventDefault();
-                document.getElementById("foulout-overlay").classList.remove("visible");
             }
         });
     },
@@ -389,11 +383,12 @@ export const Events = {
         this._updateOkButton();
 
         // Show modal
-        document.getElementById("event-modal").classList.add("visible");
+        document.getElementById("event-modal").showModal();
     },
 
     _closeModal() {
-        document.getElementById("event-modal").classList.remove("visible");
+        const modal = document.getElementById("event-modal");
+        if (modal.open) modal.close();
         this._pendingEvent = null;
     },
 
@@ -750,16 +745,11 @@ export const Events = {
     // ── Notifications ───────────────────────────────────────
 
     _showFoulOutPopup(title, message) {
-        const overlay = document.getElementById("foulout-overlay");
-        document.getElementById("foulout-title").textContent = title;
-        document.getElementById("foulout-message").textContent = message;
-        overlay.classList.add("visible");
-
-        document.getElementById("foulout-dismiss").onclick = () => {
-            overlay.classList.remove("visible");
-        };
-
-        setTimeout(() => overlay.classList.remove("visible"), 5000);
+        const dialog = document.getElementById("alert-dialog");
+        document.getElementById("alert-title").textContent = title;
+        document.getElementById("alert-message").textContent = message;
+        dialog.showModal();
+        setTimeout(() => { if (dialog.open) dialog.close(); }, 5000);
     },
 
     _showToast(message, type = "info") {
