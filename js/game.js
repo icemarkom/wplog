@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import { RULES } from './config.js';
+import { RULES, DEFAULTS } from './config.js';
 
 // wplog — Game State Management
 
@@ -38,6 +38,7 @@ export const Game = {
             overtime: rules.overtime,
             shootout: rules.shootout,
             timeoutsAllowed: { full: rules.timeouts.full, to30: rules.timeouts.to30 },
+            homeTeam: rules.homeTeam || DEFAULTS.homeTeam,
             enableLog: true,
             enableStats: false,
             statsTimeMode: "off",
@@ -48,6 +49,33 @@ export const Game = {
             _nextId: 1,
             _nextSeq: 10,
         };
+    },
+
+    /**
+     * Return [home, away] team descriptors for display ordering.
+     * Each descriptor: { code, label, name, defaultName, cssClass }
+     * @param {Object} game
+     * @returns {Array<{code: string, label: string, name: string, defaultName: string, cssClass: string}>}
+     */
+    getTeams(game) {
+        const homeCode = game.homeTeam || DEFAULTS.homeTeam;
+
+        const w = { code: "W", label: "White", name: game.white.name, defaultName: "White", cssClass: "white" };
+        const d = { code: "D", label: "Dark", name: game.dark.name, defaultName: "Dark", cssClass: "dark" };
+
+        return homeCode === "W" ? [w, d] : [d, w];
+    },
+
+    /**
+     * Return [home, away] team descriptors for a rules key (before a game exists).
+     * Uses default names.
+     * @param {string} rulesKey
+     * @returns {Array<{code: string, label: string, name: string, defaultName: string, cssClass: string}>}
+     */
+    getTeamsForRules() {
+        const w = { code: "W", label: "White", name: "White", defaultName: "White", cssClass: "white" };
+        const d = { code: "D", label: "Dark", name: "Dark", defaultName: "Dark", cssClass: "dark" };
+        return [w, d];
     },
 
     // Add an event to the game log
@@ -501,8 +529,8 @@ export const Game = {
             const eventDef = rules.events.find((e) => e.code === entry.event);
             const team = entry.team === "W" ? "White"
                 : entry.team === "D" ? "Dark"
-                : entry.team === "" ? "Official"
-                : "—";
+                    : entry.team === "" ? "Official"
+                        : "—";
             return {
                 team,
                 period: this.getPeriodLabel(entry.period),
@@ -583,7 +611,7 @@ export const Game = {
 
         // Print ALL available stats all the time for consistent layout and muscle memory
         const activeStatCodes = statTypes.map(st => st.code);
-        
+
         // Active periods for headers
         const activePeriods = this.getAllPeriods(game).map(p => this.getPeriodLabel(p));
 

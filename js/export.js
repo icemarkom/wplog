@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 
+import { Game } from './game.js';
+
 // wplog — Export Utilities (pure, no DOM)
 
 /**
@@ -38,12 +40,12 @@ export function buildFilename(game, ext) {
     const date = game.date || new Date().toISOString().slice(0, 10);
     parts.push(date);
 
-    // Teams (only if custom)
-    const w = game.white.name;
-    const d = game.dark.name;
-    if (w !== "White" || d !== "Dark") {
-        parts.push(sanitizeName(w !== "White" ? w : "White"));
-        parts.push(sanitizeName(d !== "Dark" ? d : "Dark"));
+    // Teams (only if custom) — ordered home-first
+    const teams = Game.getTeams(game);
+    const t0 = teams[0], t1 = teams[1];
+    if (t0.name !== t0.defaultName || t1.name !== t1.defaultName) {
+        parts.push(sanitizeName(t0.name !== t0.defaultName ? t0.name : t0.defaultName));
+        parts.push(sanitizeName(t1.name !== t1.defaultName ? t1.name : t1.defaultName));
     }
 
     // Time: startTime if set, else current time

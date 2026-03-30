@@ -33,9 +33,11 @@ export const Events = {
     _numpadTarget: "time",  // "time" or "cap"
     _timeRaw: "",           // raw digits for time
     _capRaw: "",            // raw value for cap
+    _teams: null,           // [home, away] team descriptors
 
     init(game) {
         this.game = game;
+        this._initScoreBar();
         this._buildEventButtons();
         this._buildPeriodTabs();
         this._updateScoreBar();
@@ -46,6 +48,19 @@ export const Events = {
             this._boundModal = true;
         }
     },
+
+    // Apply team ordering to score bar based on homeTeam config
+    _initScoreBar() {
+        this._teams = Game.getTeams(this.game);
+        for (let i = 0; i < 2; i++) {
+            const t = this._teams[i];
+            document.getElementById(`score-label-${i}`).textContent = t.label.toUpperCase();
+            const container = document.getElementById(`score-team-${i}`);
+            container.classList.remove("score-team-white", "score-team-dark");
+            container.classList.add(`score-team-${t.cssClass}`);
+        }
+    },
+
 
     // ── Time Parsing ────────────────────────────────────────
     // Delegated to pure functions in time.js:
@@ -593,13 +608,16 @@ export const Events = {
 
     _updateScoreBar() {
         const score = Game.getDisplayScore(this.game);
-        document.getElementById("score-white").textContent = score.white;
-        document.getElementById("score-dark").textContent = score.dark;
+        for (let i = 0; i < 2; i++) {
+            const t = this._teams[i];
+            const val = t.code === "W" ? score.white : score.dark;
+            document.getElementById(`score-value-${i}`).textContent = val;
+        }
         document.getElementById("current-period").textContent = Game.getPeriodLabel(
             this.game.currentPeriod
         );
-        this._updateTOL("W", "tol-white");
-        this._updateTOL("D", "tol-dark");
+        this._updateTOL(this._teams[0].code, "tol-0");
+        this._updateTOL(this._teams[1].code, "tol-1");
     },
 
     _updateTOL(team, elementId) {
