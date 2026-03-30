@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import { RULES } from './config.js';
+import { RULES, DEFAULTS } from './config.js';
 import { ConfirmDialog } from './confirm.js';
 import { Storage, validateGameData } from './storage.js';
 import { Game } from './game.js';
@@ -22,14 +22,21 @@ import { Game } from './game.js';
 // wplog — Setup Screen Logic
 
 export const Setup = {
+    _homeTeam: DEFAULTS.homeTeam,  // current home team code
+    _teams: null,    // [home, away] team descriptors
+    _bound: false,      // guard against duplicate event binding
+
     init(onStart) {
         this.onStart = onStart;
-        this._bindEvents();
-        this._bindSteppers();
+        if (!this._bound) {
+            this._bindEvents();
+            this._bindSteppers();
+            this._bindLoggingMode();
+            this._bound = true;
+        }
         this._resetForm();
         this._setDefaultDate();
         this._populateRules();
-        this._bindLoggingMode();
     },
 
     _resetForm() {
@@ -37,6 +44,7 @@ export const Setup = {
         document.getElementById("setup-start-btn").disabled = false;
         document.getElementById("setup-start-btn").textContent = "Start Game";
         document.getElementById("setup-rules").disabled = false;
+        document.getElementById("setup-home-flip").disabled = false;
 
         // Reset logging mode segmented control
         const modeControl = document.getElementById("setup-logging-mode");
@@ -71,6 +79,9 @@ export const Setup = {
     updateForActiveGame(game) {
         if (!game) return;
 
+        // Set home team from game data
+        this._homeTeam = game.homeTeam || DEFAULTS.homeTeam;
+
         // Populate form from game data
         document.getElementById("setup-rules").value = game.rules;
         document.getElementById("setup-date").value = game.date || "";
@@ -79,11 +90,21 @@ export const Setup = {
         timeEl.classList.toggle("has-value", !!timeEl.value);
         document.getElementById("setup-location").value = game.location || "";
         document.getElementById("setup-game-id").value = game.gameId || "";
-        document.getElementById("setup-white-name").value = game.white.name === "White" ? "" : game.white.name;
-        document.getElementById("setup-dark-name").value = game.dark.name === "Dark" ? "" : game.dark.name;
+
+        // Populate team inputs in home/away order
+        this._updateTeamLabels();
+        const teams = Game.getTeams(game);
+        for (let i = 0; i < 2; i++) {
+            const t = teams[i];
+            const val = t.code === "W" ? game.white.name : game.dark.name;
+            document.getElementById(`setup-team-${i}-name`).value = val === t.defaultName ? "" : val;
+        }
 
         // Hide Load Game button during active game
         document.getElementById("setup-load-btn").style.display = "none";
+
+        // Disable flip button during active game
+        document.getElementById("setup-home-flip").disabled = true;
 
         // Replace Start Game with End Game button
         const startBtn = document.getElementById("setup-start-btn");
@@ -125,14 +146,19 @@ export const Setup = {
         saveField("setup-time", () => { game.startTime = document.getElementById("setup-time").value; });
         saveField("setup-location", () => { game.location = document.getElementById("setup-location").value; });
         saveField("setup-game-id", () => { game.gameId = document.getElementById("setup-game-id").value.trim(); });
-        saveField("setup-white-name", () => {
-            const v = document.getElementById("setup-white-name").value.trim();
-            game.white.name = v || "White";
-        });
-        saveField("setup-dark-name", () => {
-            const v = document.getElementById("setup-dark-name").value.trim();
-            game.dark.name = v || "Dark";
-        });
+
+        // Live-save team names — map position-based inputs back to game.white/game.dark
+        for (let i = 0; i < 2; i++) {
+            const t = teams[i];
+            saveField(`setup-team-${i}-name`, () => {
+                const v = document.getElementById(`setup-team-${i}-name`).value.trim();
+                if (t.code === "W") {
+                    game.white.name = v || "White";
+                } else {
+                    game.dark.name = v || "Dark";
+                }
+            });
+        }
 
         // Logging mode — set active buttons and disable during active game
         const mode = game.enableLog && game.enableStats ? "full"
@@ -325,6 +351,10 @@ export const Setup = {
         const rulesKey = document.getElementById("setup-rules").value;
         const rules = RULES[rulesKey];
 
+        // Reset home team to rule set default
+        this._homeTeam = rules.homeTeam || DEFAULTS.homeTeam;
+        this._updateTeamLabels();
+
         // Post-regulation segmented control
         const prValue = rules.overtime ? "overtime" : rules.shootout ? "shootout" : "none";
         document.querySelectorAll("#setup-post-regulation .segment-btn").forEach((btn) => {
@@ -341,9 +371,38 @@ export const Setup = {
         this._updateGameSetupHeader();
     },
 
+    // Update team labels and placeholders based on _homeTeam
+    _updateTeamLabels() {
+        const w = { code: "W", label: "White" };
+        const d = { code: "D", label: "Dark" };
+        this._teams = this._homeTeam === "W" ? [w, d] : [d, w];
+
+        for (let i = 0; i < 2; i++) {
+            const t = this._teams[i];
+            const suffix = i === 0 ? "Home" : "Away";
+            document.getElementById(`setup-team-${i}-label`).textContent = `${suffix} Team (${t.label})`;
+            document.getElementById(`setup-team-${i}-name`).placeholder = t.label;
+        }
+    },
+
     _bindEvents() {
         document.getElementById("setup-rules").addEventListener("change", () => {
             this._updateToggles();
+        });
+
+        // Home/Away flip button
+        document.getElementById("setup-home-flip").addEventListener("click", () => {
+            // Capture current input values before flip
+            const val0 = document.getElementById("setup-team-0-name").value;
+            const val1 = document.getElementById("setup-team-1-name").value;
+
+            // Flip home team
+            this._homeTeam = this._homeTeam === "W" ? "D" : "W";
+            this._updateTeamLabels();
+
+            // Swap the input values so team names stay with their cap color
+            document.getElementById("setup-team-0-name").value = val1;
+            document.getElementById("setup-team-1-name").value = val0;
         });
 
         // Post-regulation segmented control
@@ -452,16 +511,25 @@ export const Setup = {
             to30: this._getStepperValue("setup-to-30"),
         };
 
+        // Home team
+        game.homeTeam = this._homeTeam;
+
         // Logging mode from segmented control
         const mode = this._getSelectedMode();
         game.enableLog = mode === "log" || mode === "full";
         game.enableStats = mode === "full" || mode === "stats";
         game.statsTimeMode = this._getStatsTimeMode();
 
-        const whiteName = document.getElementById("setup-white-name").value.trim();
-        const darkName = document.getElementById("setup-dark-name").value.trim();
-        if (whiteName) game.white.name = whiteName;
-        if (darkName) game.dark.name = darkName;
+        // Read team names from position-based inputs, map back to white/dark
+        for (let i = 0; i < 2; i++) {
+            const t = this._teams[i];
+            const v = document.getElementById(`setup-team-${i}-name`).value.trim();
+            if (t.code === "W") {
+                if (v) game.white.name = v;
+            } else {
+                if (v) game.dark.name = v;
+            }
+        }
 
         Storage.save(game);
         this.onStart(game);

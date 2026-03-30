@@ -57,9 +57,17 @@ export const Sheet = {
         const header = document.createElement("div");
         header.className = "sheet-header";
 
-        const whiteName = game.white.name === "White" ? "" : game.white.name;
-        const darkName = game.dark.name === "Dark" ? "" : game.dark.name;
+        const teams = Game.getTeams(game);
         const score = Game.getDisplayScore(game);
+
+        // Build team labels: home first, away second
+        const teamDivs = teams.map(t => {
+            const customName = t.name === t.defaultName ? "" : t.name;
+            return `<div class="sheet-team sheet-team-${t.cssClass}">
+          <span class="sheet-team-label">${escapeHTML(t.label)}</span>
+          <span class="sheet-team-name">${escapeHTML(customName)}</span>
+        </div>`;
+        });
 
         header.innerHTML = `
       <div class="sheet-title-row">
@@ -79,15 +87,9 @@ export const Sheet = {
         </div>
       </div>
       <div class="sheet-teams">
-        <div class="sheet-team sheet-team-white">
-          <span class="sheet-team-label">White</span>
-          <span class="sheet-team-name">${escapeHTML(whiteName)}</span>
-        </div>
-        <div class="sheet-final-score">${escapeHTML(score.white)} — ${escapeHTML(score.dark)}</div>
-        <div class="sheet-team sheet-team-dark">
-          <span class="sheet-team-label">Dark</span>
-          <span class="sheet-team-name">${escapeHTML(darkName)}</span>
-        </div>
+        ${teamDivs[0]}
+        <div class="sheet-final-score">${escapeHTML(String(teams[0].code === "W" ? score.white : score.dark))} — ${escapeHTML(String(teams[1].code === "W" ? score.white : score.dark))}</div>
+        ${teamDivs[1]}
       </div>
     `;
         return header;
@@ -167,11 +169,14 @@ export const Sheet = {
         thead.innerHTML = `<tr><th>Team</th>${headerCells}<th>Total</th></tr>`;
         table.appendChild(thead);
 
+        const teams = Game.getTeams(game);
         const tbody = document.createElement("tbody");
 
-        for (const [label, scores, total] of [["White", data.white, data.totalWhite], ["Dark", data.dark, data.totalDark]]) {
+        for (const t of teams) {
+            const scores = t.code === "W" ? data.white : data.dark;
+            const total = t.code === "W" ? data.totalWhite : data.totalDark;
             const tr = document.createElement("tr");
-            let cells = `<td class="sheet-team-cell">${label}</td>`;
+            let cells = `<td class="sheet-team-cell">${t.label}</td>`;
             for (const count of scores) {
                 cells += `<td>${String(count)}</td>`;
             }
@@ -349,11 +354,14 @@ export const Sheet = {
         const wName = game.white.name === "White" ? "White" : `White (${game.white.name})`;
         const dName = game.dark.name === "Dark" ? "Dark" : `Dark (${game.dark.name})`;
 
-        const wWrapper = this._renderTeamStatsTable(wName, data.stats.W, data.totals.W, data.statsPerPeriod.W, data.totalsPerPeriod.W, data.activeStatCodes, data.statTypes, data.activePeriods, formatStr);
-        section.appendChild(wWrapper);
-
-        const dWrapper = this._renderTeamStatsTable(dName, data.stats.D, data.totals.D, data.statsPerPeriod.D, data.totalsPerPeriod.D, data.activeStatCodes, data.statTypes, data.activePeriods, formatStr);
-        section.appendChild(dWrapper);
+        // Render in home-first order
+        const teams = Game.getTeams(game);
+        for (const t of teams) {
+            const teamCode = t.code;
+            const teamName = teamCode === "W" ? wName : dName;
+            const wrapper = this._renderTeamStatsTable(teamName, data.stats[teamCode], data.totals[teamCode], data.statsPerPeriod[teamCode], data.totalsPerPeriod[teamCode], data.activeStatCodes, data.statTypes, data.activePeriods, formatStr);
+            section.appendChild(wrapper);
+        }
 
         return section;
     },

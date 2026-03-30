@@ -49,7 +49,7 @@ wplog/
 │   ├── sanitize.js    # escapeHTML() utility (ES module)
 │   ├── loader.js      # App shell loader — fetches screens, imports app module, inits app
 │   ├── year.js        # Copyright year display (standalone script, shared by all pages)
-│   ├── config.js       # APP_VERSION + RULES definitions (USAWP, NFHS Varsity, NFHS JV, NCAA)
+│   ├── config.js       # APP_VERSION + DEFAULTS + RULES definitions (USAWP, NFHS Varsity, NFHS JV, NCAA)
 │   ├── confirm.js      # Custom confirmation dialog (replaces native confirm())
 │   ├── storage.js      # localStorage wrapper (with schema validation)
 │   ├── game.js         # Core data model + game logic (pure — no Storage dependency)
@@ -163,10 +163,13 @@ These were explicitly discussed and agreed with the user:
 | **`statsOnly` flag** | Events with `statsOnly: true` skip foul-out checks, allow blank time, and are filtered from Progress of Game on sheet. |
 | **`statsTimeMode`** | Controls time field in modal: `"off"` = hidden, `"optional"` = shown but not required, `"on"` = required. Stored in game data model. |
 | **ES modules** | All JS files use native `import`/`export` (except `year.js` which is a standalone `<script defer>`). `loader.js` is loaded as `<script type="module">` and imports `app.js`, which imports all other modules. The browser resolves the dependency tree automatically — no manual load ordering. Service worker also uses `import` for `APP_VERSION` from `config.js`. |
+| **Home/Away designation** | `homeTeam` is a rule-set property in `config.json` (`_base` defaults to `"W"`, `_academic` overrides to `"D"`). Setup screen shows a ⇄ flip button to override per-game. Flip is locked during active games. All display surfaces (score bar, sheet header, Score by Period, Player Stats, CSV filename) render Home team first, Away second. Event modal button order (W/D) is fixed for muscle memory. |
+| **`DEFAULTS` object** | Centralized fallback defaults in `config.js` for all rule-set properties (`periods`, `periodLength`, `foulOutLimit`, `homeTeam`, `overtime`, `shootout`, `timeouts`, `events`, `statsEvents`). Used by `_getSafeMode()` and the normalization block. Eliminates scattered magic numbers. |
+| **Setup labels** | Team input labels show `"$location Team ($color)"` format — e.g., "Home Team (White)", "Away Team (Dark)". |
 
 ---
 
-## Current State (as of 2026-03-29)
+## Current State (as of 2026-03-30)
 
 ### What's Done ✅
 - Dynamic 10+ minute game clock support natively scales Numpad limit/UI dash format between 3-digit `M:SS` and 4-digit `MM:SS` modes depending on rule set, expanding config boundaries up to 20-minute periods/halves.
@@ -300,6 +303,9 @@ These were explicitly discussed and agreed with the user:
 - Input validation fixes: cap `"0"` rejected, time `"0:60"` rejected (seconds ≥ 60)
 - Dev server: `tools/serve.go` (Go stdlib) with correct MIME types for ES modules
 - Test data: realistic game fixtures in `testdata/` (small/medium/large) for NCAA and NFHS rule sets
+- Home/Away team designation: config-driven `homeTeam` per rule set (USAWP=White, NFHS/NCAA=Dark via `_academic`), flip button override on setup, all display surfaces (score bar, sheet, CSV) render Home first/Away second
+- `DEFAULTS` object in `config.js`: centralized fallback defaults for all rule-set properties, used by safe mode and normalization — zero scattered magic numbers
+- `DEFAULTS` imported as `{ RULES, DEFAULTS }` in game.js, setup.js, storage.js for consistent fallback handling
 
 ### Known Gaps / Future Work 📋
 - No substitution tracking (user hasn't decided)

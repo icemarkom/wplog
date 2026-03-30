@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import { RULES } from './config.js';
+import { RULES, DEFAULTS } from './config.js';
 
 // wplog — localStorage Persistence + Game Data Validation
 
@@ -124,6 +124,11 @@ export function validateGameData(parsed) {
         const validStatsTimeModes = ["off", "optional", "on"];
         if (!_isString(parsed.statsTimeMode) || !validStatsTimeModes.includes(parsed.statsTimeMode)) {
             return _fail("statsTimeMode must be 'off', 'optional', or 'on'.");
+        }
+
+        // homeTeam (optional, defaults to "W")
+        if (parsed.homeTeam != null && parsed.homeTeam !== "W" && parsed.homeTeam !== "D") {
+            return _fail("homeTeam must be 'W' or 'D'.");
         }
 
         // white, dark (required objects with name)
@@ -248,6 +253,7 @@ export function validateGameData(parsed) {
             enableLog: parsed.enableLog,
             enableStats: parsed.enableStats,
             statsTimeMode: parsed.statsTimeMode,
+            homeTeam: parsed.homeTeam || DEFAULTS.homeTeam,
             white: { name: parsed.white.name },
             dark: { name: parsed.dark.name },
             currentPeriod: parsed.currentPeriod,

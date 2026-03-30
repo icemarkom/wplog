@@ -186,7 +186,8 @@ body {
 .segment-btn:disabled,
 .stepper-btn:disabled,
 .btn:disabled,
-.modal-action-btn:disabled {
+.modal-action-btn:disabled,
+.home-flip-btn:disabled {
   opacity: 0.3;
   cursor: not-allowed;
 }
@@ -301,6 +302,31 @@ select.form-input {
 .form-row .form-group {
   flex: 1;
 }
+
+.home-flip-btn {
+  align-self: flex-end;
+  margin-bottom: 16px;
+  width: 44px;
+  height: 44px;
+  flex-shrink: 0;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--bg-input);
+  color: var(--text-secondary);
+  font-size: 18px;
+  cursor: pointer;
+  transition: all var(--transition);
+  touch-action: manipulation;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.home-flip-btn:hover {
+  border-color: var(--border-focus);
+  color: var(--accent-blue);
+}
+
 
 /* ============================
    Segmented Control

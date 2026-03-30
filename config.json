@@ -12,7 +12,11 @@
     { "name": "Sprint Won", "color": "teal", "statsOnly": true }
   ],
   "RULES": {
-    "_base": { "periods": 4, "foulOutLimit": 3 },
+    "_base": {
+      "periods": 4,
+      "foulOutLimit": 3,
+      "homeTeam": "W"
+    },
     "USAWP": {
       "inherits": "_base",
       "name": "USA Water Polo",
@@ -38,6 +42,7 @@
     "USAWP6": { "inherits": "USAWP", "name": "USA Water Polo (6 min)", "periodLength": 6 },
     "_academic": {
       "inherits": "_base",
+      "homeTeam": "D",
       "periodLength": 7,
       "otPeriodLength": 3,
       "overtime": true,
