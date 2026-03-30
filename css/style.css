@@ -1464,41 +1464,17 @@ select.form-input {
 }
 
 .qr-dialog {
-  max-width: none;
-  width: auto;
-  background: transparent;
-  padding: 24px;
-  cursor: pointer;
-  animation: none;
-}
-
-.qr-fullscreen-wrap {
-  width: 90%;
-  aspect-ratio: 1;
-  max-height: 90%;
   background: var(--surface-white);
   padding: 12px;
-  border-radius: var(--radius-lg);
-  box-sizing: border-box;
-}
-
-/* Desktop: match modal dialog sizing */
-@media (min-width: 900px) and (min-height: 700px) {
-  .qr-fullscreen-wrap {
-    width: 480px;
-    height: 480px;
-  }
+  width: min(90vw, 90vh, 480px);
+  aspect-ratio: 1;
+  cursor: pointer;
 }
 
 .qr-fullscreen {
   width: 100%;
-  height: auto;
+  height: 100%;
   display: block;
-}
-
-/* Force QR to always have high contrast over its white wrapper */
-.qr-fullscreen {
-  color: var(--text-on-light);
 }
 
 .qr-fullscreen svg {
