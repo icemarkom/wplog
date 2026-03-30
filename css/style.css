@@ -132,6 +132,10 @@
   padding: 0;
 }
 
+dialog {
+  margin: auto;
+}
+
 html {
   font-size: 16px;
   -webkit-tap-highlight-color: transparent;
@@ -186,7 +190,8 @@ body {
 .segment-btn:disabled,
 .stepper-btn:disabled,
 .btn:disabled,
-.modal-action-btn:disabled {
+.modal-action-btn:disabled,
+.home-flip-btn:disabled {
   opacity: 0.3;
   cursor: not-allowed;
 }
@@ -301,6 +306,31 @@ select.form-input {
 .form-row .form-group {
   flex: 1;
 }
+
+.home-flip-btn {
+  align-self: flex-end;
+  margin-bottom: 16px;
+  width: 44px;
+  height: 44px;
+  flex-shrink: 0;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--bg-input);
+  color: var(--text-secondary);
+  font-size: 18px;
+  cursor: pointer;
+  transition: all var(--transition);
+  touch-action: manipulation;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.home-flip-btn:hover {
+  border-color: var(--border-focus);
+  color: var(--accent-blue);
+}
+
 
 /* ============================
    Segmented Control
@@ -664,7 +694,7 @@ select.form-input {
 .numpad {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  grid-auto-rows: 1fr;
+  grid-auto-rows: minmax(48px, 72px);
   gap: 1dvh;
   flex: 1;
   min-height: 0;
@@ -905,44 +935,38 @@ select.form-input {
 .log-entry.event-border-teal { border-left: 3px solid var(--event-stat); }
 
 /* ============================
-   Foul-Out Overlay
+   Dialog System (native <dialog>)
    ============================ */
-.overlay {
-  position: fixed;
-  inset: 0;
-  background: var(--overlay-bg);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 200;
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity 200ms ease;
-  backdrop-filter: blur(4px);
-}
-
-.overlay.visible {
-  opacity: 1;
-  pointer-events: auto;
-}
-
-.overlay-content {
+.dialog {
+  border: none;
   background: var(--bg-card);
-  border: 1px solid var(--border);
   border-radius: var(--radius-xl);
   padding: 32px 24px;
   text-align: center;
-  max-width: 340px;
-  width: 90%;
+  width: min(90%, 340px);
+  margin: auto;
   box-shadow: var(--shadow-lg);
+  color: var(--text-primary);
+  animation: dialog-in 200ms ease;
+}
+
+.dialog::backdrop {
+  background: var(--overlay-bg);
+  backdrop-filter: blur(4px);
+}
+
+@keyframes dialog-in {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 .foulout-card {
+  border: 1px solid var(--border);
   border-color: var(--danger);
   box-shadow: var(--shadow-lg), 0 0 40px var(--danger-bg);
 }
 
-/* Shared overlay title + message */
+/* Shared dialog title + message */
 .overlay-title {
   font-size: 20px;
   font-weight: 800;
@@ -958,15 +982,12 @@ select.form-input {
   line-height: 1.5;
 }
 
-/* Foul-out overlay */
+/* Foul-out title */
 .foulout-title {
   color: var(--danger);
 }
 
 /* Confirm dialog */
-.confirm-card {
-  max-width: 340px;
-}
 
 .confirm-title {
   font-size: 18px;
@@ -1007,26 +1028,21 @@ select.form-input {
 .confirm-btn-warning:hover {
   box-shadow: var(--shadow-md), 0 0 16px var(--warning-glow-hover);
 }
+
 /* ============================
    Event Modal
    ============================ */
 .event-modal {
-  position: fixed;
-  inset: 0;
-  background: var(--overlay-bg);
-  display: flex;
-  align-items: stretch;
-  justify-content: center;
-  z-index: 150;
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity 200ms ease;
-  backdrop-filter: blur(4px);
-}
-
-.event-modal.visible {
-  opacity: 1;
-  pointer-events: auto;
+  max-width: none;
+  width: 100%;
+  height: fit-content;
+  max-height: 100dvh;
+  margin: auto 0;
+  border-radius: 0;
+  padding: 0;
+  background: transparent;
+  text-align: left;
+  animation: none;
 }
 
 .event-modal-content {
@@ -1035,19 +1051,11 @@ select.form-input {
   border-radius: 0;
   padding: 2dvh 16px 2dvh;
   width: 100%;
-  height: 100dvh;
   overflow-y: auto;
-  transform: translateY(20px);
-  opacity: 0;
-  transition: transform 250ms ease, opacity 250ms ease;
   box-shadow: var(--shadow-lg);
   display: flex;
   flex-direction: column;
-}
-
-.event-modal.visible .event-modal-content {
-  transform: translateY(0);
-  opacity: 1;
+  outline: none;
 }
 
 /* Modal event title */
@@ -1134,7 +1142,7 @@ select.form-input {
   top: 12px;
   left: 50%;
   transform: translateX(-50%);
-  z-index: 300;
+  z-index: 2147483647;
   display: flex;
   flex-direction: column;
   gap: 8px;
@@ -1455,12 +1463,13 @@ select.form-input {
   transform: scale(1.03);
 }
 
-.qr-overlay {
-  display: flex;
-  align-items: center;
-  justify-content: center;
+.qr-dialog {
+  max-width: none;
+  width: auto;
+  background: transparent;
   padding: 24px;
   cursor: pointer;
+  animation: none;
 }
 
 .qr-fullscreen-wrap {
@@ -1850,7 +1859,12 @@ select.form-input {
    ============================ */
 @media (min-width: 900px) and (min-height: 700px) {
   .event-modal {
-    align-items: center;
+    width: min(90%, 480px);
+    height: fit-content;
+    max-height: 85vh;
+    margin: auto;
+    border-radius: var(--radius-xl);
+    animation: dialog-in 200ms ease;
   }
 
   .event-modal-content {

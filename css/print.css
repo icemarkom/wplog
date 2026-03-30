@@ -37,8 +37,6 @@
     --text-on-accent: #000000;
     
     --border: #000000;
-    
-    --overlay-bg: transparent;
 
     /* Force all accent and team colors to monochrome for print */
     --accent-blue: #000000;
@@ -72,7 +70,7 @@
   .nav-bar,
   .app-footer,
   #toast-container,
-  .overlay {
+  dialog {
     display: none !important;
   }
 

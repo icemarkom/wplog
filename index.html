@@ -42,121 +42,101 @@
   <!-- Toast Container -->
   <div id="toast-container"></div>
 
-  <!-- Foul-Out Overlay -->
-  <div id="foulout-overlay" class="overlay">
-    <div class="overlay-content foulout-card">
-      <div id="foulout-title" class="overlay-title foulout-title"></div>
-      <div id="foulout-message" class="overlay-message"></div>
-      <button id="foulout-dismiss" class="btn btn-primary">Dismiss</button>
-    </div>
-  </div>
+  <!-- Alert Dialog (foul-outs, load errors) -->
+  <dialog id="alert-dialog" class="dialog foulout-card">
+    <div id="alert-title" class="overlay-title foulout-title"></div>
+    <div id="alert-message" class="overlay-message"></div>
+    <button id="alert-dismiss" class="btn btn-primary">Dismiss</button>
+  </dialog>
 
   <!-- Confirm Dialog -->
-  <div id="confirm-overlay" class="overlay">
-    <div class="overlay-content confirm-card">
-      <div id="confirm-title" class="overlay-title confirm-title"></div>
-      <div id="confirm-message" class="overlay-message confirm-message"></div>
-      <div class="confirm-actions">
-        <button id="confirm-cancel" class="btn btn-outline confirm-action-btn">Cancel</button>
-        <button id="confirm-ok" class="btn confirm-action-btn">OK</button>
-      </div>
+  <dialog id="confirm-dialog" class="dialog">
+    <div id="confirm-title" class="overlay-title confirm-title"></div>
+    <div id="confirm-message" class="overlay-message confirm-message"></div>
+    <div class="confirm-actions">
+      <button id="confirm-cancel" class="btn btn-outline confirm-action-btn">Cancel</button>
+      <button id="confirm-ok" class="btn confirm-action-btn">OK</button>
     </div>
-  </div>
+  </dialog>
 
   <!-- About Dialog -->
-  <div id="about-overlay" class="overlay">
-    <div class="overlay-content dialog-card">
-      <div class="about-title">wplog</div>
-      <div class="about-subtitle">Water Polo Game Log</div>
-      <div class="about-info">
-        <div class="about-row">
-          <span class="about-label">Version</span>
-          <span class="about-value" id="about-version"></span>
-        </div>
-        <div class="about-row">
-          <span class="about-label">License</span>
-          <span class="about-value"><a href="#" id="about-license-link">Apache 2.0</a></span>
-        </div>
-        <div class="about-row">
-          <span class="about-label">Privacy</span>
-          <span class="about-value"><a href="#" id="about-privacy-link">Policy</a></span>
-        </div>
-        <div class="about-row">
-          <span class="about-label">Source</span>
-          <span class="about-value"><a href="https://github.com/icemarkom/wplog" target="_blank"
-              rel="noopener">GitHub</a></span>
-        </div>
-        <div class="about-row">
-          <span class="about-label">Author</span>
-          <span class="about-value"><a href="https://icemarkom.dev/" target="_blank" rel="noopener">Marko Milivojevic</a></span>
-        </div>
+  <dialog id="about-dialog" class="dialog dialog-card">
+    <div class="about-title">wplog</div>
+    <div class="about-subtitle">Water Polo Game Log</div>
+    <div class="about-info">
+      <div class="about-row">
+        <span class="about-label">Version</span>
+        <span class="about-value" id="about-version"></span>
       </div>
-      <p class="about-description">Log water polo game events poolside and produce official looking game sheets.</p>
-      <button id="about-dismiss" class="btn btn-primary about-dismiss-btn">Close</button>
+      <div class="about-row">
+        <span class="about-label">License</span>
+        <span class="about-value"><a href="#" id="about-license-link">Apache 2.0</a></span>
+      </div>
+      <div class="about-row">
+        <span class="about-label">Privacy</span>
+        <span class="about-value"><a href="#" id="about-privacy-link">Policy</a></span>
+      </div>
+      <div class="about-row">
+        <span class="about-label">Source</span>
+        <span class="about-value"><a href="https://github.com/icemarkom/wplog" target="_blank"
+            rel="noopener">GitHub</a></span>
+      </div>
+      <div class="about-row">
+        <span class="about-label">Author</span>
+        <span class="about-value"><a href="https://icemarkom.dev/" target="_blank" rel="noopener">Marko Milivojevic</a></span>
+      </div>
     </div>
-  </div>
+    <p class="about-description">Log water polo game events poolside and produce official looking game sheets.</p>
+    <button id="about-dismiss" class="btn btn-primary about-dismiss-btn">Close</button>
+  </dialog>
 
-  <!-- Privacy Policy Dialog -->
-  <div id="privacy-overlay" class="overlay">
-    <div class="overlay-content privacy-card">
-      <div id="privacy-body" class="privacy-body fetched-content"></div>
-      <button id="privacy-dismiss" class="btn btn-primary privacy-dismiss-btn">OK</button>
-    </div>
-  </div>
-
-  <!-- License Overlay -->
-  <div id="license-overlay" class="overlay">
-    <div class="overlay-content privacy-card">
-      <div id="license-body" class="license-body fetched-content"></div>
-      <button id="license-dismiss" class="btn btn-primary privacy-dismiss-btn">OK</button>
-    </div>
-  </div>
+  <!-- Content Dialog (shared: privacy, license) -->
+  <dialog id="content-dialog" class="dialog privacy-card">
+    <div id="content-body" class="fetched-content"></div>
+    <button id="content-dismiss" class="btn btn-primary privacy-dismiss-btn">OK</button>
+  </dialog>
 
   <!-- Download Dialog (shared by CSV and JSON exports) -->
-  <div id="download-overlay" class="overlay">
-    <div class="overlay-content dialog-card">
-      <div id="download-title" class="overlay-title dialog-title">Download</div>
-      <label for="download-filename" class="sr-only">Filename</label>
-      <input type="text" id="download-filename" class="download-filename" spellcheck="false" autocomplete="off">
-      <div class="dialog-actions">
-        <button id="download-confirm" class="btn btn-primary btn-large">Download</button>
-        <button id="download-cancel" class="btn-link">Cancel</button>
-      </div>
+  <dialog id="download-dialog" class="dialog dialog-card">
+    <div id="download-title" class="overlay-title dialog-title">Download</div>
+    <label for="download-filename" class="sr-only">Filename</label>
+    <input type="text" id="download-filename" class="download-filename" spellcheck="false" autocomplete="off">
+    <div class="dialog-actions">
+      <button id="download-confirm" class="btn btn-primary btn-large">Download</button>
+      <button id="download-cancel" class="btn-link">Cancel</button>
     </div>
-  </div>
+  </dialog>
 
   <!-- Print Sheet Dialog -->
-  <div id="print-overlay" class="overlay">
-    <div class="overlay-content dialog-card">
-      <div class="overlay-title dialog-title">Print Game Sheet</div>
-      <div class="form-group print-form-group">
-        <label id="label-print-sections">Sections to Print</label>
-        <div id="print-sections-mode" class="segment-control" aria-labelledby="label-print-sections">
-          <button type="button" class="segment-btn" data-value="log">Game Log</button>
-          <button type="button" class="segment-btn active" data-value="both">Both</button>
-          <button type="button" class="segment-btn" data-value="stats">Stats</button>
-        </div>
-      </div>
-      <div class="form-group print-form-group" id="print-stats-format-group">
-        <label id="label-print-format">Stats Format</label>
-        <div id="print-stats-format" class="segment-control" aria-labelledby="label-print-format">
-          <button type="button" class="segment-btn active" data-value="cumulative">Cumulative</button>
-          <button type="button" class="segment-btn" data-value="per-period">Per Period</button>
-        </div>
-      </div>
-      <div class="dialog-actions">
-        <button id="print-confirm" class="btn btn-primary btn-large">Print</button>
-        <button id="print-cancel" class="btn-link">Cancel</button>
+  <dialog id="print-dialog" class="dialog dialog-card">
+    <div class="overlay-title dialog-title">Print Game Sheet</div>
+    <div class="form-group print-form-group">
+      <label id="label-print-sections">Sections to Print</label>
+      <div id="print-sections-mode" class="segment-control" aria-labelledby="label-print-sections">
+        <button type="button" class="segment-btn" data-value="log">Game Log</button>
+        <button type="button" class="segment-btn active" data-value="both">Both</button>
+        <button type="button" class="segment-btn" data-value="stats">Stats</button>
       </div>
     </div>
-  </div>
+    <div class="form-group print-form-group" id="print-stats-format-group">
+      <label id="label-print-format">Stats Format</label>
+      <div id="print-stats-format" class="segment-control" aria-labelledby="label-print-format">
+        <button type="button" class="segment-btn active" data-value="cumulative">Cumulative</button>
+        <button type="button" class="segment-btn" data-value="per-period">Per Period</button>
+      </div>
+    </div>
+    <div class="dialog-actions">
+      <button id="print-confirm" class="btn btn-primary btn-large">Print</button>
+      <button id="print-cancel" class="btn-link">Cancel</button>
+    </div>
+  </dialog>
 
-  <!-- QR Code Full-Screen Overlay -->
-  <div id="qr-overlay" class="overlay qr-overlay">
+  <!-- QR Code Full-Screen Dialog -->
+  <dialog id="qr-dialog" class="dialog qr-dialog">
     <div class="qr-fullscreen-wrap">
       <div id="qr-svg-fullscreen" class="qr-fullscreen"></div>
     </div>
-  </div>
+  </dialog>
 
   <!-- Navigation -->
   <nav class="nav-bar">
@@ -178,9 +158,9 @@
   </section>
 
   <!-- ==================== EVENT MODAL ==================== -->
-  <div id="event-modal" class="event-modal">
-    <div class="event-modal-content" id="modal-content"></div>
-  </div>
+  <dialog id="event-modal" class="dialog event-modal">
+    <div class="event-modal-content" id="modal-content" tabindex="-1" autofocus></div>
+  </dialog>
 
   <!-- ==================== GAME SHEET SCREEN ==================== -->
   <section id="screen-sheet" class="screen">

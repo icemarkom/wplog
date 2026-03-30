@@ -16,7 +16,27 @@
 
 // wplog — Application Version
 // Default is "dev"; deploy workflow injects the release tag.
-export const APP_VERSION = "2.6.0";
+export const APP_VERSION = "2.7.0";
+
+// App-level defaults — fallbacks for missing rule-set properties
+export const DEFAULTS = {
+    periods: 4,
+    periodLength: 8,
+    foulOutLimit: 3,
+    homeTeam: "W",
+    overtime: false,
+    shootout: true,
+    timeouts: { full: 2, to30: 0 },
+    events: [
+        { name: "Goal", code: "G", color: "green", align: "left" },
+        { name: "Exclusion", code: "E", color: "amber", align: "right", isPersonalFoul: true },
+        { name: "Penalty", code: "P", color: "amber", align: "right", isPersonalFoul: true },
+        { name: "Timeout", code: "TO", color: "blue", align: "center", teamOnly: true }
+    ],
+    statsEvents: [
+        { name: "Shot", color: "teal", statsOnly: true }
+    ],
+};
 
 // wplog — Rules Configuration
 //
@@ -80,7 +100,7 @@ function _resolveRules(rulesObj, statsArr) {
         resolved.add(key);
     }
     for (const key of Object.keys(rulesObj)) resolve(key);
-    
+
     // 3. Apply removeEvents / addEvents directives
     for (const [key, rule] of Object.entries(rulesObj)) {
         rule.events = rule.events || [];
@@ -99,12 +119,12 @@ function _resolveRules(rulesObj, statsArr) {
             delete rule.addEvents;
         }
     }
-    
+
     // 4. Append STATS_EVENTS to every rule set
     for (const rule of Object.values(rulesObj)) {
         rule.events = [...(rule.events || []), ...statsArr];
     }
-    
+
     // 5. Auto-derive code from name for any event missing one
     for (const rule of Object.values(rulesObj)) {
         for (const evt of rule.events) {
@@ -115,18 +135,18 @@ function _resolveRules(rulesObj, statsArr) {
 
 function _getSafeMode() {
     return {
-        STATS_EVENTS: [],
+        STATS_EVENTS: [...DEFAULTS.statsEvents],
         RULES: {
             "SAFE": {
                 name: "Safe Mode (Config Error)",
-                periods: 4,
-                periodLength: 8,
-                foulOutLimit: 3,
-                events: [
-                    { name: "Goal", code: "G", color: "green", align: "left" },
-                    { name: "Exclusion", code: "E", color: "amber", align: "right", isPersonalFoul: true },
-                    { name: "Timeout", code: "TO", color: "blue", align: "center", teamOnly: true }
-                ]
+                periods: DEFAULTS.periods,
+                periodLength: DEFAULTS.periodLength,
+                foulOutLimit: DEFAULTS.foulOutLimit,
+                homeTeam: DEFAULTS.homeTeam,
+                overtime: DEFAULTS.overtime,
+                shootout: DEFAULTS.shootout,
+                timeouts: { ...DEFAULTS.timeouts },
+                events: [...DEFAULTS.events]
             }
         }
     };
@@ -153,9 +173,10 @@ export async function loadConfig() {
         if (typeof v !== 'object') continue;
         if (!v.events && !v.inherits) v.events = [];
         if (v.events && !Array.isArray(v.events)) v.events = [];
-        if (!v.periodLength && !v.inherits) v.periodLength = 8;
-        if (!v.periods && !v.inherits) v.periods = 4;
-        if (!v.foulOutLimit && !v.inherits) v.foulOutLimit = 3;
+        if (!v.periodLength && !v.inherits) v.periodLength = DEFAULTS.periodLength;
+        if (!v.periods && !v.inherits) v.periods = DEFAULTS.periods;
+        if (!v.foulOutLimit && !v.inherits) v.foulOutLimit = DEFAULTS.foulOutLimit;
+        if (!v.homeTeam && !v.inherits) v.homeTeam = DEFAULTS.homeTeam;
     }
 
     try {

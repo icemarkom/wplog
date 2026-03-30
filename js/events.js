@@ -18,6 +18,7 @@ import { RULES } from './config.js';
 import { ConfirmDialog } from './confirm.js';
 import { Game } from './game.js';
 import { escapeHTML } from './sanitize.js';
+import { initDialog } from './dialog.js';
 import { Storage } from './storage.js';
 import { getMaxMinutes, parseTime, formatTimeDisplay } from './time.js';
 
@@ -33,9 +34,11 @@ export const Events = {
     _numpadTarget: "time",  // "time" or "cap"
     _timeRaw: "",           // raw digits for time
     _capRaw: "",            // raw value for cap
+    _teams: null,           // [home, away] team descriptors
 
     init(game) {
         this.game = game;
+        this._initScoreBar();
         this._buildEventButtons();
         this._buildPeriodTabs();
         this._updateScoreBar();
@@ -46,6 +49,19 @@ export const Events = {
             this._boundModal = true;
         }
     },
+
+    // Apply team ordering to score bar based on homeTeam config
+    _initScoreBar() {
+        this._teams = Game.getTeams(this.game);
+        for (let i = 0; i < 2; i++) {
+            const t = this._teams[i];
+            document.getElementById(`score-label-${i}`).textContent = t.label.toUpperCase();
+            const container = document.getElementById(`score-team-${i}`);
+            container.classList.remove("score-team-white", "score-team-dark");
+            container.classList.add(`score-team-${t.cssClass}`);
+        }
+    },
+
 
     // ── Time Parsing ────────────────────────────────────────
     // Delegated to pure functions in time.js:
@@ -68,12 +84,22 @@ export const Events = {
     // ── Modal Controls ──────────────────────────────────────
 
     _bindModalEvents() {
+        // Alert dialog (foul-out / load error popups)
+        initDialog("alert-dialog", { dismissId: "alert-dismiss" });
+
         // Cancel
         document.getElementById("event-modal-cancel").addEventListener("click", () => this._closeModal());
 
-        // Backdrop
-        document.getElementById("event-modal").addEventListener("click", (e) => {
-            if (e.target === e.currentTarget) this._closeModal();
+        // Backdrop — click outside modal content
+        const modal = document.getElementById("event-modal");
+        modal.addEventListener("click", (e) => {
+            if (e.target === modal) this._closeModal();
+        });
+
+        // Native Escape = cancel
+        modal.addEventListener("cancel", (e) => {
+            e.preventDefault();
+            this._closeModal();
         });
 
         // Team toggle
@@ -95,7 +121,7 @@ export const Events = {
 
         // Keyboard input — desktop support
         document.addEventListener("keydown", (e) => {
-            if (!document.getElementById("event-modal").classList.contains("visible")) return;
+            if (!document.getElementById("event-modal").open) return;
 
             const key = e.key;
 
@@ -161,39 +187,23 @@ export const Events = {
                 }
                 return;
             }
-
-            // Escape = cancel
-            if (key === "Escape") {
-                e.preventDefault();
-                this._closeModal();
-                return;
-            }
-        });
-
-        // Keyboard: Escape/Enter to dismiss foul-out overlay
-        document.addEventListener("keydown", (e) => {
-            if (!document.getElementById("foulout-overlay").classList.contains("visible")) return;
-            if (document.getElementById("event-modal").classList.contains("visible")) return;
-            if (e.key === "Escape" || e.key === "Enter") {
-                e.preventDefault();
-                document.getElementById("foulout-overlay").classList.remove("visible");
-            }
         });
     },
 
     _handleNumpad(val) {
         if (this._numpadTarget === "time") {
+            const maxLen = this._getMaxMinutes() >= 10 ? 4 : 3;
             if (val === "clear") {
                 this._timeRaw = this._timeRaw.slice(0, -1);
             } else if (["A", "B", "C"].includes(val)) {
                 return; // letters not valid for time
-            } else if (this._timeRaw.length < 3) {
+            } else if (this._timeRaw.length < maxLen) {
                 this._timeRaw += val;
             }
             document.getElementById("time-display").innerHTML = this._formatTimeDisplay(this._timeRaw);
 
-            // Auto-advance to cap after 3 digits (M:SS complete)
-            if (this._timeRaw.length >= 3 && !this._isTeamOnly()) {
+            // Auto-advance to cap after complete input length
+            if (this._timeRaw.length >= maxLen && !this._isTeamOnly()) {
                 this._setNumpadTarget("cap");
             }
         } else {
@@ -373,11 +383,12 @@ export const Events = {
         this._updateOkButton();
 
         // Show modal
-        document.getElementById("event-modal").classList.add("visible");
+        document.getElementById("event-modal").showModal();
     },
 
     _closeModal() {
-        document.getElementById("event-modal").classList.remove("visible");
+        const modal = document.getElementById("event-modal");
+        if (modal.open) modal.close();
         this._pendingEvent = null;
     },
 
@@ -592,13 +603,16 @@ export const Events = {
 
     _updateScoreBar() {
         const score = Game.getDisplayScore(this.game);
-        document.getElementById("score-white").textContent = score.white;
-        document.getElementById("score-dark").textContent = score.dark;
+        for (let i = 0; i < 2; i++) {
+            const t = this._teams[i];
+            const val = t.code === "W" ? score.white : score.dark;
+            document.getElementById(`score-value-${i}`).textContent = val;
+        }
         document.getElementById("current-period").textContent = Game.getPeriodLabel(
             this.game.currentPeriod
         );
-        this._updateTOL("W", "tol-white");
-        this._updateTOL("D", "tol-dark");
+        this._updateTOL(this._teams[0].code, "tol-0");
+        this._updateTOL(this._teams[1].code, "tol-1");
     },
 
     _updateTOL(team, elementId) {
@@ -731,16 +745,11 @@ export const Events = {
     // ── Notifications ───────────────────────────────────────
 
     _showFoulOutPopup(title, message) {
-        const overlay = document.getElementById("foulout-overlay");
-        document.getElementById("foulout-title").textContent = title;
-        document.getElementById("foulout-message").textContent = message;
-        overlay.classList.add("visible");
-
-        document.getElementById("foulout-dismiss").onclick = () => {
-            overlay.classList.remove("visible");
-        };
-
-        setTimeout(() => overlay.classList.remove("visible"), 5000);
+        const dialog = document.getElementById("alert-dialog");
+        document.getElementById("alert-title").textContent = title;
+        document.getElementById("alert-message").textContent = message;
+        dialog.showModal();
+        setTimeout(() => { if (dialog.open) dialog.close(); }, 5000);
     },
 
     _showToast(message, type = "info") {
