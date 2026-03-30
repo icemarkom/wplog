@@ -93,13 +93,13 @@ export const App = {
 
         initDialog("content-dialog", { dismissId: "content-dismiss" });
 
-        // QR code full-screen dialog
+        // QR code full-screen dialog — click anywhere to dismiss
+        const qrDialog = document.getElementById("qr-dialog");
         document.querySelector(".qr-code").addEventListener("click", () => {
-            document.getElementById("qr-dialog").showModal();
+            qrDialog.showModal();
         });
-        document.getElementById("qr-dialog").addEventListener("click", () => {
-            document.getElementById("qr-dialog").close();
-        });
+        initDialog("qr-dialog");
+        qrDialog.addEventListener("click", () => qrDialog.close());
 
         // Try to restore saved game
         const saved = Storage.load();
