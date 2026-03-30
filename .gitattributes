@@ -1,0 +1,10 @@
+# Exclude internal files from release archives (git archive / GitHub source downloads)
+.agents/        export-ignore
+.github/        export-ignore
+.vscode/        export-ignore
+.gitignore      export-ignore
+.gitattributes  export-ignore
+AGENTS.md       export-ignore
+CNAME           export-ignore
+testdata/       export-ignore
+tools/          export-ignore
