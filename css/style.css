@@ -108,6 +108,81 @@
   --transition: 150ms ease;
 }
 
+/* ── Light Theme Override ── */
+:root[data-theme="light"] {
+  /* Backgrounds */
+  --bg-primary: #f8fafc;
+  --bg-secondary: #ffffff;
+  --bg-card: #ffffff;
+  --bg-elevated: #f1f5f9;
+  --bg-input: #ffffff;
+
+  /* Text */
+  --text-primary: #0f172a;
+  --text-secondary: #475569;
+  --text-muted: #64748b;
+  --text-on-light: #111;
+
+  /* Accent */
+  --accent-blue: #2563eb;
+  --accent-blue-glow: rgba(37, 99, 235, 0.2);
+  --accent-indigo: #4f46e5;
+  --accent-indigo-light: #6366f1;
+
+  /* Teams */
+  --white-team: #0f172a;
+  --white-team-bg: #ffffff;
+  --white-team-glow: rgba(15, 23, 42, 0.08);
+  --dark-team: #ea580c;
+  --dark-team-bg: rgba(234, 88, 12, 0.08);
+  --dark-team-glow: rgba(234, 88, 12, 0.15);
+  --official-team-bg: rgba(100, 116, 139, 0.08);
+  --official-team-glow: rgba(100, 116, 139, 0.15);
+
+  /* Event colors */
+  --event-goal: #16a34a;
+  --event-goal-bg: rgba(22, 163, 74, 0.1);
+  --event-exclusion: #ea580c;
+  --event-exclusion-bg: rgba(234, 88, 12, 0.1);
+  --event-penalty: #ea580c;
+  --event-penalty-bg: rgba(234, 88, 12, 0.1);
+  --event-timeout: #2563eb;
+  --event-timeout-bg: rgba(37, 99, 235, 0.1);
+  --event-yellow: #ca8a04;
+  --event-yellow-bg: rgba(202, 138, 4, 0.1);
+  --event-red: #dc2626;
+  --event-red-bg: rgba(220, 38, 38, 0.1);
+  --event-stat: #0d9488;
+  --event-stat-bg: rgba(13, 148, 136, 0.1);
+
+  /* Status */
+  --danger: #dc2626;
+  --danger-bg: rgba(220, 38, 38, 0.1);
+  --danger-dark: #b91c1c;
+  --danger-darker: #991b1b;
+  --danger-glow: rgba(220, 38, 38, 0.3);
+  --danger-glow-hover: rgba(220, 38, 38, 0.5);
+  --warning-amber: #ea580c;
+  --warning-amber-dark: #c2410c;
+  --warning-glow: rgba(234, 88, 12, 0.3);
+  --warning-glow-hover: rgba(234, 88, 12, 0.5);
+  --success: #16a34a;
+
+  /* Borders & surfaces */
+  --border: rgba(15, 23, 42, 0.12);
+  --border-focus: rgba(37, 99, 235, 0.5);
+  --overlay-bg: rgba(15, 23, 42, 0.4);
+  --highlight: rgba(15, 23, 42, 0.05);
+  --highlight-hover: rgba(15, 23, 42, 0.08);
+  --surface-white: #ffffff;
+
+  /* Shadows */
+  --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.05);
+  --shadow-md: 0 4px 6px -1px rgba(15, 23, 42, 0.1), 0 2px 4px -1px rgba(15, 23, 42, 0.06);
+  --shadow-lg: 0 10px 15px -3px rgba(15, 23, 42, 0.1), 0 4px 6px -2px rgba(15, 23, 42, 0.05);
+  --shadow-glow: 0 0 12px var(--accent-blue-glow);
+}
+
 /* ============================
    Accessibility Utilities
    ============================ */
@@ -522,20 +597,13 @@ select.form-input {
   margin-top: 8px;
 }
 
-.hard-reset-link {
-  display: block;
+.inline-menu {
   text-align: center;
+  margin-top: 24px;
+  margin-bottom: 4px;
+  text-transform: uppercase;
+  letter-spacing: var(--letter-spacing-caps);
   font-size: 12px;
-  color: var(--text-secondary);
-  text-decoration: none;
-  margin-top: 12px;
-  padding: 4px;
-  cursor: pointer;
-  transition: color 0.15s;
-}
-
-.hard-reset-link:hover {
-  color: var(--danger);
 }
 
 /* ============================
@@ -1293,24 +1361,24 @@ select.form-input {
   text-align: left;
 }
 
-.stats-toggle-link {
+.inline-toggle-link {
   color: var(--text-muted);
   cursor: pointer;
   transition: color var(--transition);
 }
 
-.stats-toggle-link:hover {
+.inline-toggle-link:hover {
   color: var(--accent-blue);
   opacity: 0.8;
 }
 
-.stats-toggle-link.active {
+.inline-toggle-link.active {
   color: var(--accent-blue);
   font-weight: 700;
   pointer-events: none;
 }
 
-.stats-toggle-sep {
+.inline-toggle-sep {
   color: var(--text-muted);
   font-weight: 300;
 }

@@ -34,14 +34,21 @@ export const App = {
         // Initialize confirm dialog
         ConfirmDialog.init();
 
+        // Load Theme
+        const applyTheme = () => {
+            const theme = localStorage.getItem("wplog_theme") || "dark";
+            if (theme === "system") {
+                const isLight = window.matchMedia("(prefers-color-scheme: light)").matches;
+                document.documentElement.setAttribute("data-theme", isLight ? "light" : "dark");
+            } else {
+                document.documentElement.setAttribute("data-theme", theme);
+            }
+        };
+        applyTheme();
+        window.matchMedia("(prefers-color-scheme: light)").addEventListener("change", applyTheme);
+
         // Display version
         this._initVersion();
-
-        // Footer "About" link
-        document.getElementById("footer-about-link").addEventListener("click", (e) => {
-            e.preventDefault();
-            document.getElementById("about-dialog").showModal();
-        });
 
         initDialog("about-dialog", { dismissId: "about-dismiss" });
 
@@ -128,6 +135,24 @@ export const App = {
                 Setup.updateForActiveGame(this.game);
             }
         });
+        // About Dialog (Setup Screen)
+        const setupAbout = document.getElementById("setup-about-link");
+        if (setupAbout) {
+            setupAbout.addEventListener("click", (e) => {
+                e.preventDefault();
+                document.getElementById("about-dialog").showModal();
+            });
+        }
+
+        // About Dialog (Help Screen)
+        const helpAbout = document.getElementById("help-about-link");
+        if (helpAbout) {
+            helpAbout.addEventListener("click", (e) => {
+                e.preventDefault();
+                document.getElementById("about-dialog").showModal();
+            });
+        }
+
 
         // Hard Reset — uses native confirm() so it works even when custom code is broken
         document.getElementById("setup-hard-reset").addEventListener("click", async (e) => {
@@ -166,24 +191,8 @@ export const App = {
             Share.init(this.game);
         });
 
-        document.getElementById("nav-help").addEventListener("click", async () => {
+        document.getElementById("nav-help").addEventListener("click", () => {
             this.showScreen("help");
-
-            // Load content from help.html (single source of truth)
-            const el = document.getElementById("help-content");
-            if (!el.innerHTML) {
-                try {
-                    const res = await fetch("help.html");
-                    const html = await res.text();
-                    const doc = new DOMParser().parseFromString(html, "text/html");
-                    el.innerHTML = doc.querySelector(".container").innerHTML;
-                    // Remove the footer — not needed in-app
-                    const footer = el.querySelector(".footer");
-                    if (footer) footer.remove();
-                } catch {
-                    el.innerHTML = "<p>Could not load help content.</p>";
-                }
-            }
         });
 
         // Intercept native print to adjust layout dynamically
@@ -293,6 +302,7 @@ export const App = {
         document.getElementById("nav-sheet").disabled = !hasGame;
     },
 
+
     // Show a screen and initialize its module (used for restore on reload)
     _showScreenWithInit(name) {
         switch (name) {
@@ -319,22 +329,6 @@ export const App = {
                 break;
             case "help":
                 this.showScreen("help");
-                // Load help content (same logic as nav-help click)
-                (async () => {
-                    const el = document.getElementById("help-content");
-                    if (!el.innerHTML) {
-                        try {
-                            const res = await fetch("help.html");
-                            const html = await res.text();
-                            const doc = new DOMParser().parseFromString(html, "text/html");
-                            el.innerHTML = doc.querySelector(".container").innerHTML;
-                            const footer = el.querySelector(".footer");
-                            if (footer) footer.remove();
-                        } catch {
-                            el.innerHTML = "<p>Could not load help content.</p>";
-                        }
-                    }
-                })();
                 break;
             case "live":
             default:

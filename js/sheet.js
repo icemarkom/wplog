@@ -36,11 +36,10 @@ export const Sheet = {
             container.innerHTML = "";
             renderScreen(game, this, container, isPrint);
             
-            // Re-bind inline toggle if on screen
             if (!this.isPrint) {
                 const toggle = container.querySelector("#sheet-stats-format-toggle");
                 if (toggle) {
-                    toggle.querySelectorAll(".stats-toggle-link").forEach(btn => {
+                    toggle.querySelectorAll(".inline-toggle-link").forEach(btn => {
                         btn.addEventListener("click", (e) => {
                             this.statsFormat = e.target.dataset.format;
                             this.render(game, false);
@@ -335,9 +334,9 @@ export const Sheet = {
         title.className = "sheet-section-title";
         title.innerHTML = `
           <span class="stats-inline-toggle" id="sheet-stats-format-toggle">
-            <span class="stats-toggle-link ${isCumulative ? 'active' : ''}" data-format="cumulative">CUMULATIVE</span>
-            <span class="stats-toggle-sep"> / </span>
-            <span class="stats-toggle-link ${!isCumulative ? 'active' : ''}" data-format="per-period">PER PERIOD</span>
+            <span class="inline-toggle-link ${isCumulative ? 'active' : ''}" data-format="cumulative">CUMULATIVE</span>
+            <span class="inline-toggle-sep"> / </span>
+            <span class="inline-toggle-link ${!isCumulative ? 'active' : ''}" data-format="per-period">PER PERIOD</span>
           </span>
           PLAYER STATS
         `;
