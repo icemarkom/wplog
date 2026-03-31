@@ -49,8 +49,8 @@ const ASSETS = [
     "./screens/modal.html",
     "./screens/sheet.html",
     "./screens/share.html",
+    "./screens/help.html",
     "./privacy.html",
-    "./help.html",
     "./LICENSE",
     "./manifest.json",
 ];

@@ -40,7 +40,8 @@ wplog/
 │   ├── live.html       # Live log screen content (score bar, event buttons, log)
 │   ├── modal.html      # Event modal content (time, cap, numpad)
 │   ├── sheet.html      # Game sheet container
-│   └── share.html      # Share screen content (QR code, print button)
+│   ├── share.html      # Share screen content (QR code, print button)
+│   └── help.html       # Help screen content (quick reference)
 ├── css/
 │   ├── style.css       # Dark-mode design system, mobile-first
 │   ├── print.css       # Print-only B&W styles for game sheet
@@ -65,12 +66,6 @@ wplog/
 │   ├── share.js        # Share/Print functionality
 │   ├── export.js       # Export utilities — filename, CSV builders (pure — no DOM)
 │   └── app.js          # App init + screen navigation + version display
-├── help.html           # Standalone help page (uses standalone.css)
-├── sw.js               # Service worker (offline caching, version-keyed cache)
-├── manifest.json       # PWA manifest (relative paths for GH Pages)
-├── .github/
-│   └── workflows/
-│       └── deploy.yml  # Release-triggered deploy to gh-pages (injects version)
 ├── .agents/
 │   ├── skills/
 │   │   └── branching/
@@ -151,9 +146,9 @@ These were explicitly discussed and agreed with the user:
 | **SW dev vs prod** | Service worker uses network-first strategy in dev mode (no stale cache issues) and cache-first in production (offline reliability). |
 | **QR code sharing** | Single SVG (`img/qr-wplog.svg`) with white modules on transparent background. CSS `filter: invert(1)` for high-contrast overlay. Share screen always accessible. |
 | **Share tab always active** | Share tab is always enabled. Print Game Sheet button is disabled when no game is active. |
-| **Help screen** | 5th nav tab (always enabled). Full screen section with concise quick-reference guide (~1 min read). Not a footer link or overlay — too undiscoverable. |
+| **Help screen** | 5th nav tab (always enabled). Full screen section with concise quick-reference guide (~1 min read). Loaded at boot alongside all other screen fragments. |
 | **innerHTML sanitization** | All user-supplied values (team names, cap numbers, Game #, location, etc.) MUST be escaped via `escapeHTML()` from `sanitize.js` before `innerHTML` interpolation. Config-driven data (event names/codes) and internally computed values are safe but should still be escaped where mixed with user data. |
-| **CSP meta tags** | `Content-Security-Policy` and `X-Content-Type-Options` meta tags in `<head>` of `index.html`, `privacy.html`, and `help.html`. No `'unsafe-inline'` for scripts — all scripts are external. `style-src` still allows `'unsafe-inline'` for inline styles. |
+| **CSP meta tags** | `Content-Security-Policy` and `X-Content-Type-Options` meta tags in `<head>` of `index.html` and `privacy.html`. No `'unsafe-inline'` for scripts — all scripts are external. `style-src` still allows `'unsafe-inline'` for inline styles. |
 | **No inline scripts** | All JavaScript is in external files. `index.html` uses `js/loader.js` (app shell loader) and `js/year.js` (copyright year). Standalone pages use `js/year.js`. This enables strict CSP without `'unsafe-inline'` for `script-src`. |
 | **localStorage validation** | `Storage.load()` validates parsed data shape (`rules` is string, `log` is array) before returning. Tampered/corrupt data is silently ignored. |
 | **Stats are separate from log** | Live view: stats interleaved in recent events with teal accent. Game sheet: stats filtered from Progress of Game, shown in separate Player Stats section. |
@@ -173,6 +168,8 @@ These were explicitly discussed and agreed with the user:
 ## Current State (as of 2026-03-31)
 
 ### What's Done ✅
+- Added specific explicit Light Theme toggle (System / Dark / Light) in Setup screen. Uses OS `prefers-color-scheme` tracking via `mathMedia` when set to `system` natively updating `data-theme` without repeating CSS.
+- Re-architected Theme toggle and Restart App controls into an adjacent `.inline-menu` container.
 - Dynamic 10+ minute game clock support natively scales Numpad limit/UI dash format between 3-digit `M:SS` and 4-digit `MM:SS` modes depending on rule set, expanding config boundaries up to 20-minute periods/halves.
 - Externalized application configuration (`config.json`): decoupled game rules, events, and stats taxonomies from hardcoded application logic using an asynchronous boot loader.
 - Replaced JS-based pagination logic with a clean, fully native CSS `@media print` pipeline.

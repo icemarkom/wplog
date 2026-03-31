@@ -60,6 +60,13 @@ export const Setup = {
             btn.classList.toggle("active", btn.dataset.value === "off");
         });
 
+        // Reset theme setting
+        const currentTheme = localStorage.getItem("wplog_theme") || "dark";
+        const themeInline = document.getElementById("setup-theme-inline");
+        themeInline.querySelectorAll(".inline-toggle-link").forEach((link) => {
+            link.classList.toggle("active", link.dataset.theme === currentTheme);
+        });
+
         // Reset post-regulation segmented control
         const prControl = document.getElementById("setup-post-regulation");
         prControl.classList.remove("disabled");
@@ -467,6 +474,25 @@ export const Setup = {
 
             timeControl.querySelectorAll(".segment-btn").forEach((b) => b.classList.remove("active"));
             btn.classList.add("active");
+        });
+
+        // Theme inline control
+        const themeInline = document.getElementById("setup-theme-inline");
+        themeInline.addEventListener("click", (e) => {
+            const link = e.target.closest(".inline-toggle-link");
+            if (!link) return;
+
+            themeInline.querySelectorAll(".inline-toggle-link").forEach((l) => l.classList.remove("active"));
+            link.classList.add("active");
+
+            const theme = link.dataset.theme;
+            localStorage.setItem("wplog_theme", theme);
+            if (theme === "system") {
+                const isLight = window.matchMedia("(prefers-color-scheme: light)").matches;
+                document.documentElement.setAttribute("data-theme", isLight ? "light" : "dark");
+            } else {
+                document.documentElement.setAttribute("data-theme", theme);
+            }
         });
     },
 

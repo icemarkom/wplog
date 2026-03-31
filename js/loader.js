@@ -29,6 +29,7 @@ import { loadConfig } from './config.js';
         { url: "screens/modal.html" + _cb, target: "modal-content" },
         { url: "screens/sheet.html" + _cb, target: "sheet-container" },
         { url: "screens/share.html" + _cb, target: "share-content" },
+        { url: "screens/help.html" + _cb, target: "help-content" },
     ];
     await Promise.all(screens.map(async ({ url, target }) => {
         const res = await fetch(url);
