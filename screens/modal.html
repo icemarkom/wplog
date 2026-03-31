@@ -23,10 +23,21 @@
   <div id="time-display" class="field-display"></div>
 </div>
 
-<!-- Cap (tap to target numpad) -->
-<div class="modal-field" id="field-cap" data-target="cap">
-  <span class="input-label">CAP</span>
-  <div id="cap-display" class="field-display"></div>
+<!-- Cap / Alt Cap Row -->
+<div class="form-row" id="modal-cap-row" style="margin-bottom: 1dvh; align-items: center;">
+  <!-- Cap (tap to target numpad) -->
+  <div class="modal-field form-group" id="field-cap" data-target="cap" style="margin-bottom: 0;">
+    <span class="input-label" id="label-cap">CAP</span>
+    <div id="cap-display" class="field-display"></div>
+  </div>
+
+  <button type="button" id="modal-swap-btn" class="swap-btn" aria-label="Toggle Swap Direction" style="display:none;">⇄</button>
+
+  <!-- Alt Cap (tap to target numpad) -->
+  <div class="modal-field form-group" id="field-alt-cap" data-target="altCap" style="display:none; margin-bottom: 0;">
+    <span class="input-label" id="label-alt-cap">ALT CAP</span>
+    <div id="alt-cap-display" class="field-display"></div>
+  </div>
 </div>
 
 <!-- Team Toggle -->
