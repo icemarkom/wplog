@@ -143,4 +143,16 @@
 <button id="setup-start-btn" class="btn btn-primary btn-large">Start Game</button>
 <button id="setup-load-btn" class="btn btn-primary btn-large">Load Game</button>
 <input type="file" id="setup-load-file" accept=".json" class="sr-only">
-<a id="setup-hard-reset" class="hard-reset-link" href="#">Restart App</a>
+
+<div class="inline-menu">
+  <div id="setup-theme-inline" style="margin-bottom: 16px;">
+    <span class="inline-toggle-link" data-theme="system">System</span> <span class="inline-toggle-sep">/</span>
+    <span class="inline-toggle-link active" data-theme="dark">Dark</span> <span class="inline-toggle-sep">/</span>
+    <span class="inline-toggle-link" data-theme="light">Light</span>
+  </div>
+  <div>
+    <a id="setup-about-link" class="inline-toggle-link" href="#" style="text-decoration: none;">About wplog</a>
+    <span class="inline-toggle-sep" style="margin: 0 12px;">|</span>
+    <a id="setup-hard-reset" class="inline-toggle-link" href="#" style="text-decoration: none;">Restart App</a>
+  </div>
+</div>
