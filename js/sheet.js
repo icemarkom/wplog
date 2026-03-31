@@ -131,13 +131,24 @@ export const Sheet = {
                 tr.className = "sheet-period-end";
                 tr.innerHTML = `<td colspan="5">——— End of ${Game.getPeriodLabel(entry.period)} ———</td>`;
             } else {
-                const eventDef = rules.events.find((e) => e.code === entry.event);
-                const align = eventDef && eventDef.align ? eventDef.align : "center";
+                let align = "center";
+                let capDisplay = escapeHTML(entry.cap || "—");
+                let eventDisplay = escapeHTML(entry.event);
+
+                if (entry.event === "Cap swap") {
+                    eventDisplay = "Cap swap";
+                    const arrow = entry.swapType === "uni" ? "\u2192" : "\u21C4";
+                    capDisplay = escapeHTML(entry.cap) + ` ${arrow} ` + escapeHTML(entry.note);
+                } else {
+                    const eventDef = rules.events.find((e) => e.code === entry.event);
+                    if (eventDef && eventDef.align) align = eventDef.align;
+                }
+
                 tr.innerHTML = `
           <td>${entry.period === "SO" ? "" : escapeHTML(entry.time.replace(/^0(\d:)/, '$1'))}</td>
-          <td>${escapeHTML(entry.cap || "—")}</td>
+          <td>${capDisplay}</td>
           <td>${escapeHTML(entry.team || "—")}</td>
-          <td style="text-align:${align}">${escapeHTML(entry.event)}</td>
+          <td style="text-align:${align}">${eventDisplay}</td>
           <td>${escapeHTML(Game.formatEntryScore(entry, game))}</td>
         `;
             }

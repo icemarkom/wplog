@@ -172,7 +172,36 @@ export const Game = {
         const rules = RULES[game.rules];
         let scoreW = 0;
         let scoreD = 0;
+
+        game._activeCaps = { W: {}, D: {} };
+        game._retiredCaps = { W: new Set(), D: new Set() };
+
         for (const entry of game.log) {
+            // Identity resolution
+            if (entry.team === "W" || entry.team === "D") {
+                if (entry.event === "Cap swap") {
+                    const capA = entry.cap;
+                    const capB = entry.note;
+                    const baseA = game._activeCaps[entry.team][capA] || capA;
+                    
+                    if (entry.swapType === "uni") {
+                        game._activeCaps[entry.team][capB] = baseA;
+                        game._activeCaps[entry.team][capA] = baseA; // explicitly retired mapping
+                        game._retiredCaps[entry.team].add(capA);
+                    } else {
+                        // Bidirectional swap
+                        const baseB = game._activeCaps[entry.team][capB] || capB;
+                        game._activeCaps[entry.team][capB] = baseA;
+                        game._activeCaps[entry.team][capA] = baseB;
+                    }
+                    entry.baseCap = baseA; // Assign arbitrary baseCap to Cap swap event itself
+                } else {
+                    entry.baseCap = game._activeCaps[entry.team][entry.cap] || entry.cap;
+                }
+            } else {
+                entry.baseCap = entry.cap;
+            }
+
             const eventDef = rules.events.find((e) => e.code === entry.event);
             const isStatsOnly = eventDef && eventDef.statsOnly;
             if (entry.event === "G" && !isStatsOnly) {
@@ -232,19 +261,19 @@ export const Game = {
         };
     },
 
-    // Get personal fouls for a specific player (team + cap)
-    getPlayerFouls(game, team, cap) {
+    // Get personal fouls for a specific player (team + baseCap)
+    getPlayerFouls(game, team, baseCap) {
         const rules = RULES[game.rules];
         const foulCodes = rules.events.filter(e => e.isPersonalFoul).map(e => e.code);
         return game.log.filter(
-            (e) => e.team === team && e.cap === cap && foulCodes.includes(e.event)
+            (e) => e.team === team && e.baseCap === baseCap && foulCodes.includes(e.event)
         ).length;
     },
 
     // Get count of a specific event type for a player
-    getPlayerEventCount(game, team, cap, eventCode) {
+    getPlayerEventCount(game, team, baseCap, eventCode) {
         return game.log.filter(
-            (e) => e.team === team && e.cap === cap && e.event === eventCode
+            (e) => e.team === team && e.baseCap === baseCap && e.event === eventCode
         ).length;
     },
 
@@ -254,9 +283,13 @@ export const Game = {
         const eventDef = rules.events.find((e) => e.code === eventCode);
         if (!eventDef) return null;
 
+        const baseCap = game._activeCaps && game._activeCaps[team] 
+            ? (game._activeCaps[team][cap] || cap) 
+            : cap;
+
         // Auto foul-out events
         if (eventDef.autoFoulOut) {
-            const count = this.getPlayerEventCount(game, team, cap, eventCode);
+            const count = this.getPlayerEventCount(game, team, baseCap, eventCode);
             // count is BEFORE adding this event, so +1
             if (count + 1 >= eventDef.autoFoulOut) {
                 return {
@@ -269,7 +302,7 @@ export const Game = {
 
         // Accumulated personal fouls
         if (eventDef && eventDef.isPersonalFoul) {
-            const fouls = this.getPlayerFouls(game, team, cap);
+            const fouls = this.getPlayerFouls(game, team, baseCap);
             if (fouls + 1 >= rules.foulOutLimit) {
                 return {
                     type: "accumulated",
@@ -462,9 +495,9 @@ export const Game = {
 
         for (const entry of game.log) {
             if (foulCodes.includes(entry.event) && entry.cap) {
-                const key = entry.team + "#" + entry.cap;
+                const key = entry.team + "#" + entry.baseCap;
                 if (!playerFouls[key]) {
-                    playerFouls[key] = { team: entry.team, cap: entry.cap, fouls: [] };
+                    playerFouls[key] = { team: entry.team, cap: entry.baseCap, fouls: [] };
                 }
                 const eventDef = rules.events.find((e) => e.code === entry.event);
                 playerFouls[key].fouls.push({
@@ -585,12 +618,14 @@ export const Game = {
             const team = entry.team;
             if (team !== "W" && team !== "D") continue;
 
-            if (!stats[team][entry.cap]) {
-                stats[team][entry.cap] = {};
-                statsPerPeriod[team][entry.cap] = {};
+            const baseCap = entry.baseCap;
+
+            if (!stats[team][baseCap]) {
+                stats[team][baseCap] = {};
+                statsPerPeriod[team][baseCap] = {};
             }
-            if (!statsPerPeriod[team][entry.cap][entry.event]) {
-                statsPerPeriod[team][entry.cap][entry.event] = {};
+            if (!statsPerPeriod[team][baseCap][entry.event]) {
+                statsPerPeriod[team][baseCap][entry.event] = {};
             }
             if (!totalsPerPeriod[team][entry.event]) {
                 totalsPerPeriod[team][entry.event] = {};
@@ -598,10 +633,10 @@ export const Game = {
 
             const periodStr = this.getPeriodLabel(entry.period);
 
-            stats[team][entry.cap][entry.event] = (stats[team][entry.cap][entry.event] || 0) + 1;
+            stats[team][baseCap][entry.event] = (stats[team][baseCap][entry.event] || 0) + 1;
             totals[team][entry.event] = (totals[team][entry.event] || 0) + 1;
 
-            statsPerPeriod[team][entry.cap][entry.event][periodStr] = (statsPerPeriod[team][entry.cap][entry.event][periodStr] || 0) + 1;
+            statsPerPeriod[team][baseCap][entry.event][periodStr] = (statsPerPeriod[team][baseCap][entry.event][periodStr] || 0) + 1;
             totalsPerPeriod[team][entry.event][periodStr] = (totalsPerPeriod[team][entry.event][periodStr] || 0) + 1;
 
             activeStatCodesSet.add(entry.event);
