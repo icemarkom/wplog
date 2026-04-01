@@ -382,11 +382,9 @@ select.form-input {
   flex: 1;
 }
 
-.home-flip-btn {
-  align-self: flex-end;
-  margin-bottom: 16px;
-  width: 44px;
-  height: 44px;
+.swap-btn {
+  width: 45px;
+  height: 45px;
   flex-shrink: 0;
   border: 1px solid var(--border);
   border-radius: var(--radius-md);
@@ -401,9 +399,14 @@ select.form-input {
   justify-content: center;
 }
 
-.home-flip-btn:hover {
+.swap-btn:hover {
   border-color: var(--border-focus);
   color: var(--accent-blue);
+}
+
+#setup-home-flip {
+  align-self: flex-start;
+  margin-top: 20px;
 }
 
 
@@ -1211,10 +1214,17 @@ select.form-input {
   left: 50%;
   transform: translateX(-50%);
   z-index: 2147483647;
-  display: flex;
   flex-direction: column;
   gap: 8px;
   pointer-events: none;
+  background: transparent;
+  border: none;
+  padding: 0;
+  margin: 0;
+}
+
+#toast-container:popover-open {
+  display: flex;
 }
 
 .toast {

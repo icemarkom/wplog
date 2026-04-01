@@ -230,6 +230,7 @@ export function validateGameData(parsed) {
                 scoreW: entry.scoreW,
                 scoreD: entry.scoreD,
                 note: _isString(entry.note) ? entry.note : "",
+                swapType: _isString(entry.swapType) ? entry.swapType : undefined,
             });
         }
 

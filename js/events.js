@@ -31,9 +31,10 @@ export const Events = {
     selectedTeam: null,
     _pendingEvent: null,
     _boundModal: false,
-    _numpadTarget: "time",  // "time" or "cap"
+    _numpadTarget: "time",  // "time", "cap", or "altCap"
     _timeRaw: "",           // raw digits for time
     _capRaw: "",            // raw value for cap
+    _altCapRaw: "",         // raw value for alt cap
     _teams: null,           // [home, away] team descriptors
 
     init(game) {
@@ -60,6 +61,12 @@ export const Events = {
             container.classList.remove("score-team-white", "score-team-dark");
             container.classList.add(`score-team-${t.cssClass}`);
         }
+    },
+
+    _getEventDef(code) {
+        if (code === "Cap swap") return { name: "Swap Caps", code: "Cap swap", color: "end-period", isSwap: true };
+        const rules = RULES[this.game.rules];
+        return rules.events.find((e) => e.code === code) || null;
     },
 
 
@@ -110,6 +117,18 @@ export const Events = {
         // Field selection — tap to switch numpad target
         document.getElementById("field-time").addEventListener("click", () => this._setNumpadTarget("time", true));
         document.getElementById("field-cap").addEventListener("click", () => this._setNumpadTarget("cap", true));
+        const altCapField = document.getElementById("field-alt-cap");
+        if (altCapField) altCapField.addEventListener("click", () => this._setNumpadTarget("altCap", true));
+        
+        const swapIcon = document.getElementById("modal-swap-btn");
+        if (swapIcon) {
+            swapIcon.addEventListener("click", () => {
+                this._swapType = this._swapType === "bi" ? "uni" : "bi";
+                swapIcon.textContent = this._swapType === "uni" ? "\u2192" : "\u21C4";
+                document.getElementById("label-cap").textContent = this._swapType === "uni" ? "OLD CAP" : "CAP";
+                document.getElementById("label-alt-cap").textContent = this._swapType === "uni" ? "NEW CAP" : "CAP";
+            });
+        }
 
         // Shared numpad
         document.querySelectorAll("#shared-numpad .numpad-btn").forEach((btn) => {
@@ -173,7 +192,17 @@ export const Events = {
             // Tab = toggle time/cap field
             if (key === "Tab") {
                 e.preventDefault();
-                const next = this._numpadTarget === "time" ? "cap" : "time";
+                const code = document.getElementById("modal-event-title").dataset.code;
+                const eventDef = this._getEventDef(code);
+                
+                let next;
+                if (this._numpadTarget === "time") {
+                    next = "cap";
+                } else if (this._numpadTarget === "cap" && eventDef && eventDef.isSwap) {
+                    next = "altCap";
+                } else {
+                    next = "time";
+                }
                 this._setNumpadTarget(next, true);
                 return;
             }
@@ -207,70 +236,80 @@ export const Events = {
                 this._setNumpadTarget("cap");
             }
         } else {
-            // Cap input
+            // Cap or Alt Cap input
+            const code = document.getElementById("modal-event-title").dataset.code;
+            const eventDef = this._getEventDef(code);
+            let targetRaw = this._numpadTarget === "cap" ? this._capRaw : this._altCapRaw;
+
             if (val === "clear") {
-                this._capRaw = this._capRaw.slice(0, -1);
+                targetRaw = targetRaw.slice(0, -1);
             } else if (["A", "B", "C"].includes(val)) {
-                const code = document.getElementById("modal-event-title").dataset.code;
-                const rules = RULES[this.game.rules];
-                const eventDef = rules.events.find((e) => e.code === code);
                 if (eventDef && (eventDef.allowCoach || eventDef.allowAssistant || eventDef.allowBench)) {
                     // Coach/assistant/bench: "C" = coach, "A" then "C" → "AC" = asst coach, "B" = bench
-                    if (val === "C" && eventDef.allowCoach && this._capRaw === "") {
-                        this._capRaw = "C";
-                    } else if (val === "C" && eventDef.allowAssistant && this._capRaw === "A") {
-                        this._capRaw = "AC";
-                    } else if (val === "A" && eventDef.allowAssistant && this._capRaw === "") {
-                        this._capRaw = "A";
-                    } else if (val === "B" && eventDef.allowBench && this._capRaw === "") {
-                        this._capRaw = "B";
+                    if (val === "C" && eventDef.allowCoach && targetRaw === "") {
+                        targetRaw = "C";
+                    } else if (val === "C" && eventDef.allowAssistant && targetRaw === "A") {
+                        targetRaw = "AC";
+                    } else if (val === "A" && eventDef.allowAssistant && targetRaw === "") {
+                        targetRaw = "A";
+                    } else if (val === "B" && eventDef.allowBench && targetRaw === "") {
+                        targetRaw = "B";
                     }
                 } else {
                     // Normal: A/B/C only after "1" (goalie numbers)
-                    if (this._capRaw === "1") {
-                        this._capRaw = "1" + val;
+                    if (targetRaw === "1") {
+                        targetRaw = "1" + val;
                     }
                 }
             } else {
                 // Digit input — blocked when allowPlayer is false
-                const code = document.getElementById("modal-event-title").dataset.code;
-                const rules = RULES[this.game.rules];
-                const eventDef = rules.events.find((e) => e.code === code);
                 if (eventDef && eventDef.allowPlayer === false) {
                     // No digit input for non-player events
-                } else if (this._capRaw.length < 2 && !this._capRaw.match(/[ABC]/)) {
-                    this._capRaw += val;
+                } else if (targetRaw.length < 2 && !targetRaw.match(/[ABC]/)) {
+                    targetRaw += val;
                 }
             }
-            document.getElementById("cap-display").textContent = this._capRaw;
+
+            if (this._numpadTarget === "cap") {
+                this._capRaw = targetRaw;
+                document.getElementById("cap-display").textContent = this._capRaw;
+            } else {
+                this._altCapRaw = targetRaw;
+                document.getElementById("alt-cap-display").textContent = this._altCapRaw;
+            }
         }
         this._updateOkButton();
     },
 
     _isTeamOnly() {
         const code = document.getElementById("modal-event-title").dataset.code;
-        const rules = RULES[this.game.rules];
-        const eventDef = rules.events.find((e) => e.code === code);
+        const eventDef = this._getEventDef(code);
         return eventDef && eventDef.teamOnly;
     },
 
     _updateOkButton() {
         const btn = document.getElementById("event-modal-confirm");
-        const teamOnly = this._isTeamOnly();
-        const hasCap = teamOnly || this._capRaw.length > 0;
+        const code = document.getElementById("modal-event-title").dataset.code;
+        const eventDef = this._getEventDef(code);
+
+        const teamOnly = eventDef && eventDef.teamOnly;
+        const isSwap = eventDef && eventDef.isSwap;
+        
+        let hasCap = teamOnly || this._capRaw.length > 0;
+        if (isSwap) {
+            hasCap = this._capRaw.length > 0 && this._altCapRaw.length > 0;
+        }
+        
         const hasTeam = this.selectedTeam !== null;
 
-        // Stats events: time requirement depends on statsTimeMode
-        const code = document.getElementById("modal-event-title").dataset.code;
-        const rules = RULES[this.game.rules];
-        const eventDef = rules.events.find((e) => e.code === code);
+        // Stats UI validation logic
         const isStatsMode = !this.game.enableLog && this.game.enableStats;
         const isStatsOnly = eventDef && eventDef.statsOnly;
         const timeMode = this.game.statsTimeMode || "off";
 
         let hasTime;
-        if ((isStatsOnly || isStatsMode) && (timeMode === "off" || timeMode === "optional")) {
-            hasTime = true; // time not required
+        if (isSwap || ((isStatsOnly || isStatsMode) && (timeMode === "off" || timeMode === "optional"))) {
+            hasTime = true; // time not required for swap cap features
         } else {
             hasTime = this._timeRaw.length > 0 && this._parseTime(this._timeRaw) !== null;
         }
@@ -281,7 +320,6 @@ export const Events = {
     _setNumpadTarget(target, isUserClick) {
         this._numpadTarget = target;
 
-        // Auto-clear only on user-initiated clicks, not auto-advance
         if (isUserClick) {
             if (target === "time" && this._timeRaw.length > 0 && this.game.currentPeriod !== "SO") {
                 this._timeRaw = "";
@@ -291,11 +329,18 @@ export const Events = {
                 this._capRaw = "";
                 document.getElementById("cap-display").textContent = "";
                 this._updateOkButton();
+            } else if (target === "altCap" && this._altCapRaw.length > 0) {
+                this._altCapRaw = "";
+                document.getElementById("alt-cap-display").textContent = "";
+                this._updateOkButton();
             }
         }
 
         document.getElementById("field-time").classList.toggle("active", target === "time");
         document.getElementById("field-cap").classList.toggle("active", target === "cap");
+        
+        const altField = document.getElementById("field-alt-cap");
+        if (altField) altField.classList.toggle("active", target === "altCap");
     },
 
     _setModalTitle(eventDef) {
@@ -306,16 +351,33 @@ export const Events = {
 
     _updateModalSections() {
         const code = document.getElementById("modal-event-title").dataset.code;
-        const rules = RULES[this.game.rules];
-        const eventDef = rules.events.find((e) => e.code === code);
+        const eventDef = this._getEventDef(code);
 
         const capField = document.getElementById("field-cap");
+        const altCapField = document.getElementById("field-alt-cap");
 
         if (eventDef && eventDef.teamOnly) {
             capField.style.display = "none";
             if (this._numpadTarget === "cap") this._setNumpadTarget("time");
         } else {
             capField.style.display = "";
+        }
+
+        const swapIcon = document.getElementById("modal-swap-btn");
+        if (altCapField) {
+            if (eventDef && eventDef.isSwap) {
+                altCapField.style.display = "";
+                if (swapIcon) {
+                    swapIcon.style.display = "flex";
+                    swapIcon.textContent = this._swapType === "uni" ? "\u2192" : "\u21C4";
+                }
+                document.getElementById("label-cap").textContent = this._swapType === "uni" ? "OLD CAP" : "CAP";
+                document.getElementById("label-alt-cap").textContent = this._swapType === "uni" ? "NEW CAP" : "CAP";
+            } else {
+                altCapField.style.display = "none";
+                if (swapIcon) swapIcon.style.display = "none";
+                document.getElementById("label-cap").textContent = "CAP";
+            }
         }
 
         // Show/hide Official team button
@@ -336,6 +398,8 @@ export const Events = {
         // Reset inputs
         this._timeRaw = "";
         this._capRaw = "";
+        this._altCapRaw = "";
+        this._swapType = "bi";
 
         // Shootout: lock time to 0:00
         const isSO = this.game.currentPeriod === "SO";
@@ -351,6 +415,8 @@ export const Events = {
             timeField.style.opacity = "";
         }
         document.getElementById("cap-display").textContent = "";
+        const altDisplay = document.getElementById("alt-cap-display");
+        if (altDisplay) altDisplay.textContent = "";
 
         // Show/hide sections
         this._updateModalSections();
@@ -404,7 +470,7 @@ export const Events = {
     async _confirmEvent() {
         const rules = RULES[this.game.rules];
         const code = document.getElementById("modal-event-title").dataset.code;
-        const eventDef = rules.events.find((e) => e.code === code);
+        const eventDef = this._getEventDef(code);
         if (!eventDef) return;
 
         // Parse time (stats events may have no time)
@@ -414,6 +480,8 @@ export const Events = {
         let time;
 
         if ((isStatsOnly || isStatsMode) && (timeMode === "off" || (timeMode === "optional" && this._timeRaw.length === 0))) {
+            time = "";
+        } else if (eventDef.isSwap && this._timeRaw.length === 0) {
             time = "";
         } else {
             const parsed = this._parseTime(this._timeRaw);
@@ -433,6 +501,20 @@ export const Events = {
             this._showToast("Enter a cap number", "warning");
             this._setNumpadTarget("cap");
             return;
+        }
+
+        // Validate against locally retired caps
+        if (!eventDef.teamOnly && cap && (this.selectedTeam === "W" || this.selectedTeam === "D")) {
+            const retired = this.game._retiredCaps || { W: new Set(), D: new Set() };
+            if (retired[this.selectedTeam].has(cap)) {
+                const ok = await ConfirmDialog.show({
+                    title: "Retired Cap entered",
+                    message: `Cap ${cap} was officially retired during an earlier Cap Swap. Are you sure you want to log an event against it?`,
+                    type: "warning",
+                    confirmLabel: "Proceed"
+                });
+                if (!ok) return;
+            }
         }
 
         // Validate time order (skip for statsOnly events without time)
@@ -461,7 +543,8 @@ export const Events = {
             team: this.selectedTeam === "official" ? "" : this.selectedTeam,
             cap: eventDef.teamOnly ? "" : cap,
             event: eventDef.code,
-            note: "",
+            note: eventDef.isSwap ? this._altCapRaw : "",
+            swapType: eventDef.isSwap ? this._swapType : undefined
         });
         Storage.save(this.game);
 
@@ -557,6 +640,15 @@ export const Events = {
             }
         }
 
+        // Swap Caps button — rendered identically following End Period methodology
+        const swapBtn = document.createElement("button");
+        swapBtn.className = "event-btn event-end-period"; // Reuses exact styling of End Period
+        swapBtn.style.gridColumn = "2"; // Implicitly places it next to End Period (which uses grid-column:3)
+        swapBtn.textContent = "Swap Caps";
+        swapBtn.dataset.code = "Cap swap";
+        swapBtn.addEventListener("click", () => this._openModal(this._getEventDef("Cap swap")));
+        container.appendChild(swapBtn);
+
         // End Period / End Game — always visible (periods track in all modes)
         const endBtn = document.createElement("button");
         endBtn.id = "end-period-btn";
@@ -647,9 +739,16 @@ export const Events = {
           <button class="log-delete-btn" data-id="${entry.id}" title="Delete">✕</button>
         `;
             } else {
-                const rules = RULES[this.game.rules];
-                const eventDef = rules.events.find((e) => e.code === entry.event);
-                const eventName = eventDef ? eventDef.name : entry.event;
+                const eventDef = this._getEventDef(entry.event);
+                let eventName = eventDef ? eventDef.name : entry.event;
+                let capDisplay = escapeHTML(entry.cap);
+
+                if (entry.event === "Cap swap") {
+                    eventName = "Cap swap";
+                    const arrow = entry.swapType === "uni" ? "\u2192" : "\u21C4";
+                    capDisplay = `${escapeHTML(entry.cap)} ${arrow} ${escapeHTML(entry.note)}`;
+                }
+                
                 const isStatEvent = eventDef && eventDef.statsOnly;
                 const colorClass = this._getEventClass(entry.event);
 
@@ -665,7 +764,7 @@ export const Events = {
                 row.innerHTML = `
           <span class="log-time">${timeDisplay}</span>
           <span class="log-team ${entry.team === 'W' ? 'team-white' : 'team-dark'}">${entry.team}</span>
-          <span class="log-cap">${escapeHTML(entry.cap)}</span>
+          <span class="log-cap">${capDisplay}</span>
           <span class="log-event event-${colorClass}">${eventName}</span>
           <span class="log-score">${scoreDisplay}</span>
           <button class="log-delete-btn" data-id="${entry.id}" title="Delete">✕</button>
@@ -754,6 +853,10 @@ export const Events = {
 
     _showToast(message, type = "info") {
         const container = document.getElementById("toast-container");
+        if (container.showPopover && !container.matches(':popover-open')) {
+            container.showPopover();
+        }
+
         const toast = document.createElement("div");
         toast.className = "toast toast-" + type;
         toast.textContent = message;
@@ -761,7 +864,12 @@ export const Events = {
 
         setTimeout(() => {
             toast.classList.add("toast-fade");
-            setTimeout(() => toast.remove(), 300);
+            setTimeout(() => {
+                toast.remove();
+                if (container.children.length === 0 && container.hidePopover) {
+                    container.hidePopover();
+                }
+            }, 300);
         }, 2500);
     },
 };
