@@ -144,6 +144,7 @@ These were explicitly discussed and agreed with the user:
 | **About dialog** | Native `<dialog>` popup (not a screen) accessible via footer "About" link. Shows version, license, author, source link. Privacy and License open as stacked content dialogs on top. |
 | **SW cache = version** | Service worker cache name is `"wplog-" + APP_VERSION`. Each release busts stale caches automatically. |
 | **SW dev vs prod** | Service worker uses network-first strategy in dev mode (no stale cache issues) and cache-first in production (offline reliability). |
+| **Interactive SW Updates** | `sw.js` safely idles downloaded updates in the `waiting` queue until the UI commands otherwise. `js/loader.js` tracks `updatefound` hooks to generate a native `popover` Toast prompting the user. Clicking 'Reload' signals `skipWaiting` via `postMessage` and instantly reboots `wplog` into the new cache layer seamlessly, avoiding aggressive auto-refreshes that clear out midway data entry. |
 | **QR code sharing** | Single SVG (`img/qr-wplog.svg`) with white modules on transparent background. CSS `filter: invert(1)` for high-contrast overlay. Share screen always accessible. |
 | **Share tab always active** | Share tab is always enabled. Print Game Sheet button is disabled when no game is active. |
 | **Help screen** | 5th nav tab (always enabled). Full screen section with concise quick-reference guide (~1 min read). Loaded at boot alongside all other screen fragments. |
@@ -165,9 +166,10 @@ These were explicitly discussed and agreed with the user:
 
 ---
 
-## Current State (as of 2026-03-31)
+## Current State (as of 2026-04-01)
 
 ### What's Done ✅
+- Implemented interactive Service Worker Update flow: the app now traps background updates in `waiting` state and drops an explicit *Update Available* popover Toast on-screen to gracefully force a controlled UI refresh, preventing mixed-version ghosts.
 - Migrated global toast notifications to use the native HTML5 `popover="manual"`, bypassing dialog `z-index` isolation contexts directly via the browser's Top Layer.
 - Cap swaps support Unidirectional (replacement) and Bidirectional (trade) modes with Retired Caps validation for identity tracking.
 - Added specific explicit Light Theme toggle (System / Dark / Light) in Setup screen. Uses OS `prefers-color-scheme` tracking via `mathMedia` when set to `system` natively updating `data-theme` without repeating CSS.

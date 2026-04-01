@@ -57,6 +57,49 @@ import { loadConfig } from './config.js';
     // Register service worker for offline caching.
     // type: 'module' is required because sw.js uses ES module imports.
     if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('sw.js', { type: 'module' });
+        navigator.serviceWorker.register('sw.js', { type: 'module' }).then((reg) => {
+            if (reg.waiting) {
+                showUpdateToast(reg.waiting);
+            }
+
+            reg.addEventListener("updatefound", () => {
+                const newWorker = reg.installing;
+                newWorker.addEventListener("statechange", () => {
+                    // When the new worker is installed and a controller exists
+                    // (meaning it's an update, not the initial install)
+                    if (newWorker.state === "installed" && navigator.serviceWorker.controller) {
+                        showUpdateToast(newWorker);
+                    }
+                });
+            });
+        });
+
+        // Trigger reload exactly when the new worker takes control
+        let refreshing = false;
+        navigator.serviceWorker.addEventListener("controllerchange", () => {
+            if (!refreshing) {
+                refreshing = true;
+                window.location.reload();
+            }
+        });
+
+        function showUpdateToast(worker) {
+            const container = document.getElementById("toast-container");
+            if (container.showPopover && !container.matches(':popover-open')) {
+                container.showPopover();
+            }
+
+            const toast = document.createElement("button");
+            toast.className = "toast toast-info";
+            toast.textContent = "Update Available. Tap to Reload.";
+            
+            toast.addEventListener("click", () => {
+                toast.textContent = "Loading...";
+                toast.disabled = true;
+                worker.postMessage({ type: 'SKIP_WAITING' });
+            });
+
+            container.appendChild(toast);
+        }
     }
 })();
