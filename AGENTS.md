@@ -169,6 +169,7 @@ These were explicitly discussed and agreed with the user:
 ## Current State (as of 2026-04-01)
 
 ### What's Done ✅
+- Added new Rebound statistic tracking.
 - Implemented interactive Service Worker Update flow: the app now traps background updates in `waiting` state and drops an explicit *Update Available* popover Toast on-screen to gracefully force a controlled UI refresh, preventing mixed-version ghosts.
 - Migrated global toast notifications to use the native HTML5 `popover="manual"`, bypassing dialog `z-index` isolation contexts directly via the browser's Top Layer.
 - Cap swaps support Unidirectional (replacement) and Bidirectional (trade) modes with Retired Caps validation for identity tracking.
@@ -260,7 +261,7 @@ These were explicitly discussed and agreed with the user:
 - Form label associations: all `<input>`/`<select>` use `for`/`id`; custom widgets (segment controls, steppers) use `aria-labelledby`; `.sr-only` utility class for visually-hidden labels
 - Favicon: water polo wave-splash W icon in 32px, 192px, 512px sizes (browser tab, PWA install, splash screen)
 - Apple touch icon for iOS home screen
-- Full stats tracking: 11 stat event types (Shot, Assist, Offensive, Steal, Intercept, Turnover, Field Block, Save, Drawn Exclusion, Drawn Penalty, Sprint Won)
+- Full stats tracking: 12 stat event types (Shot, Assist, Offensive, Steal, Intercept, Turnover, Field Block, Save, Drawn Exclusion, Drawn Penalty, Sprint Won, Rebound)
 - Stats events omit `code` in config — auto-derived from `name` at load time (applies to any event)
 - Logging Mode as collapsible section on setup with segmented control (Game Log Only / Both / Stats Only) and Stats Time Entry
 - Three logging modes: Game Log only, Stats only, Full (Game Log + Stats)
