@@ -481,6 +481,8 @@ export const Events = {
 
         if ((isStatsOnly || isStatsMode) && (timeMode === "off" || (timeMode === "optional" && this._timeRaw.length === 0))) {
             time = "";
+        } else if (eventDef.isSwap && this._timeRaw.length === 0) {
+            time = "";
         } else {
             const parsed = this._parseTime(this._timeRaw);
             if (!parsed) {
@@ -851,6 +853,10 @@ export const Events = {
 
     _showToast(message, type = "info") {
         const container = document.getElementById("toast-container");
+        if (container.showPopover && !container.matches(':popover-open')) {
+            container.showPopover();
+        }
+
         const toast = document.createElement("div");
         toast.className = "toast toast-" + type;
         toast.textContent = message;
@@ -858,7 +864,12 @@ export const Events = {
 
         setTimeout(() => {
             toast.classList.add("toast-fade");
-            setTimeout(() => toast.remove(), 300);
+            setTimeout(() => {
+                toast.remove();
+                if (container.children.length === 0 && container.hidePopover) {
+                    container.hidePopover();
+                }
+            }, 300);
         }, 2500);
     },
 };
