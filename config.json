@@ -5,6 +5,7 @@
     { "name": "Offensive", "color": "teal", "statsOnly": true },
     { "name": "Steal", "color": "teal", "statsOnly": true },
     { "name": "Turnover", "color": "teal", "statsOnly": true },
+    { "name": "Rebound", "color": "teal", "statsOnly": true },
     { "name": "Field Block", "color": "teal", "statsOnly": true },
     { "name": "Save", "color": "teal", "statsOnly": true },
     { "name": "Drawn Exclusion", "color": "teal", "statsOnly": true },
