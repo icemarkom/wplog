@@ -168,6 +168,7 @@ These were explicitly discussed and agreed with the user:
 ## Current State (as of 2026-03-31)
 
 ### What's Done ✅
+- Migrated global toast notifications to use the native HTML5 `popover="manual"`, bypassing dialog `z-index` isolation contexts directly via the browser's Top Layer.
 - Cap swaps support Unidirectional (replacement) and Bidirectional (trade) modes with Retired Caps validation for identity tracking.
 - Added specific explicit Light Theme toggle (System / Dark / Light) in Setup screen. Uses OS `prefers-color-scheme` tracking via `mathMedia` when set to `system` natively updating `data-theme` without repeating CSS.
 - Re-architected Theme toggle and Restart App controls into an adjacent `.inline-menu` container.

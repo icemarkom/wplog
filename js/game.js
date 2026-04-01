@@ -79,7 +79,7 @@ export const Game = {
     },
 
     // Add an event to the game log
-    addEvent(game, { period, time, team, cap, event, note }) {
+    addEvent(game, { period, time, team, cap, event, note, swapType }) {
         const rules = RULES[game.rules];
         const eventDef = rules.events.find((e) => e.code === event);
         const isStatsOnly = eventDef && eventDef.statsOnly;
@@ -106,6 +106,7 @@ export const Game = {
             scoreW,
             scoreD,
             note: note || "",
+            swapType: swapType
         };
 
         game._nextSeq += 10;
