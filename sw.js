@@ -60,7 +60,14 @@ self.addEventListener("install", (event) => {
     event.waitUntil(
         caches.open(CACHE_NAME).then((cache) => cache.addAll(ASSETS))
     );
-    self.skipWaiting();
+    // self.skipWaiting() intentionally omitted to allow UI-controlled update flow
+});
+
+// Update — listen for directive to apply the new worker
+self.addEventListener('message', (event) => {
+    if (event.data && event.data.type === 'SKIP_WAITING') {
+        self.skipWaiting();
+    }
 });
 
 // Activate — clean old caches
@@ -103,3 +110,5 @@ self.addEventListener("fetch", (event) => {
         );
     }
 });
+
+
