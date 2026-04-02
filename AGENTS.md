@@ -169,6 +169,8 @@ These were explicitly discussed and agreed with the user:
 ## Current State (as of 2026-04-02)
 
 ### What's Done ✅
+- Supported Halves and dynamic period configs via a new Setup Periods stepper, replacing hardcoded Quarter logic and safely updating Player Stats layout chunking math.
+- Globally centered table headers (`vertical-align: middle`) and safely insulated bottom alignments on vertical stats headers using CSS specificity.
 - Fixed a timing race condition in the Print Dialog on mobile browsers (specifically iOS Safari) by leveraging the native `window.afterprint` event, ensuring hidden CSS print classes reliably persist through asynchronous PDF generation.
 - Integrated Screen Wake Lock API to prevent devices from sleeping during active games when on the Live screen.
 - Added new Rebound statistic tracking.
