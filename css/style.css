@@ -87,7 +87,7 @@
   --highlight: rgba(255, 255, 255, 0.06);
   --highlight-hover: rgba(255, 255, 255, 0.12);
   --surface-white: #fff;
-  
+
   /* Media filters */
 
   /* Shadows */
@@ -201,7 +201,9 @@
 /* ============================
    Reset + Base
    ============================ */
-*, *::before, *::after {
+*,
+*::before,
+*::after {
   box-sizing: border-box;
   margin: 0;
   padding: 0;
@@ -276,7 +278,8 @@ body {
    ============================ */
 .screen {
   display: none;
-  padding-bottom: 104px; /* nav bar + footer space */
+  padding-bottom: 104px;
+  /* nav bar + footer space */
 }
 
 .screen.active {
@@ -641,12 +644,16 @@ select.form-input {
 .score-team-white .score-label,
 .score-team-white .score-value,
 .log-team.team-white,
-.sheet-team-white .sheet-team-name { color: var(--white-team); }
+.sheet-team-white .sheet-team-name {
+  color: var(--white-team);
+}
 
 .score-team-dark .score-label,
 .score-team-dark .score-value,
 .log-team.team-dark,
-.sheet-team-dark .sheet-team-name { color: var(--dark-team); }
+.sheet-team-dark .sheet-team-name {
+  color: var(--dark-team);
+}
 
 .score-value {
   font-size: 40px;
@@ -997,13 +1004,33 @@ select.form-input {
   margin: 0 2px;
 }
 
-.log-entry.event-border-green { border-left: 3px solid var(--event-goal); }
-.log-entry.event-border-amber { border-left: 3px solid var(--event-exclusion); }
-.log-entry.event-border-orange { border-left: 3px solid var(--event-penalty); }
-.log-entry.event-border-blue { border-left: 3px solid var(--event-timeout); }
-.log-entry.event-border-yellow { border-left: 3px solid var(--event-yellow); }
-.log-entry.event-border-red { border-left: 3px solid var(--event-red); }
-.log-entry.event-border-teal { border-left: 3px solid var(--event-stat); }
+.log-entry.event-border-green {
+  border-left: 3px solid var(--event-goal);
+}
+
+.log-entry.event-border-amber {
+  border-left: 3px solid var(--event-exclusion);
+}
+
+.log-entry.event-border-orange {
+  border-left: 3px solid var(--event-penalty);
+}
+
+.log-entry.event-border-blue {
+  border-left: 3px solid var(--event-timeout);
+}
+
+.log-entry.event-border-yellow {
+  border-left: 3px solid var(--event-yellow);
+}
+
+.log-entry.event-border-red {
+  border-left: 3px solid var(--event-red);
+}
+
+.log-entry.event-border-teal {
+  border-left: 3px solid var(--event-stat);
+}
 
 /* ============================
    Dialog System (native <dialog>)
@@ -1027,8 +1054,15 @@ select.form-input {
 }
 
 @keyframes dialog-in {
-  from { opacity: 0; transform: translateY(12px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .foulout-card {
@@ -1252,13 +1286,26 @@ select.form-input {
 }
 
 @keyframes toast-in {
-  from { opacity: 0; transform: translateY(-12px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(-12px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 @keyframes toast-out {
-  from { opacity: 1; }
-  to { opacity: 0; transform: translateY(-12px); }
+  from {
+    opacity: 1;
+  }
+
+  to {
+    opacity: 0;
+    transform: translateY(-12px);
+  }
 }
 
 /* ============================
@@ -1297,7 +1344,9 @@ select.form-input {
   margin-bottom: 4px;
 }
 
-.sheet-meta-row:last-child { margin-bottom: 0; }
+.sheet-meta-row:last-child {
+  margin-bottom: 0;
+}
 
 .sheet-meta-pair {
   white-space: nowrap;
@@ -1405,6 +1454,7 @@ select.form-input {
   border: 1px solid var(--border);
   padding: 6px 10px;
   text-align: center;
+  vertical-align: middle;
 }
 
 .sheet-table th {
@@ -1435,7 +1485,7 @@ select.form-input {
   padding: 4px 8px;
 }
 
-.sheet-stat-header {
+.sheet-table .sheet-stat-header {
   vertical-align: bottom;
   padding: 8px 4px !important;
 }
@@ -1448,7 +1498,7 @@ select.form-input {
 }
 
 .sheet-stat-header-horizontal {
-  vertical-align: bottom;
+  vertical-align: middle;
   padding: 8px 4px !important;
 }
 
@@ -1677,7 +1727,7 @@ select.form-input {
   padding: 6px 0;
 }
 
-.about-row + .about-row {
+.about-row+.about-row {
   border-top: 1px solid var(--border);
 }
 
@@ -1973,6 +2023,7 @@ select.form-input {
    Compact layout — small viewports
    ============================ */
 @media (max-height: 700px) {
+
   /* ── Setup Screen ── */
   .app-title {
     font-size: 28px;

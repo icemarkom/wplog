@@ -33,6 +33,7 @@ export const Game = {
             startTime: "",
             location: "",
             gameId: "",
+            periods: rules.periods || 4,
             periodLength: rules.periodLength,
             otPeriodLength: rules.otPeriodLength,
             overtime: rules.overtime,
@@ -323,12 +324,12 @@ export const Game = {
         const rules = RULES[game.rules];
 
         // Regulation periods (not last)
-        if (typeof current === "number" && current < rules.periods) {
+        if (typeof current === "number" && current < game.periods) {
             return current + 1;
         }
 
         // End of regulation
-        if (typeof current === "number" && current === rules.periods) {
+        if (typeof current === "number" && current === game.periods) {
             const score = this.getScore(game);
             if (score.white !== score.dark) return null; // not tied → game over
             if (game.overtime) return "OT1";
@@ -371,8 +372,12 @@ export const Game = {
     },
 
     // Get period display label
-    getPeriodLabel(period) {
-        if (typeof period === "number") return "Q" + period;
+    getPeriodLabel(period, periodsCount = 4) {
+        if (typeof period === "number") {
+            if (periodsCount === 2) return "H" + period;
+            if (periodsCount === 4) return "Q" + period;
+            return "P" + period;
+        }
         return period; // "OT1", "OT2", "SO" etc.
     },
 
@@ -391,7 +396,7 @@ export const Game = {
         const periods = [];
 
         // Regulation
-        for (let i = 1; i <= rules.periods; i++) {
+        for (let i = 1; i <= game.periods; i++) {
             periods.push(i);
         }
 
@@ -473,7 +478,7 @@ export const Game = {
 
         const displayScore = this.getDisplayScore(game);
         return {
-            periods: periods.map((p) => this.getPeriodLabel(p)),
+            periods: periods.map((p) => this.getPeriodLabel(p, game.periods)),
             white,
             dark,
             totalWhite: displayScore.white,
@@ -567,7 +572,7 @@ export const Game = {
                         : "—";
             return {
                 team,
-                period: this.getPeriodLabel(entry.period),
+                period: this.getPeriodLabel(entry.period, game.periods),
                 time: entry.time.replace(/^0(\d:)/, "$1"),
                 type: eventDef ? eventDef.name : entry.event,
             };
@@ -588,7 +593,7 @@ export const Game = {
             return {
                 team: entry.team === "W" ? "White" : entry.team === "D" ? "Dark" : "—",
                 cap: entry.cap || "—",
-                period: this.getPeriodLabel(entry.period),
+                period: this.getPeriodLabel(entry.period, game.periods),
                 time: entry.time.replace(/^0(\d:)/, "$1"),
                 type: eventDef ? eventDef.name : entry.event,
             };
@@ -632,7 +637,7 @@ export const Game = {
                 totalsPerPeriod[team][entry.event] = {};
             }
 
-            const periodStr = this.getPeriodLabel(entry.period);
+            const periodStr = this.getPeriodLabel(entry.period, game.periods);
 
             stats[team][baseCap][entry.event] = (stats[team][baseCap][entry.event] || 0) + 1;
             totals[team][entry.event] = (totals[team][entry.event] || 0) + 1;
@@ -649,7 +654,7 @@ export const Game = {
         const activeStatCodes = statTypes.map(st => st.code);
 
         // Active periods for headers
-        const activePeriods = this.getAllPeriods(game).map(p => this.getPeriodLabel(p));
+        const activePeriods = this.getAllPeriods(game).map(p => this.getPeriodLabel(p, game.periods));
 
         return {
             statTypes,

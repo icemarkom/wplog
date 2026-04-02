@@ -35,7 +35,7 @@ export const Sheet = {
         if (container) {
             container.innerHTML = "";
             renderScreen(game, this, container, isPrint);
-            
+
             if (!this.isPrint) {
                 const toggle = container.querySelector("#sheet-stats-format-toggle");
                 if (toggle) {
@@ -129,7 +129,7 @@ export const Sheet = {
 
             if (entry.event === "---") {
                 tr.className = "sheet-period-end";
-                tr.innerHTML = `<td colspan="5">——— End of ${Game.getPeriodLabel(entry.period)} ———</td>`;
+                tr.innerHTML = `<td colspan="5">——— End of ${Game.getPeriodLabel(entry.period, game.periods)} ———</td>`;
             } else {
                 let align = "center";
                 let capDisplay = escapeHTML(entry.cap || "—");
@@ -233,7 +233,7 @@ export const Sheet = {
             if (player.fouledOut) tr.classList.add("sheet-fouled-out");
 
             const details = player.details
-                .map((f) => `${Game.getPeriodLabel(f.period)} ${f.time} ${f.event}`)
+                .map((f) => `${Game.getPeriodLabel(f.period, game.periods)} ${f.time} ${f.event}`)
                 .join("; ");
 
             tr.innerHTML = `
@@ -390,9 +390,15 @@ export const Sheet = {
         const numPeriods = activePeriods.length || 1;
 
         // Group into chunks of 11 (or 22 for print) internally.
-        // If per-period, one stat has \`numPeriods\` columns, so we scale down the chunk.
         let targetColsCount = this.isPrint ? 22 : 11;
-        let chunkSize = isPerPeriod ? Math.max(1, Math.floor(targetColsCount / numPeriods)) : targetColsCount;
+        let chunkSize = targetColsCount;
+
+        if (isPerPeriod) {
+            // Horizontal text categories physically require the width of ~4 narrow columns to fit inside `table-layout: fixed`.
+            // By enforcing this minimum cost, we natively reuse `targetColsCount` to scale elegantly across Screen (11) and Print (22).
+            const costPerCategory = Math.max(4, numPeriods);
+            chunkSize = Math.max(1, Math.floor(targetColsCount / costPerCategory));
+        }
 
         for (let i = 0; i < activeStatCodes.length; i += chunkSize) {
             const chunkCodes = activeStatCodes.slice(i, i + chunkSize);
@@ -408,14 +414,14 @@ export const Sheet = {
             const thead = document.createElement("thead");
             if (isPerPeriod) {
                 table.classList.add("sheet-table-per-period");
-                
+
                 let tr1 = `<tr><th class="col-cap" rowspan="2">Cap</th>`;
                 let tr2 = `<tr class="sheet-stat-subheader">`;
-                
+
                 for (const code of chunkCodes) {
                     if (code === null) {
                         tr1 += `<th class="sheet-stat-header-horizontal col-stat" colspan="${numPeriods}"><span></span></th>`;
-                        for (let p=0; p<numPeriods; p++) tr2 += `<th></th>`;
+                        for (let p = 0; p < numPeriods; p++) tr2 += `<th></th>`;
                     } else {
                         const st = statTypes.find(s => s.code === code);
                         tr1 += `<th class="sheet-stat-header-horizontal col-stat" colspan="${numPeriods}"><span>${escapeHTML(st.name)}</span></th>`;
@@ -438,20 +444,20 @@ export const Sheet = {
                     }
                 }
                 theadHtml += `</tr>`;
-                thead.innerHTML = document.createRange().createContextualFragment(theadHtml).textContent === "" ? theadHtml : theadHtml; 
+                thead.innerHTML = document.createRange().createContextualFragment(theadHtml).textContent === "" ? theadHtml : theadHtml;
                 // The quick assignment works best with outerHTML structure via innerHTML.
             }
 
             table.appendChild(thead);
 
             const tbody = document.createElement("tbody");
-            
+
             for (const cap of caps) {
                 let rowHtml = `<td class="col-cap">${escapeHTML(cap)}</td>`;
                 for (const code of chunkCodes) {
                     if (code === null) {
                         const cols = isPerPeriod ? numPeriods : 1;
-                        for (let c=0; c<cols; c++) rowHtml += `<td class="col-stat"></td>`;
+                        for (let c = 0; c < cols; c++) rowHtml += `<td class="col-stat"></td>`;
                     } else {
                         if (isPerPeriod) {
                             for (const p of activePeriods) {
@@ -479,7 +485,7 @@ export const Sheet = {
             for (const code of chunkCodes) {
                 if (code === null) {
                     const cols = isPerPeriod ? numPeriods : 1;
-                    for (let c=0; c<cols; c++) tfHtml += `<td class="col-stat"></td>`;
+                    for (let c = 0; c < cols; c++) tfHtml += `<td class="col-stat"></td>`;
                 } else {
                     if (isPerPeriod) {
                         for (const p of activePeriods) {
