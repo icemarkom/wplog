@@ -199,6 +199,7 @@ export const Setup = {
         });
 
         // Steppers — set values and disable
+        this._setStepperValue("setup-num-periods", game.periods || 4);
         this._setStepperValue("setup-period-length", game.periodLength);
         this._setStepperValue("setup-ot-length", game.otPeriodLength || 3);
         this._setStepperValue("setup-to-full", game.timeoutsAllowed.full);
@@ -326,9 +327,10 @@ export const Setup = {
     },
 
     _updateGameSetupHeader() {
+        const pNum = this._getStepperValue("setup-num-periods");
         const qLen = this._getStepperValue("setup-period-length");
         const pr = this._getPostRegulation();
-        const parts = [qLen + " min"];
+        const parts = [pNum + " × " + qLen + " min"];
 
         if (pr === "overtime") {
             const otLen = this._getStepperValue("setup-ot-length");
@@ -369,6 +371,7 @@ export const Setup = {
         });
 
         // Steppers
+        this._setStepperValue("setup-num-periods", rules.periods || 4);
         this._setStepperValue("setup-period-length", rules.periodLength);
         this._setStepperValue("setup-ot-length", rules.otPeriodLength || 3);
         this._setStepperValue("setup-to-full", rules.timeouts.full);
@@ -528,6 +531,7 @@ export const Setup = {
         const pr = this._getPostRegulation();
         game.overtime = pr === "overtime";
         game.shootout = pr === "shootout";
+        game.periods = this._getStepperValue("setup-num-periods");
         game.periodLength = this._getStepperValue("setup-period-length");
         game.otPeriodLength = game.overtime
             ? this._getStepperValue("setup-ot-length")
