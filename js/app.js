@@ -22,6 +22,7 @@ import { Events } from './events.js';
 import { Sheet } from './sheet.js';
 import { Share } from './share.js';
 import { initDialog } from './dialog.js';
+import { WakeLock } from './wakelock.js';
 
 
 // wplog — App Initialization + Screen Navigation
@@ -300,6 +301,13 @@ export const App = {
         const hasGame = !!this.game;
         document.getElementById("nav-live").disabled = !hasGame;
         document.getElementById("nav-sheet").disabled = !hasGame;
+
+        // Manage Wake Lock precisely for active games on Live screen
+        if (name === "live" && hasGame) {
+            WakeLock.acquire();
+        } else {
+            WakeLock.release();
+        }
     },
 
 
