@@ -169,6 +169,7 @@ These were explicitly discussed and agreed with the user:
 ## Current State (as of 2026-04-02)
 
 ### What's Done ✅
+- Fixed a timing race condition in the Print Dialog on mobile browsers (specifically iOS Safari) by leveraging the native `window.afterprint` event, ensuring hidden CSS print classes reliably persist through asynchronous PDF generation.
 - Integrated Screen Wake Lock API to prevent devices from sleeping during active games when on the Live screen.
 - Added new Rebound statistic tracking.
 - Implemented interactive Service Worker Update flow: the app now traps background updates in `waiting` state and drops an explicit *Update Available* popover Toast on-screen to gracefully force a controlled UI refresh, preventing mixed-version ghosts.
