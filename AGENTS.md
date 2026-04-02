@@ -166,9 +166,10 @@ These were explicitly discussed and agreed with the user:
 
 ---
 
-## Current State (as of 2026-04-01)
+## Current State (as of 2026-04-02)
 
 ### What's Done ✅
+- Integrated Screen Wake Lock API to prevent devices from sleeping during active games when on the Live screen.
 - Added new Rebound statistic tracking.
 - Implemented interactive Service Worker Update flow: the app now traps background updates in `waiting` state and drops an explicit *Update Available* popover Toast on-screen to gracefully force a controlled UI refresh, preventing mixed-version ghosts.
 - Migrated global toast notifications to use the native HTML5 `popover="manual"`, bypassing dialog `z-index` isolation contexts directly via the browser's Top Layer.
