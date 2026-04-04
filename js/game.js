@@ -33,6 +33,7 @@ export const Game = {
             startTime: "",
             location: "",
             gameId: "",
+            periods: rules.periods || 4,
             periodLength: rules.periodLength,
             otPeriodLength: rules.otPeriodLength,
             overtime: rules.overtime,
@@ -184,7 +185,7 @@ export const Game = {
                     const capA = entry.cap;
                     const capB = entry.note;
                     const baseA = game._activeCaps[entry.team][capA] || capA;
-                    
+
                     if (entry.swapType === "uni") {
                         game._activeCaps[entry.team][capB] = baseA;
                         game._activeCaps[entry.team][capA] = baseA; // explicitly retired mapping
@@ -241,8 +242,8 @@ export const Game = {
         if (entry.event !== "G") return "";
         const soW = game.log.filter(e => e.id <= entry.id && e.event === "G" && e.team === "W" && e.period === "SO").length;
         const soD = game.log.filter(e => e.id <= entry.id && e.event === "G" && e.team === "D" && e.period === "SO").length;
-        if (soW === 0 && soD === 0) return entry.scoreW + "–" + entry.scoreD;
-        return formatFractionalScore(entry.scoreW, soW) + "–" + formatFractionalScore(entry.scoreD, soD);
+        if (soW === 0 && soD === 0) return entry.scoreW + " - " + entry.scoreD;
+        return formatFractionalScore(entry.scoreW, soW) + " - " + formatFractionalScore(entry.scoreD, soD);
     },
 
     // Get timeouts used per team
@@ -284,8 +285,8 @@ export const Game = {
         const eventDef = rules.events.find((e) => e.code === eventCode);
         if (!eventDef) return null;
 
-        const baseCap = game._activeCaps && game._activeCaps[team] 
-            ? (game._activeCaps[team][cap] || cap) 
+        const baseCap = game._activeCaps && game._activeCaps[team]
+            ? (game._activeCaps[team][cap] || cap)
             : cap;
 
         // Auto foul-out events
@@ -323,12 +324,12 @@ export const Game = {
         const rules = RULES[game.rules];
 
         // Regulation periods (not last)
-        if (typeof current === "number" && current < rules.periods) {
+        if (typeof current === "number" && current < game.periods) {
             return current + 1;
         }
 
         // End of regulation
-        if (typeof current === "number" && current === rules.periods) {
+        if (typeof current === "number" && current === game.periods) {
             const score = this.getScore(game);
             if (score.white !== score.dark) return null; // not tied → game over
             if (game.overtime) return "OT1";
@@ -371,8 +372,12 @@ export const Game = {
     },
 
     // Get period display label
-    getPeriodLabel(period) {
-        if (typeof period === "number") return "Q" + period;
+    getPeriodLabel(period, periodsCount = 4) {
+        if (typeof period === "number") {
+            if (periodsCount === 2) return "H" + period;
+            if (periodsCount === 4) return "Q" + period;
+            return "P" + period;
+        }
         return period; // "OT1", "OT2", "SO" etc.
     },
 
@@ -391,7 +396,7 @@ export const Game = {
         const periods = [];
 
         // Regulation
-        for (let i = 1; i <= rules.periods; i++) {
+        for (let i = 1; i <= game.periods; i++) {
             periods.push(i);
         }
 
@@ -427,7 +432,7 @@ export const Game = {
         if (time > lastEntry.time) {
             return {
                 valid: false,
-                warning: `This time (${time}) is before the previous entry (${lastEntry.time}) — are you sure?`,
+                warning: `This time (${time}) is before the previous entry (${lastEntry.time}) - are you sure?`,
             };
         }
         return { valid: true };
@@ -473,7 +478,7 @@ export const Game = {
 
         const displayScore = this.getDisplayScore(game);
         return {
-            periods: periods.map((p) => this.getPeriodLabel(p)),
+            periods: periods.map((p) => this.getPeriodLabel(p, game.periods)),
             white,
             dark,
             totalWhite: displayScore.white,
@@ -564,10 +569,10 @@ export const Game = {
             const team = entry.team === "W" ? "White"
                 : entry.team === "D" ? "Dark"
                     : entry.team === "" ? "Official"
-                        : "—";
+                        : "-";
             return {
                 team,
-                period: this.getPeriodLabel(entry.period),
+                period: this.getPeriodLabel(entry.period, game.periods),
                 time: entry.time.replace(/^0(\d:)/, "$1"),
                 type: eventDef ? eventDef.name : entry.event,
             };
@@ -588,7 +593,7 @@ export const Game = {
             return {
                 team: entry.team === "W" ? "White" : entry.team === "D" ? "Dark" : "—",
                 cap: entry.cap || "—",
-                period: this.getPeriodLabel(entry.period),
+                period: this.getPeriodLabel(entry.period, game.periods),
                 time: entry.time.replace(/^0(\d:)/, "$1"),
                 type: eventDef ? eventDef.name : entry.event,
             };
@@ -632,7 +637,7 @@ export const Game = {
                 totalsPerPeriod[team][entry.event] = {};
             }
 
-            const periodStr = this.getPeriodLabel(entry.period);
+            const periodStr = this.getPeriodLabel(entry.period, game.periods);
 
             stats[team][baseCap][entry.event] = (stats[team][baseCap][entry.event] || 0) + 1;
             totals[team][entry.event] = (totals[team][entry.event] || 0) + 1;
@@ -649,7 +654,7 @@ export const Game = {
         const activeStatCodes = statTypes.map(st => st.code);
 
         // Active periods for headers
-        const activePeriods = this.getAllPeriods(game).map(p => this.getPeriodLabel(p));
+        const activePeriods = this.getAllPeriods(game).map(p => this.getPeriodLabel(p, game.periods));
 
         return {
             statTypes,

@@ -30,8 +30,10 @@ const ASSETS = [
     "./config.json",
     "./js/config.js",
     "./js/confirm.js",
+    "./js/dialog.js",
     "./js/storage.js",
     "./js/time.js",
+    "./js/wakelock.js",
     "./js/game.js",
     "./js/setup.js",
     "./js/events.js",
@@ -93,12 +95,12 @@ self.addEventListener("fetch", (event) => {
                     caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
                 }
                 return response;
-            }).catch(() => caches.match(event.request))
+            }).catch(() => caches.match(event.request, { ignoreSearch: true }))
         );
     } else {
         // Production: cache-first for offline reliability
         event.respondWith(
-            caches.match(event.request).then((cached) => {
+            caches.match(event.request, { ignoreSearch: true }).then((cached) => {
                 return cached || fetch(event.request).then((response) => {
                     if (response.status === 200) {
                         const clone = response.clone();

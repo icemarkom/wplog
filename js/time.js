@@ -20,7 +20,7 @@
  * Returns the maximum minutes for a given period.
  *
  * @param {number|string} period - Current period (1-4, "OT1", "OT2", ..., "SO")
- * @param {number} periodLength - Quarter length in minutes (default 8)
+ * @param {number} periodLength - Period length in minutes (default 8)
  * @param {number|null} otPeriodLength - OT period length in minutes (default 3)
  * @returns {number} Maximum minutes allowed
  */

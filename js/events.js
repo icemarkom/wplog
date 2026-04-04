@@ -701,7 +701,7 @@ export const Events = {
             document.getElementById(`score-value-${i}`).textContent = val;
         }
         document.getElementById("current-period").textContent = Game.getPeriodLabel(
-            this.game.currentPeriod
+            this.game.currentPeriod, this.game.periods
         );
         this._updateTOL(this._teams[0].code, "tol-0");
         this._updateTOL(this._teams[1].code, "tol-1");
@@ -734,7 +734,7 @@ export const Events = {
             if (entry.event === "---") {
                 row.classList.add("log-period-end");
                 row.innerHTML = `
-          <span class="log-period">${Game.getPeriodLabel(entry.period)}</span>
+          <span class="log-period">${Game.getPeriodLabel(entry.period, this.game.periods)}</span>
           <span class="log-separator">——— End of Period ———</span>
           <button class="log-delete-btn" data-id="${entry.id}" title="Delete">✕</button>
         `;
@@ -810,7 +810,7 @@ export const Events = {
         // For End Game, log the actual wall clock time
         const note = isEndGame
             ? "End of Game"
-            : "End of " + Game.getPeriodLabel(period);
+            : "End of " + Game.getPeriodLabel(period, this.game.periods);
 
         Game.addEvent(this.game, {
             period,
@@ -837,7 +837,7 @@ export const Events = {
             this._updateScoreBar();
             this._updateLog();
             this._updateEndButton();
-            this._showToast("Period " + Game.getPeriodLabel(this.game.currentPeriod) + " started", "info");
+            this._showToast("Period " + Game.getPeriodLabel(this.game.currentPeriod, this.game.periods) + " started", "info");
         }
     },
 
