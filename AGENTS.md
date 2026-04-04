@@ -228,7 +228,7 @@ These were explicitly discussed and agreed with the user:
 - localStorage persistence
 - PWA manifest + service worker (v2, relative paths)
 - GitHub Pages deployment (release-gated via Actions)
-- Dark mode, mobile-first CSS (Source Code Pro for scores/times/tables)
+- Dark mode, mobile-first CSS (native system fonts for scores/times/tables)
 - Copyright footer with dynamic year
 - Subdued placeholder color on native time input (`--:--`)
 - "Geronimo" workflow for quick commit/push/close

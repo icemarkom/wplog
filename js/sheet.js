@@ -74,10 +74,10 @@ export const Sheet = {
       </div>
       <div class="sheet-meta">
         <div class="sheet-meta-row">
-          <span class="sheet-meta-pair"><span class="sheet-label">Game #:</span> <span class="sheet-value">${escapeHTML(game.gameId || "—")}</span></span>
+          <span class="sheet-meta-pair"><span class="sheet-label">Game #:</span> <span class="sheet-value">${escapeHTML(game.gameId || "-")}</span></span>
         </div>
         <div class="sheet-meta-row">
-          <span class="sheet-meta-pair"><span class="sheet-label">Location:</span> <span class="sheet-value">${escapeHTML(game.location || "—")}</span></span>
+          <span class="sheet-meta-pair"><span class="sheet-label">Location:</span> <span class="sheet-value">${escapeHTML(game.location || "-")}</span></span>
         </div>
         <div class="sheet-meta-row sheet-meta-times">
           <span class="sheet-meta-pair"><span class="sheet-label">Date:</span> <span class="sheet-value">${escapeHTML(game.date)}</span></span>
@@ -87,7 +87,7 @@ export const Sheet = {
       </div>
       <div class="sheet-teams">
         ${teamDivs[0]}
-        <div class="sheet-final-score">${escapeHTML(String(teams[0].code === "W" ? score.white : score.dark))} — ${escapeHTML(String(teams[1].code === "W" ? score.white : score.dark))}</div>
+        <div class="sheet-final-score">${escapeHTML(String(teams[0].code === "W" ? score.white : score.dark))} - ${escapeHTML(String(teams[1].code === "W" ? score.white : score.dark))}</div>
         ${teamDivs[1]}
       </div>
     `;
@@ -129,10 +129,10 @@ export const Sheet = {
 
             if (entry.event === "---") {
                 tr.className = "sheet-period-end";
-                tr.innerHTML = `<td colspan="5">——— End of ${Game.getPeriodLabel(entry.period, game.periods)} ———</td>`;
+                tr.innerHTML = `<td colspan="5">--- End of ${Game.getPeriodLabel(entry.period, game.periods)} ---</td>`;
             } else {
                 let align = "center";
-                let capDisplay = escapeHTML(entry.cap || "—");
+                let capDisplay = escapeHTML(entry.cap || "-");
                 let eventDisplay = escapeHTML(entry.event);
 
                 if (entry.event === "Cap swap") {
@@ -147,7 +147,7 @@ export const Sheet = {
                 tr.innerHTML = `
           <td>${entry.period === "SO" ? "" : escapeHTML(entry.time.replace(/^0(\d:)/, '$1'))}</td>
           <td>${capDisplay}</td>
-          <td>${escapeHTML(entry.team || "—")}</td>
+          <td>${escapeHTML(entry.team || "-")}</td>
           <td style="text-align:${align}">${eventDisplay}</td>
           <td>${escapeHTML(Game.formatEntryScore(entry, game))}</td>
         `;

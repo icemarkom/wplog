@@ -85,12 +85,12 @@ export function validateGameData(parsed) {
 
         // periodLength (required, 1-9)
         if (!_isIntInRange(parsed.periodLength, 1, 9)) {
-            return _fail("Period length must be 1–9.");
+            return _fail("Period length must be 1-9.");
         }
 
         // otPeriodLength (optional, 1-9, or null/undefined when no OT)
         if (parsed.otPeriodLength != null && !_isIntInRange(parsed.otPeriodLength, 1, 9)) {
-            return _fail("OT period length must be 1–9.");
+            return _fail("OT period length must be 1-9.");
         }
 
         // overtime, shootout (required booleans)
