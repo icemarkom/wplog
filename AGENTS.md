@@ -17,6 +17,7 @@
 - **Version system** — `APP_VERSION` lives in `config.js`. Default is `"dev"`. Deploy workflow injects release tag. Dev mode auto-detects file timestamp via `HEAD` requests. Don't hardcode versions elsewhere.
 - **About is a native dialog** — not a screen/section. Uses native `<dialog>` element with `showModal()`/`close()`. All overlays (About, Confirm, Alert, Content, Download, Print, QR, Event Modal) are native `<dialog>` elements.
 - **Always use `escapeHTML()`** — when building `innerHTML` templates with user-supplied data (team names, cap numbers, Game #, location, etc.), wrap them in `escapeHTML()`. This is mandatory — see `sanitize.js`.
+- **Update sw.js ASSETS** — whenever adding a new file (HTML, CSS, JS, image) to the application, you MUST add it to the `ASSETS` array in `sw.js` to ensure the app continues to work completely offline.
 
 
 ## Project Summary
