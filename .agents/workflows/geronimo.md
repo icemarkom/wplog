@@ -16,8 +16,9 @@ When the user says **"geronimo"**, they are giving **one-time approval** to run 
    - Update design decision table entries if any decisions changed
    - Update the date in the section header
    - Remove completed items from "Known Gaps / Future Work 📋" if applicable
-3. **Fix license headers** — run `addlicense -c "Marko Milivojevic" -l apache -ignore '.github/**' -ignore '.agents/**' -ignore 'lib/**' .` to add any missing headers.
-4. **Run tests** — execute `./tools/test.sh`. This must pass before committing.
+3. **Check `sw.js` ASSETS** — verify if any new files (HTML, CSS, JS, images) were added. If so, ensure they are added to the `ASSETS` array in `sw.js` so they are cached for offline use.
+4. **Fix license headers** — run `addlicense -c "Marko Milivojevic" -l apache -ignore '.github/**' -ignore '.agents/**' -ignore 'lib/**' .` to add any missing headers.
+5. **Run tests** — execute `./tools/test.sh`. This must pass before committing.
    > If tests fail, fix the issue and re-run. Do NOT proceed to commit with failing tests.
 5. **Commit** the staged/changed files with an appropriate commit message referencing the issue number.
    > **Signed commits:** All commits in this repo are signed. The commit command will trigger a passphrase prompt. When this happens, **pause and instruct the user to enter the passphrase in the IDE** — it is handled by an extension the agent cannot interact with. Wait for the commit to complete before proceeding.
