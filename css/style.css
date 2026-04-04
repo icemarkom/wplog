@@ -102,8 +102,8 @@
   --radius-md: 10px;
   --radius-lg: 14px;
   --radius-xl: 20px;
-  --font: 'Inter', system-ui, -apple-system, sans-serif;
-  --font-mono: 'Source Code Pro', monospace;
+  --font: system-ui, -apple-system, sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", Menlo, monospace;
   --letter-spacing-caps: 0.04em;
   --transition: 150ms ease;
 }

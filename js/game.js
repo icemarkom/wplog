@@ -185,7 +185,7 @@ export const Game = {
                     const capA = entry.cap;
                     const capB = entry.note;
                     const baseA = game._activeCaps[entry.team][capA] || capA;
-                    
+
                     if (entry.swapType === "uni") {
                         game._activeCaps[entry.team][capB] = baseA;
                         game._activeCaps[entry.team][capA] = baseA; // explicitly retired mapping
@@ -242,8 +242,8 @@ export const Game = {
         if (entry.event !== "G") return "";
         const soW = game.log.filter(e => e.id <= entry.id && e.event === "G" && e.team === "W" && e.period === "SO").length;
         const soD = game.log.filter(e => e.id <= entry.id && e.event === "G" && e.team === "D" && e.period === "SO").length;
-        if (soW === 0 && soD === 0) return entry.scoreW + "–" + entry.scoreD;
-        return formatFractionalScore(entry.scoreW, soW) + "–" + formatFractionalScore(entry.scoreD, soD);
+        if (soW === 0 && soD === 0) return entry.scoreW + " - " + entry.scoreD;
+        return formatFractionalScore(entry.scoreW, soW) + " - " + formatFractionalScore(entry.scoreD, soD);
     },
 
     // Get timeouts used per team
@@ -285,8 +285,8 @@ export const Game = {
         const eventDef = rules.events.find((e) => e.code === eventCode);
         if (!eventDef) return null;
 
-        const baseCap = game._activeCaps && game._activeCaps[team] 
-            ? (game._activeCaps[team][cap] || cap) 
+        const baseCap = game._activeCaps && game._activeCaps[team]
+            ? (game._activeCaps[team][cap] || cap)
             : cap;
 
         // Auto foul-out events
@@ -432,7 +432,7 @@ export const Game = {
         if (time > lastEntry.time) {
             return {
                 valid: false,
-                warning: `This time (${time}) is before the previous entry (${lastEntry.time}) — are you sure?`,
+                warning: `This time (${time}) is before the previous entry (${lastEntry.time}) - are you sure?`,
             };
         }
         return { valid: true };
@@ -569,7 +569,7 @@ export const Game = {
             const team = entry.team === "W" ? "White"
                 : entry.team === "D" ? "Dark"
                     : entry.team === "" ? "Official"
-                        : "—";
+                        : "-";
             return {
                 team,
                 period: this.getPeriodLabel(entry.period, game.periods),
