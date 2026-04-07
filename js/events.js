@@ -20,7 +20,7 @@ import { Game } from './game.js';
 import { escapeHTML } from './sanitize.js';
 import { initDialog } from './dialog.js';
 import { Storage } from './storage.js';
-import { getMaxMinutes, parseTime, formatTimeDisplay } from './time.js';
+import { getMaxMinutes, parseTime, formatTimeDisplay, formatTime } from './time.js';
 
 // wplog — Live Log Screen (Event Logging)
 // Event-first workflow: tap event button → modal opens → enter details → OK
@@ -480,9 +480,9 @@ export const Events = {
         let time;
 
         if ((isStatsOnly || isStatsMode) && (timeMode === "off" || (timeMode === "optional" && this._timeRaw.length === 0))) {
-            time = "";
+            time = null;
         } else if (eventDef.isSwap && this._timeRaw.length === 0) {
-            time = "";
+            time = null;
         } else {
             const parsed = this._parseTime(this._timeRaw);
             if (!parsed) {
@@ -756,7 +756,8 @@ export const Events = {
                 row.classList.add("event-border-" + colorClass);
 
                 // Time display: blank for SO events and stat events without time
-                const timeDisplay = entry.period === "SO" ? "" : (entry.time || "").replace(/^0(\d:)/, '$1');
+                let rawFmt = (entry.time !== null) ? formatTime(entry.time) : "";
+                const timeDisplay = entry.period === "SO" ? "" : rawFmt.replace(/^0(\d:)/, '$1');
 
                 // Score display: blank for stats-only events
                 const scoreDisplay = isStatEvent ? "" : Game.formatEntryScore(entry, this.game);

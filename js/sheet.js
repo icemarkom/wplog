@@ -16,6 +16,7 @@
 
 import { RULES } from './config.js';
 import { Game } from './game.js';
+import { formatTime } from './time.js';
 import { escapeHTML } from './sanitize.js';
 import { renderScreen } from './sheet-screen.js';
 
@@ -145,7 +146,7 @@ export const Sheet = {
                 }
 
                 tr.innerHTML = `
-          <td>${entry.period === "SO" ? "" : escapeHTML(entry.time.replace(/^0(\d:)/, '$1'))}</td>
+          <td>${entry.period === "SO" ? "" : escapeHTML((entry.time !== null ? formatTime(entry.time) : "").replace(/^0(\d:)/, '$1'))}</td>
           <td>${capDisplay}</td>
           <td>${escapeHTML(entry.team || "-")}</td>
           <td style="text-align:${align}">${eventDisplay}</td>
@@ -233,7 +234,7 @@ export const Sheet = {
             if (player.fouledOut) tr.classList.add("sheet-fouled-out");
 
             const details = player.details
-                .map((f) => `${Game.getPeriodLabel(f.period, game.periods)} ${f.time} ${f.event}`)
+                .map((f) => `${Game.getPeriodLabel(f.period, game.periods)} ${f.time !== null ? formatTime(f.time) : ""} ${f.event}`)
                 .join("; ");
 
             tr.innerHTML = `
@@ -282,7 +283,7 @@ export const Sheet = {
             tr.innerHTML = `
         <td>${entry.team}</td>
         <td>${entry.period}</td>
-        <td>${entry.time}</td>
+        <td>${entry.time !== null ? formatTime(entry.time) : ""}</td>
         <td>${entry.type}</td>
       `;
             tbody.appendChild(tr);
@@ -322,7 +323,7 @@ export const Sheet = {
         <td>${entry.team}</td>
         <td>${escapeHTML(entry.cap)}</td>
         <td>${entry.period}</td>
-        <td>${escapeHTML(entry.time)}</td>
+        <td>${escapeHTML(entry.time !== null ? formatTime(entry.time) : "")}</td>
         <td>${entry.type}</td>
       `;
             tbody.appendChild(tr);
