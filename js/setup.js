@@ -219,7 +219,6 @@ export const Setup = {
         // Advanced: always open during active game (settings are visible/locked)
         document.getElementById("setup-advanced-section").open = true;
     },
-
     _populateRules() {
         const select = document.getElementById("setup-rules");
         select.innerHTML = "";

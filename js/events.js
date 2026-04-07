@@ -144,6 +144,12 @@ export const Events = {
 
             const key = e.key;
 
+            // If focus is inside a native text input, let browser handle normal typing/shortcuts.
+            // Only Enter, Escape, and Tab pass through for modal control.
+            if (e.target.tagName === "INPUT" && e.target.type === "text" && key !== "Enter" && key !== "Escape" && key !== "Tab") {
+                return;
+            }
+
             // Digits 0-9
             if (key >= "0" && key <= "9") {
                 e.preventDefault();
@@ -189,21 +195,35 @@ export const Events = {
                 return;
             }
 
-            // Tab = toggle time/cap field
+            // Tab = cycle through fields: time → cap → [altCap] → name → time
             if (key === "Tab") {
                 e.preventDefault();
                 const code = document.getElementById("modal-event-title").dataset.code;
                 const eventDef = this._getEventDef(code);
-                
-                let next;
-                if (this._numpadTarget === "time") {
-                    next = "cap";
-                } else if (this._numpadTarget === "cap" && eventDef && eventDef.isSwap) {
-                    next = "altCap";
+                const nameField = document.getElementById("field-roster-name");
+                const nameInput = document.getElementById("modal-input-name");
+                const nameVisible = nameField && nameField.style.display !== "none";
+                const isInName = e.target === nameInput;
+
+                if (isInName) {
+                    // Leave name → back to time
+                    nameInput.blur();
+                    this._setNumpadTarget("time", true);
                 } else {
-                    next = "time";
+                    let next;
+                    if (this._numpadTarget === "time") {
+                        next = "cap";
+                    } else if (this._numpadTarget === "cap" && eventDef && eventDef.isSwap) {
+                        next = "altCap";
+                    } else if (nameVisible) {
+                        // cap (or altCap) → name
+                        nameInput.focus();
+                        return;
+                    } else {
+                        next = "time";
+                    }
+                    this._setNumpadTarget(next, true);
                 }
-                this._setNumpadTarget(next, true);
                 return;
             }
 
@@ -273,6 +293,7 @@ export const Events = {
             if (this._numpadTarget === "cap") {
                 this._capRaw = targetRaw;
                 document.getElementById("cap-display").textContent = this._capRaw;
+                this._refreshRosterFields();
             } else {
                 this._altCapRaw = targetRaw;
                 document.getElementById("alt-cap-display").textContent = this._altCapRaw;
@@ -445,7 +466,12 @@ export const Events = {
         const officialBtn = document.getElementById("team-official-btn");
         if (officialBtn) officialBtn.classList.remove("active");
 
-        // Update OK state
+        // Update OK state and Roster fields
+        const nameInput = document.getElementById("modal-input-name");
+        const idInput = document.getElementById("modal-input-id");
+        if (nameInput) nameInput.value = "";
+        if (idInput) idInput.value = "";
+        this._refreshRosterFields();
         this._updateOkButton();
 
         // Show modal
@@ -458,12 +484,52 @@ export const Events = {
         this._pendingEvent = null;
     },
 
+    _refreshRosterFields() {
+        const code = document.getElementById("modal-event-title").dataset.code;
+        const eventDef = this._getEventDef(code);
+        const nameField = document.getElementById("field-roster-name");
+        const idField = document.getElementById("field-roster-id");
+        const nameInput = document.getElementById("modal-input-name");
+        const idInput = document.getElementById("modal-input-id");
+        if (!nameField || !idField) return;
+
+        // Hide roster fields for teamOnly, swap, and official
+        const hide = (eventDef && (eventDef.teamOnly || eventDef.isSwap)) || this.selectedTeam === "official";
+        nameField.style.display = hide ? "none" : "";
+        idField.style.display = hide ? "none" : "";
+
+        if (hide) return;
+
+        // Show ID field only when ruleset has playerId
+        const rules = RULES[this.game.rules];
+        const playerIdLabel = rules.playerId;
+        if (playerIdLabel) {
+            idField.style.display = "";
+            idInput.placeholder = playerIdLabel + " (Optional)";
+        } else {
+            idField.style.display = "none";
+        }
+
+        // Pre-fill from existing roster
+        const cap = this._capRaw;
+        const team = this.selectedTeam;
+        if (cap && team && team !== "official") {
+            const teamKey = team === "W" ? "white" : "dark";
+            const entry = this.game[teamKey].roster && this.game[teamKey].roster[cap];
+            if (entry) {
+                if (entry.name && !nameInput.value) nameInput.value = entry.name;
+                if (entry.id && !idInput.value && playerIdLabel) idInput.value = entry.id;
+            }
+        }
+    },
+
     _selectTeam(team) {
         this.selectedTeam = team;
         document.getElementById("team-white-btn").classList.toggle("active", team === "W");
         document.getElementById("team-dark-btn").classList.toggle("active", team === "D");
         const officialBtn = document.getElementById("team-official-btn");
         if (officialBtn) officialBtn.classList.toggle("active", team === "official");
+        this._refreshRosterFields();
         this._updateOkButton();
     },
 
@@ -535,6 +601,17 @@ export const Events = {
         const foulOut = (eventDef.teamOnly || isStatsOnly)
             ? null
             : Game.checkFoulOut(this.game, this.selectedTeam, cap, eventDef.code);
+
+        // Extract JIT Name/ID
+        const nameInput = document.getElementById("modal-input-name");
+        const idInput = document.getElementById("modal-input-id");
+        if ((nameInput?.value.trim() || idInput?.value.trim()) && cap && this.selectedTeam && this.selectedTeam !== "official") {
+            const teamKey = this.selectedTeam === "W" ? "white" : "dark";
+            if (!this.game[teamKey].roster) this.game[teamKey].roster = {};
+            if (!this.game[teamKey].roster[cap]) this.game[teamKey].roster[cap] = {};
+            if (nameInput?.value.trim()) this.game[teamKey].roster[cap].name = nameInput.value.trim();
+            if (idInput?.value.trim()) this.game[teamKey].roster[cap].id = idInput.value.trim();
+        }
 
         // Log the event
         Game.addEvent(this.game, {

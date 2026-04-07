@@ -1239,6 +1239,19 @@ select.form-input {
   border-radius: var(--radius-md);
 }
 
+/* Modal roster inputs — compact text inputs for Name / ID */
+.modal-roster {
+  margin-bottom: 1dvh;
+}
+
+.modal-roster .form-input {
+  padding: 0 12px;
+  min-height: 48px;
+  font-size: 15px;
+  background: transparent;
+  border: 2px solid var(--border);
+}
+
 /* ============================
    Toast Notifications
    ============================ */
@@ -2016,6 +2029,10 @@ select.form-input {
 
   .modal-action-btn {
     min-height: 48px;
+  }
+
+  .modal-roster {
+    margin-bottom: 8px;
   }
 }
 

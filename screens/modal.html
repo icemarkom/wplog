@@ -31,7 +31,8 @@
     <div id="cap-display" class="field-display"></div>
   </div>
 
-  <button type="button" id="modal-swap-btn" class="swap-btn" aria-label="Toggle Swap Direction" style="display:none;">⇄</button>
+  <button type="button" id="modal-swap-btn" class="swap-btn" aria-label="Toggle Swap Direction"
+    style="display:none;">⇄</button>
 
   <!-- Alt Cap (tap to target numpad) -->
   <div class="modal-field form-group" id="field-alt-cap" data-target="altCap" style="display:none; margin-bottom: 0;">
@@ -45,6 +46,16 @@
   <button id="team-white-btn" class="team-btn team-btn-white">WHITE</button>
   <button id="team-official-btn" class="team-btn team-btn-official" style="display:none">OFFICIAL</button>
   <button id="team-dark-btn" class="team-btn team-btn-dark">DARK</button>
+</div>
+
+<!-- Inline Roster Inputs -->
+<div id="field-roster-name" class="modal-roster">
+  <input type="text" id="modal-input-name" class="form-input" autocomplete="off" spellcheck="false"
+    placeholder="Name (Optional)">
+</div>
+<div id="field-roster-id" class="modal-roster">
+  <input type="text" id="modal-input-id" class="form-input" autocomplete="off" spellcheck="false"
+    placeholder="ID (Optional)">
 </div>
 
 <!-- Shared Numpad -->
