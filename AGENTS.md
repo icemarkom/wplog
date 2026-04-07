@@ -167,9 +167,12 @@ These were explicitly discussed and agreed with the user:
 
 ---
 
-## Current State (as of 2026-04-03)
+## Current State (as of 2026-04-07)
 
 ### What's Done ✅
+- Cap Swap persistence integration: Added 'Cap swap' into internal storage validation allowlists automatically protecting structural tracking across PWA loads natively ensuring continuity over structural cache layers stably resolving event UI.
+- Time Engine Restructure: Internally transitioned time structures globally natively out into numerical integer intervals exclusively handling math mapping instead of formatted sequences implicitly bypassing edge-case comparison blocks across rules dynamically.
+- Sequential UI Organization limit mapping globally decoupled native runtime limits using implicitly executed execution structures scaling `a.seq - b.seq` mappings over chronology overrides safely.
 - Supported Halves and dynamic period configs via a new Setup Periods stepper, replacing hardcoded Quarter logic and safely updating Player Stats layout chunking math.
 - Globally centered table headers (`vertical-align: middle`) and safely insulated bottom alignments on vertical stats headers using CSS specificity.
 - Fixed a timing race condition in the Print Dialog on mobile browsers (specifically iOS Safari) by leveraging the native `window.afterprint` event, ensuring hidden CSS print classes reliably persist through asynchronous PDF generation.

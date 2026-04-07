@@ -61,6 +61,7 @@ export function validateGameData(parsed) {
         // Build set of valid event codes for this rule set
         const validEvents = new Set(resolvedRules.events.map((e) => e.code));
         validEvents.add("---"); // Period End marker
+        validEvents.add("Cap swap"); // Swap Caps system event
 
         // date
         if (!_isString(parsed.date) || !RE_DATE.test(parsed.date)) {
@@ -179,13 +180,21 @@ export function validateGameData(parsed) {
                 return _fail(`Log entry ${i + 1}: invalid period.`);
             }
 
-            // time (game clock: M:SS or empty)
-            if (!_isString(entry.time)) {
-                return _fail(`Log entry ${i + 1}: time must be a string.`);
+            // time (game clock: integer seconds or null)
+            // Backward-compatibility: auto-migrate legacy "M:SS" and "" to integer/null
+            if (_isString(entry.time)) {
+                if (entry.time === "") {
+                    entry.time = null;
+                } else if (RE_GAME_TIME.test(entry.time)) {
+                    const parts = entry.time.split(":");
+                    entry.time = parseInt(parts[0], 10) * 60 + parseInt(parts[1], 10);
+                } else {
+                    return _fail(`Log entry ${i + 1}: invalid legacy time "${entry.time}".`);
+                }
+            } else if (entry.time !== null && typeof entry.time !== "number") {
+                return _fail(`Log entry ${i + 1}: time must be an integer (seconds), null, or legacy string.`);
             }
-            if (entry.time !== "" && !RE_GAME_TIME.test(entry.time)) {
-                return _fail(`Log entry ${i + 1}: invalid time format "${entry.time}" (expected M:SS).`);
-            }
+
 
             // team
             if (!_isString(entry.team) || !["W", "D", ""].includes(entry.team)) {

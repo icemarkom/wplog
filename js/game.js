@@ -15,6 +15,7 @@
  */
 
 import { RULES, DEFAULTS } from './config.js';
+import { formatTime } from './time.js';
 
 // wplog — Game State Management
 
@@ -155,13 +156,8 @@ export const Game = {
                 if (a.event === "---" && b.event !== "---") return 1;
                 if (a.event !== "---" && b.event === "---") return -1;
 
-                // Compare times descending (game clock counts down)
-                if (a.time !== b.time) {
-                    return a.time > b.time ? -1 : 1;
-                }
-
-                // Equal time: preserve entry order
-                return a.id - b.id;
+                // Compare sequence implicitly as root chronological order map
+                return a.seq - b.seq;
             });
         }
 
@@ -424,15 +420,15 @@ export const Game = {
     // Validate time entry (warn if time is after previous entry in same period)
     validateTime(game, period, time) {
         // Only compare against timed events (skip stats without time)
-        const timedEntries = game.log.filter((e) => e.period === period && e.event !== "---" && e.time);
+        const timedEntries = game.log.filter((e) => e.period === period && e.event !== "---" && e.time !== null);
         if (timedEntries.length === 0) return { valid: true };
 
         const lastEntry = timedEntries[timedEntries.length - 1];
-        // Clock counts down: later events have lower time values
+        // Clock counts down natively in numerical seconds: later events have lower mathematical sizes
         if (time > lastEntry.time) {
             return {
                 valid: false,
-                warning: `This time (${time}) is before the previous entry (${lastEntry.time}) - are you sure?`,
+                warning: `This time (${formatTime(time)}) is before the previous entry (${formatTime(lastEntry.time)}) - are you sure?`,
             };
         }
         return { valid: true };

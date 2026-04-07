@@ -15,6 +15,7 @@
  */
 
 import { Game } from './game.js';
+import { formatTime } from './time.js';
 
 // wplog — Export Utilities (pure, no DOM)
 
@@ -81,7 +82,7 @@ export function buildCSV(game) {
             e.deviceTime || "",
             e.seq || "",
             e.period || "",
-            e.time || "",
+            (e.time !== null && e.time !== undefined) ? formatTime(e.time) : "",
             e.team || "",
             csvEscape(e.cap || ""),
             csvEscape(e.event || ""),

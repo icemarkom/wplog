@@ -23,6 +23,7 @@ import { Sheet } from './sheet.js';
 import { Share } from './share.js';
 import { initDialog } from './dialog.js';
 import { WakeLock } from './wakelock.js';
+import { Game } from './game.js';
 
 
 // wplog — App Initialization + Screen Navigation
@@ -113,6 +114,7 @@ export const App = {
         const saved = Storage.load();
         if (saved && saved.rules) {
             this.game = saved;
+            Game._recalcScores(this.game);
             const restoredScreen = sessionStorage.getItem("wplog-screen") || "live";
             this._showScreenWithInit(restoredScreen);
         } else {
