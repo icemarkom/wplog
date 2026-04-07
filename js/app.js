@@ -201,10 +201,19 @@ export const App = {
         // Intercept native print to adjust layout dynamically
         window.addEventListener("beforeprint", () => {
             if (this.game && document.getElementById("sheet-container")) {
+                const po = Share.printOptions || { section: "all", format: Sheet.statsFormat || "cumulative" };
+
+                if (po.section === "stats") document.body.classList.add("print-hide-log");
+                else if (po.section === "log") document.body.classList.add("print-hide-stats");
+
+                const origFormat = Sheet.statsFormat;
+                Sheet.statsFormat = po.format;
                 Sheet.render(this.game, true);
+                Sheet.statsFormat = origFormat;
             }
         });
         window.addEventListener("afterprint", () => {
+            document.body.classList.remove("print-hide-log", "print-hide-stats");
             if (this.game && document.getElementById("sheet-container")) {
                 Sheet.render(this.game, false);
             }

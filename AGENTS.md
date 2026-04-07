@@ -170,6 +170,7 @@ These were explicitly discussed and agreed with the user:
 ## Current State (as of 2026-04-07)
 
 ### What's Done ✅
+- Fixed stats format reverting bug: Refactored the native print sequence in `js/share.js` and `js/app.js` to decouple overriding logic out of fragile inline listeners and safely route them through persistent global hooks via `Share.printOptions`, handling continuous Safari orientation regeneration natively.
 - Cap Swap persistence integration: Added 'Cap swap' into internal storage validation allowlists automatically protecting structural tracking across PWA loads natively ensuring continuity over structural cache layers stably resolving event UI.
 - Time Engine Restructure: Internally transitioned time structures globally natively out into numerical integer intervals exclusively handling math mapping instead of formatted sequences implicitly bypassing edge-case comparison blocks across rules dynamically.
 - Sequential UI Organization limit mapping globally decoupled native runtime limits using implicitly executed execution structures scaling `a.seq - b.seq` mappings over chronology overrides safely.
