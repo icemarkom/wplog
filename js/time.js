@@ -61,10 +61,40 @@ export function parseTime(digits, maxMinutes) {
     // Cap at period length
     if (minutes > maxMinutes || (minutes === maxMinutes && seconds > 0)) return null;
 
+    const totalSeconds = minutes * 60 + seconds;
+
     return {
         display: minutes + ":" + String(seconds).padStart(2, "0"),
-        stored: minutes + ":" + String(seconds).padStart(2, "0"),
+        stored: totalSeconds,
     };
+}
+
+/**
+ * Formats integer seconds back into M:SS display string.
+ *
+ * @param {number|null} seconds - Total seconds
+ * @returns {string} Formatted game clock string
+ */
+export function formatTime(seconds) {
+    if (typeof seconds !== "number") return "";
+    const m = Math.floor(seconds / 60);
+    const s = seconds % 60;
+    return m + ":" + String(s).padStart(2, "0");
+}
+
+/**
+ * Parses legacy M:SS strings into integer seconds.
+ *
+ * @param {string} timeStr - Legacy time string
+ * @returns {number|null} Integer seconds
+ */
+export function parseLegacyTime(timeStr) {
+    if (!timeStr || typeof timeStr !== "string") return null;
+    const parts = timeStr.split(":");
+    if (parts.length === 2) {
+        return parseInt(parts[0], 10) * 60 + parseInt(parts[1], 10);
+    }
+    return null;
 }
 
 /**

@@ -105,27 +105,13 @@ export const Share = {
             const activeSection = document.querySelector("#print-sections-mode .segment-btn.active").dataset.value;
             const activeFormat = document.querySelector("#print-stats-format .segment-btn.active").dataset.value;
 
-            if (activeSection === "stats") {
-                document.body.classList.add("print-hide-log");
-            } else if (activeSection === "log") {
-                document.body.classList.add("print-hide-stats");
-            }
-
-            const origFormat = Sheet.statsFormat;
-            Sheet.statsFormat = activeFormat;
-            Sheet.render(this.game, true); 
+            Share.printOptions = {
+                section: activeSection,
+                format: activeFormat
+            };
 
             // Defer print briefly to allow DOM layout
             setTimeout(() => {
-                // Wait for the OS print dialog to close before stripping the hiding classes,
-                // otherwise non-blocking browsers (Safari iOS) will print the hidden sections.
-                const onAfterPrint = () => {
-                    document.body.classList.remove("print-hide-log", "print-hide-stats");
-                    Sheet.statsFormat = origFormat;
-                    window.removeEventListener("afterprint", onAfterPrint);
-                };
-                window.addEventListener("afterprint", onAfterPrint);
-
                 window.print();
                 this._closePrintDialog();
             }, 50);
