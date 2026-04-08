@@ -161,11 +161,12 @@ export const Events = {
                 return;
             }
 
-            // Letters A/B/C (case-insensitive)
+            // Letters A/B/C/H (case-insensitive)
             const upper = key.toUpperCase();
-            if (["A", "B", "C"].includes(upper)) {
+            if (["A", "B", "C", "H"].includes(upper)) {
                 e.preventDefault();
-                this._handleNumpad(upper);
+                // H triggers the HC button (mapped to "C" internally)
+                this._handleNumpad(upper === "H" ? "C" : upper);
                 return;
             }
 
@@ -294,28 +295,25 @@ export const Events = {
             if (val === "clear") {
                 targetRaw = targetRaw.slice(0, -1);
             } else if (["A", "B", "C"].includes(val)) {
-                if (eventDef && (eventDef.allowCoach || eventDef.allowAssistant || eventDef.allowBench)) {
-                    // Coach/assistant/bench: "C" = coach, "A" then "C" → "AC" = asst coach, "B" = bench
-                    if (val === "C" && eventDef.allowCoach && targetRaw === "") {
-                        targetRaw = "C";
-                    } else if (val === "C" && eventDef.allowAssistant && targetRaw === "A") {
+                const hasStaff = eventDef && (eventDef.allowCoach || eventDef.allowAssistant || eventDef.allowBench);
+                if (hasStaff && targetRaw === "") {
+                    // Single-press coaching staff caps
+                    if (val === "C" && eventDef.allowCoach) {
+                        targetRaw = "HC";
+                    } else if (val === "A" && eventDef.allowAssistant) {
                         targetRaw = "AC";
-                    } else if (val === "A" && eventDef.allowAssistant && targetRaw === "") {
-                        targetRaw = "A";
-                    } else if (val === "B" && eventDef.allowBench && targetRaw === "") {
+                    } else if (val === "B" && eventDef.allowBench) {
                         targetRaw = "B";
                     }
-                } else {
-                    // Normal: A/B/C only after "1" (goalie numbers)
-                    if (targetRaw === "1") {
-                        targetRaw = "1" + val;
-                    }
+                } else if (targetRaw === "1") {
+                    // Goalie modifier: 1A, 1B, 1C
+                    targetRaw = "1" + val;
                 }
             } else {
                 // Digit input — blocked when allowPlayer is false
                 if (eventDef && eventDef.allowPlayer === false) {
                     // No digit input for non-player events
-                } else if (targetRaw.length < 2 && !targetRaw.match(/[ABC]/)) {
+                } else if (targetRaw.length < 2 && !targetRaw.match(/[A-Z]/) && targetRaw !== "HC") {
                     targetRaw += val;
                 }
             }
@@ -328,6 +326,7 @@ export const Events = {
                 this._altCapRaw = targetRaw;
                 document.getElementById("alt-cap-display").textContent = this._altCapRaw;
             }
+            this._updateLetterButtons();
         }
         this._updateOkButton();
     },
@@ -336,6 +335,66 @@ export const Events = {
         const code = document.getElementById("modal-event-title").dataset.code;
         const eventDef = this._getEventDef(code);
         return eventDef && eventDef.teamOnly;
+    },
+
+    // ── Contextual Letter Button Labels + Disable ────────────
+
+    _updateLetterButtons() {
+        const code = document.getElementById("modal-event-title").dataset.code;
+        const eventDef = this._getEventDef(code);
+        const targetRaw = this._numpadTarget === "cap" ? this._capRaw
+            : this._numpadTarget === "altCap" ? this._altCapRaw : "";
+
+        const hasStaff = eventDef && (eventDef.allowCoach || eventDef.allowAssistant || eventDef.allowBench);
+        const isGoalieModifier = targetRaw === "1";
+        const isEmpty = targetRaw === "";
+        const isCapTarget = this._numpadTarget === "cap" || this._numpadTarget === "altCap";
+
+        const btnA = document.querySelector('#shared-numpad .numpad-letter[data-value="A"]');
+        const btnB = document.querySelector('#shared-numpad .numpad-letter[data-value="B"]');
+        const btnC = document.querySelector('#shared-numpad .numpad-letter[data-value="C"]');
+        if (!btnA || !btnB || !btnC) return;
+
+        // Labels always reflect event context
+        if (isGoalieModifier) {
+            // Goalie suffix: always A/B/C
+            btnA.textContent = "A";
+            btnB.textContent = "B";
+            btnC.textContent = "C";
+        } else if (hasStaff && isEmpty) {
+            // Coaching staff: show labels per flag
+            btnC.textContent = eventDef.allowCoach ? "HC" : "C";
+            btnA.textContent = eventDef.allowAssistant ? "AC" : "A";
+            btnB.textContent = "B";
+        } else {
+            // Default
+            btnA.textContent = "A";
+            btnB.textContent = "B";
+            btnC.textContent = "C";
+        }
+
+        // Disabled state: must be on cap target to be enabled
+        if (!isCapTarget) {
+            // Not targeting cap — all disabled
+            btnA.disabled = true;
+            btnB.disabled = true;
+            btnC.disabled = true;
+        } else if (isGoalieModifier) {
+            // Goalie suffix: all enabled
+            btnA.disabled = false;
+            btnB.disabled = false;
+            btnC.disabled = false;
+        } else if (hasStaff && isEmpty) {
+            // Coaching staff: enabled per flag
+            btnC.disabled = !eventDef.allowCoach;
+            btnA.disabled = !eventDef.allowAssistant;
+            btnB.disabled = !eventDef.allowBench;
+        } else {
+            // Default: all disabled
+            btnA.disabled = true;
+            btnB.disabled = true;
+            btnC.disabled = true;
+        }
     },
 
     _updateOkButton() {
@@ -403,6 +462,8 @@ export const Events = {
         
         const altField = document.getElementById("field-alt-cap");
         if (altField) altField.classList.toggle("active", target === "altCap");
+
+        this._updateLetterButtons();
     },
 
     _setModalTitle(eventDef) {
@@ -515,6 +576,7 @@ export const Events = {
 
         // OK button text
         document.getElementById("event-modal-confirm").textContent = "OK";
+        this._updateLetterButtons();
         this._updateOkButton();
 
         // Show modal
@@ -604,6 +666,7 @@ export const Events = {
 
         // OK button text
         document.getElementById("event-modal-confirm").textContent = "OK";
+        this._updateLetterButtons();
         this._updateOkButton();
 
         // Show modal
@@ -861,6 +924,7 @@ export const Events = {
 
         // OK button → "Save"
         document.getElementById("event-modal-confirm").textContent = "Save";
+        this._updateLetterButtons();
         this._updateOkButton();
 
         // Show modal

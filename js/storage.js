@@ -226,6 +226,9 @@ export function validateGameData(parsed) {
                 }
             }
 
+            // ── Migrate legacy coach cap "C" → "HC" ──
+            if (entry.cap === "C") entry.cap = "HC";
+
             // ── Build clean entry (allowlisted fields only) ──
             cleanLog.push({
                 id: entry.id,
@@ -264,8 +267,8 @@ export function validateGameData(parsed) {
             enableStats: parsed.enableStats,
             statsTimeMode: parsed.statsTimeMode,
             homeTeam: parsed.homeTeam || DEFAULTS.homeTeam,
-            white: { name: parsed.white.name, roster: _isRosterObject(parsed.white.roster) ? parsed.white.roster : {} },
-            dark: { name: parsed.dark.name, roster: _isRosterObject(parsed.dark.roster) ? parsed.dark.roster : {} },
+            white: { name: parsed.white.name, roster: _migrateRosterKeys(_isRosterObject(parsed.white.roster) ? parsed.white.roster : {}) },
+            dark: { name: parsed.dark.name, roster: _migrateRosterKeys(_isRosterObject(parsed.dark.roster) ? parsed.dark.roster : {}) },
             currentPeriod: parsed.currentPeriod,
             log: cleanLog,
             _nextId: _isPositiveInt(parsed._nextId) ? parsed._nextId : (cleanLog.length > 0 ? Math.max(...cleanLog.map(e => e.id)) + 1 : 1),
@@ -328,6 +331,14 @@ function _isRosterObject(val) {
     return true;
 }
 
+function _migrateRosterKeys(roster) {
+    if (roster["C"] && !roster["HC"]) {
+        roster["HC"] = roster["C"];
+        delete roster["C"];
+    }
+    return roster;
+}
+
 function _isValidPeriod(val, maxPeriod) {
     if (_isIntInRange(val, 1, maxPeriod)) return true;
     if (_isString(val)) {
@@ -339,7 +350,7 @@ function _isValidPeriod(val, maxPeriod) {
 
 function _isValidCap(val) {
     if (!_isString(val)) return false;
-    if (val === "" || val === "C" || val === "AC" || val === "B") return true;
+    if (val === "" || val === "HC" || val === "C" || val === "AC" || val === "B") return true;
     return RE_CAP.test(val);
 }
 
