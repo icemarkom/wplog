@@ -410,6 +410,19 @@ select.form-input {
 #setup-home-flip {
   align-self: flex-start;
   margin-top: 20px;
+  font-size: 24px;
+}
+
+/* Input with inline action button */
+.input-with-action {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.input-with-action .form-input {
+  flex: 1;
+  min-width: 0;
 }
 
 

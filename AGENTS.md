@@ -66,6 +66,7 @@ wplog/
 │   ├── pagination.js   # Print pagination engine (pure — no DOM)
 │   ├── share.js        # Share/Print functionality
 │   ├── export.js       # Export utilities — filename, CSV builders (pure — no DOM)
+│   ├── roster.js       # Roster CSV parser, builder, merge logic (pure — no DOM)
 │   └── app.js          # App init + screen navigation + version display
 ├── .agents/
 │   ├── skills/
@@ -107,7 +108,7 @@ These were explicitly discussed and agreed with the user:
 
 | Decision | Detail |
 |---|---|
-| **No roster/player entry** | Cap numbers are entered per-event, not pre-game. No player names. |
+| **Roster is authoritative** | `game.white.roster` / `game.dark.roster` is the single source of truth for all known caps per team. Every logged cap is auto-registered in roster. CSV uploads merge into roster. Sheet reads only from roster. |
 | **Team names in UI vs reports** | UI always shows "White"/"Dark". Game sheet shows "White (Team Name)" when custom name set. |
 | **Cap numbers are strings** | Support goalie modifiers: `"1A"`, `"1B"`, `"1C"` (max C). Input via 4-column numpad (digits + A/B/C column). |
 | **Game clock time format** | `M:SS` or `MM:SS` (dynamic 3 or 4 digits). Digits fill right-to-left. Stored as `"4:53"` or `"10:00"`. NOT rigid `MM:SS` for short periods. Max time capped by config (up to 20:00). Start/end times remain `HH:MM` (separate wall clock). |
@@ -167,9 +168,10 @@ These were explicitly discussed and agreed with the user:
 
 ---
 
-## Current State (as of 2026-04-07)
+## Current State (as of 2026-04-08)
 
 ### What's Done ✅
+- Roster CSV bulk management: upload (⬆ button on Setup, inline with team name inputs) and download (Share screen with team selection dialog). CSV parser handles HC→C alias, rejects B caps, warns on duplicates (first wins). Pre-game uploads buffered and applied at game start. Roster is the single authoritative source — every logged cap auto-registers.
 - Fixed stats format reverting bug: Refactored the native print sequence in `js/share.js` and `js/app.js` to decouple overriding logic out of fragile inline listeners and safely route them through persistent global hooks via `Share.printOptions`, handling continuous Safari orientation regeneration natively.
 - Cap Swap persistence integration: Added 'Cap swap' into internal storage validation allowlists automatically protecting structural tracking across PWA loads natively ensuring continuity over structural cache layers stably resolving event UI.
 - Time Engine Restructure: Internally transitioned time structures globally natively out into numerical integer intervals exclusively handling math mapping instead of formatted sequences implicitly bypassing edge-case comparison blocks across rules dynamically.

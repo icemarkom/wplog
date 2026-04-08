@@ -602,10 +602,10 @@ export const Events = {
             ? null
             : Game.checkFoulOut(this.game, this.selectedTeam, cap, eventDef.code);
 
-        // Extract JIT Name/ID
+        // Ensure cap is registered in roster (single authoritative source per team)
         const nameInput = document.getElementById("modal-input-name");
         const idInput = document.getElementById("modal-input-id");
-        if ((nameInput?.value.trim() || idInput?.value.trim()) && cap && this.selectedTeam && this.selectedTeam !== "official") {
+        if (cap && this.selectedTeam && this.selectedTeam !== "official" && !eventDef.teamOnly) {
             const teamKey = this.selectedTeam === "W" ? "white" : "dark";
             if (!this.game[teamKey].roster) this.game[teamKey].roster = {};
             if (!this.game[teamKey].roster[cap]) this.game[teamKey].roster[cap] = {};
