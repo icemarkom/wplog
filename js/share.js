@@ -101,13 +101,23 @@ export const Share = {
             });
         });
 
+        const rosterEls = document.querySelectorAll("#print-roster-mode .segment-btn");
+        rosterEls.forEach(btn => {
+            btn.addEventListener("click", (e) => {
+                rosterEls.forEach(b => b.classList.remove("active"));
+                e.target.classList.add("active");
+            });
+        });
+
         document.getElementById("print-confirm").addEventListener("click", () => {
             const activeSection = document.querySelector("#print-sections-mode .segment-btn.active").dataset.value;
             const activeFormat = document.querySelector("#print-stats-format .segment-btn.active").dataset.value;
+            const activeRoster = document.querySelector("#print-roster-mode .segment-btn.active").dataset.value;
 
             Share.printOptions = {
                 section: activeSection,
-                format: activeFormat
+                format: activeFormat,
+                roster: activeRoster
             };
 
             // Defer print briefly to allow DOM layout
@@ -137,7 +147,26 @@ export const Share = {
             }
         });
 
+        // Smart roster default: Show when names exist, Hide otherwise
+        const hasNames = this.game && this._hasRosterNames(this.game);
+        const rosterEls = document.querySelectorAll("#print-roster-mode .segment-btn");
+        rosterEls.forEach(b => {
+            const isDefault = hasNames ? b.dataset.value === "show" : b.dataset.value === "hide";
+            b.classList.toggle("active", isDefault);
+        });
+
         document.getElementById("print-dialog").showModal();
+    },
+
+    _hasRosterNames(game) {
+        for (const teamKey of ["white", "dark"]) {
+            const roster = game[teamKey] && game[teamKey].roster;
+            if (!roster) continue;
+            for (const cap of Object.keys(roster)) {
+                if (roster[cap].name) return true;
+            }
+        }
+        return false;
     },
 
     _closePrintDialog() {
