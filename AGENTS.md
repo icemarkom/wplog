@@ -169,7 +169,7 @@ These were explicitly discussed and agreed with the user:
 | **Period selector in modal** | Row of `.team-btn` pills above the time field. Shows all periods up to `currentPeriod`. New events default to current period; user can tap a previous period to log missed events. Edits show the event's existing period. Hidden when only one period available. |
 | **Full game log** | Live log shows ALL events (not capped at 15), grouped by period headers using `.log-title` typography. Period headers act as visual separators. Title changed from "Recent Events" to "Game Log". |
 | **CSS reuse over proliferation** | New interactive elements reuse existing CSS classes (`.team-btn` for period pills, `.log-title` for period headers, structural `:not()` selectors for tappable entries) rather than introducing new class names. Scoped overrides via `#id .existing-class`. |
-| **"Add Name" button** | Grey button on Live screen (alongside Swap Caps and End Period) that opens the event modal in roster-only mode: team + cap + name/ID fields, no time, no period selector, no event logged. Saves directly to `game[teamKey].roster[cap]`. Order: Add Name → Swap Caps → End Period. All three use explicit `gridColumn` 1/2/3 with a separator above. |
+| **"Add Name" button** | Grey button on Live screen (alongside Swap Caps and End Period) that opens the event modal in roster-only mode: team + cap + name/ID fields, no time, no period selector, no event logged. Saves directly to `game[teamKey].roster[cap]`. Order: Add Name → Swap Caps → End Period. All three follow a `.stats-separator` and auto-flow into the 3-column grid. |
 | **Tappable roster rows** | On the Game Sheet screen, roster rows are tappable to edit name/ID inline. Tap → static text replaced with `<input>` → blur/Enter saves + `Storage.save()` + re-renders roster section. Escape reverts. Print layout stays static. |
 
 ---
@@ -177,6 +177,7 @@ These were explicitly discussed and agreed with the user:
 ## Current State (as of 2026-04-08)
 
 ### What's Done ✅
+- Inline styles elimination (#203): Migrated all inline `style="..."` attributes from HTML (modal.html, setup.html, help.html) and all `element.style.*` JS manipulation (events.js, setup.js, share.js) to CSS classes. Two utility classes (`.hidden`, `.disabled`) + scoped ID rules. Zero inline styles remain in the codebase.
 - Inline roster editing: "Add Name" grey button on Live screen opens modal in roster-only mode (team + cap + name, no event logged). Roster rows on the Game Sheet are tappable to edit name/ID inline with blur/Enter save. Separator above grey action buttons row. Help docs updated.
 - Edit-in-place (#23): Tap any event in the game log to edit its time, cap, team, or period. Period selector pills in the modal allow logging missed events in previous periods. Full game log with period grouping replaces the 15-event limit. Foul-out detection on edits. Uses existing `.team-btn` and `.log-title` CSS — zero new class names.
 - Roster CSV bulk management: upload (⬆ button on Setup, inline with team name inputs) and download (Share screen with team selection dialog). CSV parser handles HC→C alias, rejects B caps, warns on duplicates (first wins). Pre-game uploads buffered and applied at game start. Roster is the single authoritative source — every logged cap auto-registers.
@@ -256,6 +257,7 @@ These were explicitly discussed and agreed with the user:
 - Tap-to-expand QR overlay: full-screen on mobile, dialog-sized on desktop, high-contrast (black on white)
 - Service worker: network-first in dev, cache-first in production
 - `.btn:disabled` styling matching nav tab pattern (opacity 0.3)
+- CSS utility classes: `.hidden` (display:none) and `.disabled` (opacity:0.5, pointer-events:none) replace all inline `style.*` manipulation in JS and inline `style="..."` attributes in HTML. All visibility/state toggling uses `classList.toggle()` exclusively.
 - "Kraken" workflow for version tagging and release
 - Help screen: 5th nav tab with quick-reference guide (9 sections, always enabled), includes keyboard shortcut tip
 - Privacy policy: standalone `privacy.html` + `PRIVACY.md`, linked from footer and About dialog
@@ -264,7 +266,7 @@ These were explicitly discussed and agreed with the user:
 - Unified `.fetched-content` class for privacy + help content styles
 - Shared `.overlay-title`/`.overlay-message` base classes for dialog content
 - Consistent `letter-spacing: 0.04em` on all uppercase labels app-wide
-- Consistent `opacity: 0.3` on all disabled elements
+- Consistent `opacity: 0.5` on `.disabled` utility class (replaces inline style toggles)
 - Version link in About dialog: links to GitHub release page in production, plain text in dev
 - Inline license display: clickable "Apache 2.0" in About opens scrollable license overlay
 - Apache 2.0 copyright headers on all source files via `addlicense`

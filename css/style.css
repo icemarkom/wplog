@@ -198,6 +198,15 @@
   border: 0;
 }
 
+.hidden {
+  display: none;
+}
+
+.disabled {
+  opacity: 0.5;
+  pointer-events: none;
+}
+
 /* ============================
    Reset + Base
    ============================ */
@@ -623,6 +632,15 @@ select.form-input {
   text-transform: uppercase;
   letter-spacing: var(--letter-spacing-caps);
   font-size: 12px;
+}
+
+#screen-help .inline-menu {
+  margin-top: 48px;
+  margin-bottom: 24px;
+}
+
+#setup-theme-inline {
+  margin-bottom: 16px;
 }
 
 /* ============================
@@ -1248,6 +1266,15 @@ select.form-input {
   flex-shrink: 0;
 }
 
+#modal-cap-row {
+  margin-bottom: 1dvh;
+  align-items: center;
+}
+
+#modal-cap-row .modal-field {
+  margin-bottom: 0;
+}
+
 .modal-field.active {
   border-color: var(--accent-blue);
   box-shadow: 0 0 12px var(--accent-blue-glow);
@@ -1493,6 +1520,7 @@ select.form-input {
   color: var(--text-muted);
   cursor: pointer;
   transition: color var(--transition);
+  text-decoration: none;
 }
 
 .inline-toggle-link:hover {
@@ -1509,6 +1537,7 @@ select.form-input {
 .inline-toggle-sep {
   color: var(--text-muted);
   font-weight: 300;
+  margin: 0 12px;
 }
 
 .sheet-table {
