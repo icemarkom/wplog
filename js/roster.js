@@ -24,11 +24,11 @@ const RE_CAP = /^[1-9]\d?[ABC]?$/;
 
 // Map standard coach codes to wplog internal codes
 const COACH_ALIASES = {
-    "HC": "C",   // Head Coach → internal C
+    "C": "HC",   // Legacy internal C → new HC
 };
 
 // Valid roster cap codes (coach/special — B excluded, it's YC-only)
-const SPECIAL_CAPS = new Set(["C", "AC"]);
+const SPECIAL_CAPS = new Set(["HC", "AC"]);
 
 /**
  * Validate a cap value for roster import.

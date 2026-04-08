@@ -199,7 +199,7 @@
 }
 
 .hidden {
-  display: none;
+  display: none !important;
 }
 
 .disabled {
@@ -723,10 +723,13 @@ select.form-input {
 
 /* End Period grid button */
 .event-end-period {
-  grid-column: 3;
   background: var(--bg-card);
   border-color: var(--border);
   color: var(--text-secondary);
+}
+
+#end-period-btn {
+  grid-column: 3;
 }
 
 /* ============================
@@ -837,6 +840,16 @@ select.form-input {
 .numpad-clear {
   color: var(--danger);
   font-size: 20px;
+}
+
+.numpad-btn:disabled {
+  opacity: 0.25;
+  cursor: default;
+}
+
+.numpad-btn:disabled:active {
+  transform: none;
+  background: var(--bg-card);
 }
 
 /* ============================

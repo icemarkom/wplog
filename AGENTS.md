@@ -128,12 +128,12 @@ These were explicitly discussed and agreed with the user:
 | **Dynamic Print Chunking** | Player Stats matrix dynamically expands from 11 columns on-screen to 22 columns via `window.beforeprint`/`afterprint` hooks to maximize ink density at print time without breaking responsive layouts. |
 | **USAWP + NFHS + NCAA supported** | USAWP (8-min default, 7-min, 6-min variants), NFHS Varsity (7-min, OT, MAM), NFHS JV (6-min, no OT), NCAA (8-min, OT, YRC). Additional rule sets added via inheritance. |
 | **Rule set inheritance** | `inherits` key chains parent→child. `addEvents`/`removeEvents` directives for per-ruleset event list mutations. `_base` and `_academic` are internal (hidden from dropdown). `STATS_EVENTS` auto-appended to all rule sets. |
-| **Cap flags** | `allowCoach`, `allowAssistant`, `allowBench` enable C/AC/B cap values. `allowPlayer` (default true) can be set false to block digit input. `allowNoCap` allows submitting without cap. `teamOnly` (renamed from `noPlayer`) hides cap field entirely. |
+| **Cap flags** | `allowCoach`, `allowAssistant`, `allowBench` enable HC/AC/B cap values. `allowPlayer` (default true) can be set false to block digit input. `allowNoCap` allows submitting without cap. `teamOnly` (renamed from `noPlayer`) hides cap field entirely. |
 | **`allowOfficial` flag** | Config-driven flag (valid on `teamOnly` events only). Shows a third "OFFICIAL" team toggle button in the modal. Selecting it stores `team: ""` — no new team code. TOL counting naturally excludes official timeouts. `O` keyboard shortcut. Button order: WHITE → OFFICIAL → DARK (Dark stays rightmost for muscle memory). |
 | **No `#` in Cap display** | Cap numbers shown without `#` prefix everywhere (modal, live log, sheet tables). |
 | **Score on Goals only** | Score column in game log (live + sheet) only shows on Goal events. Other events leave it empty. |
 | **Responsive modal** | Compact content-sized on mobile (default), fixed centered 480px dialog on desktop (`@media min-width:900px and min-height:700px`). Numpad button height capped at 72px for landscape aspect ratio. |
-| **Numpad layout** | 4 columns: digits 1-9/0, A/B/C in rightmost column, backspace next to 0. |
+| **Numpad layout** | 4 columns: digits 1-9/0, A/B/C in rightmost column, backspace next to 0. For events with coaching staff flags, letter buttons contextually relabel to HC/AC/B (single-press, enabled per flag). When cap is `"1"`, buttons revert to A/B/C for goalie modifiers. `H` keyboard shortcut triggers HC. |
 | **Auto-close disabled** | GitHub auto-close via commit messages is disabled in this repo. Close issues manually with `gh issue close`. |
 | **Don't commit without confirmation** | Always wait for user to confirm before committing and pushing. |
 | **"Geronimo" workflow** | When user says "geronimo", it's one-time approval to commit, push, and close the relevant issue. Branch-aware: on long-lived feature branches, skip PR/merge. See `.agents/workflows/geronimo.md`. |
@@ -174,9 +174,10 @@ These were explicitly discussed and agreed with the user:
 
 ---
 
-## Current State (as of 2026-04-08)
+## Current State (as of 2026-04-09)
 
 ### What's Done ✅
+- Coaching staff cap overhaul (#198): Internal coach cap code changed from `C` to `HC` (Head Coach). Numpad letter buttons contextually relabel to HC/AC/B for events with coaching staff flags — single-press entry, no two-step sequence. Buttons show labels only when enabled; revert to A/B/C for goalie modifiers or when disabled. `H` keyboard shortcut. Old `C` data auto-migrates on load via `storage.js`. `.hidden` utility class fixed with `!important` to override `display:flex` on `.swap-btn`/`.modal-field`. Grey action button grid layout fixed (`grid-column:3` scoped to `#end-period-btn` only).
 - Inline styles elimination (#203): Migrated all inline `style="..."` attributes from HTML (modal.html, setup.html, help.html) and all `element.style.*` JS manipulation (events.js, setup.js, share.js) to CSS classes. Two utility classes (`.hidden`, `.disabled`) + scoped ID rules. Zero inline styles remain in the codebase.
 - Inline roster editing: "Add Name" grey button on Live screen opens modal in roster-only mode (team + cap + name, no event logged). Roster rows on the Game Sheet are tappable to edit name/ID inline with blur/Enter save. Separator above grey action buttons row. Help docs updated.
 - Edit-in-place (#23): Tap any event in the game log to edit its time, cap, team, or period. Period selector pills in the modal allow logging missed events in previous periods. Full game log with period grouping replaces the 15-event limit. Foul-out detection on edits. Uses existing `.team-btn` and `.log-title` CSS — zero new class names.
@@ -257,7 +258,7 @@ These were explicitly discussed and agreed with the user:
 - Tap-to-expand QR overlay: full-screen on mobile, dialog-sized on desktop, high-contrast (black on white)
 - Service worker: network-first in dev, cache-first in production
 - `.btn:disabled` styling matching nav tab pattern (opacity 0.3)
-- CSS utility classes: `.hidden` (display:none) and `.disabled` (opacity:0.5, pointer-events:none) replace all inline `style.*` manipulation in JS and inline `style="..."` attributes in HTML. All visibility/state toggling uses `classList.toggle()` exclusively.
+- CSS utility classes: `.hidden` (display:none !important) and `.disabled` (opacity:0.5, pointer-events:none) replace all inline `style.*` manipulation in JS and inline `style="..."` attributes in HTML. All visibility/state toggling uses `classList.toggle()` exclusively.
 - "Kraken" workflow for version tagging and release
 - Help screen: 5th nav tab with quick-reference guide (9 sections, always enabled), includes keyboard shortcut tip
 - Privacy policy: standalone `privacy.html` + `PRIVACY.md`, linked from footer and About dialog
