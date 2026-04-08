@@ -38,6 +38,7 @@ export const Events = {
     _teams: null,           // [home, away] team descriptors
     _editingId: null,       // event ID being edited, or null for new
     _selectedPeriod: null,  // period selected in modal pill row
+    _rosterMode: false,     // true when modal is in roster-only mode (Add Name)
 
     init(game) {
         this.game = game;
@@ -313,6 +314,17 @@ export const Events = {
 
     _updateOkButton() {
         const btn = document.getElementById("event-modal-confirm");
+
+        // Roster mode: require team + cap + name
+        if (this._rosterMode) {
+            const hasTeam = this.selectedTeam !== null;
+            const hasCap = this._capRaw.length > 0;
+            const nameInput = document.getElementById("modal-input-name");
+            const hasName = nameInput && nameInput.value.trim().length > 0;
+            btn.disabled = !(hasTeam && hasCap && hasName);
+            return;
+        }
+
         const code = document.getElementById("modal-event-title").dataset.code;
         const eventDef = this._getEventDef(code);
 
@@ -494,17 +506,125 @@ export const Events = {
         if (modal.open) modal.close();
         this._pendingEvent = null;
         this._editingId = null;
+        this._rosterMode = false;
         document.getElementById("event-modal-confirm").textContent = "OK";
     },
 
+    // ── Roster-only Modal ───────────────────────────────────
+
+    _openModalForRoster() {
+        this._rosterMode = true;
+        this._pendingEvent = null;
+        this._editingId = null;
+
+        // Title
+        const el = document.getElementById("modal-event-title");
+        el.textContent = "Add Name";
+        el.dataset.code = "";
+
+        // Hide period selector
+        document.getElementById("modal-period-selector").innerHTML = "";
+        document.getElementById("modal-period-selector").style.display = "none";
+
+        // Hide time field
+        const timeField = document.getElementById("field-time");
+        timeField.style.display = "none";
+
+        // Show cap field, hide alt cap + swap
+        document.getElementById("field-cap").style.display = "";
+        const altCapField = document.getElementById("field-alt-cap");
+        if (altCapField) altCapField.style.display = "none";
+        const swapIcon = document.getElementById("modal-swap-btn");
+        if (swapIcon) swapIcon.style.display = "none";
+        document.getElementById("label-cap").textContent = "CAP";
+
+        // Hide official button
+        const officialBtn = document.getElementById("team-official-btn");
+        if (officialBtn) officialBtn.style.display = "none";
+
+        // Reset inputs
+        this._timeRaw = "";
+        this._capRaw = "";
+        this._altCapRaw = "";
+
+        document.getElementById("cap-display").textContent = "";
+
+        // Start numpad on cap
+        this._setNumpadTarget("cap");
+
+        // Reset team selection
+        this.selectedTeam = null;
+        document.getElementById("team-white-btn").classList.remove("active");
+        document.getElementById("team-dark-btn").classList.remove("active");
+        if (officialBtn) officialBtn.classList.remove("active");
+
+        // Show name/ID fields unconditionally
+        const nameField = document.getElementById("field-roster-name");
+        const idField = document.getElementById("field-roster-id");
+        const nameInput = document.getElementById("modal-input-name");
+        const idInput = document.getElementById("modal-input-id");
+        if (nameInput) nameInput.value = "";
+        if (idInput) idInput.value = "";
+        if (nameField) nameField.style.display = "";
+
+        // Show ID field if rule set has playerId
+        const rules = RULES[this.game.rules];
+        if (rules.playerId && idField) {
+            idField.style.display = "";
+            idInput.placeholder = rules.playerId + " (Optional)";
+        } else if (idField) {
+            idField.style.display = "none";
+        }
+
+        // Listen for name input changes to update OK button
+        if (nameInput) {
+            nameInput.addEventListener("input", () => this._updateOkButton(), { once: false });
+        }
+
+        // OK button text
+        document.getElementById("event-modal-confirm").textContent = "OK";
+        this._updateOkButton();
+
+        // Show modal
+        document.getElementById("event-modal").showModal();
+    },
+
     _refreshRosterFields() {
-        const code = document.getElementById("modal-event-title").dataset.code;
-        const eventDef = this._getEventDef(code);
         const nameField = document.getElementById("field-roster-name");
         const idField = document.getElementById("field-roster-id");
         const nameInput = document.getElementById("modal-input-name");
         const idInput = document.getElementById("modal-input-id");
         if (!nameField || !idField) return;
+
+        // In roster mode, fields are always visible — skip eventDef checks
+        if (this._rosterMode) {
+            nameField.style.display = "";
+            const rules = RULES[this.game.rules];
+            const playerIdLabel = rules.playerId;
+            if (playerIdLabel) {
+                idField.style.display = "";
+                idInput.placeholder = playerIdLabel + " (Optional)";
+            } else {
+                idField.style.display = "none";
+            }
+
+            // Pre-fill from existing roster
+            const cap = this._capRaw;
+            const team = this.selectedTeam;
+            if (cap && team) {
+                const teamKey = team === "W" ? "white" : "dark";
+                const entry = this.game[teamKey].roster && this.game[teamKey].roster[cap];
+                if (entry) {
+                    if (entry.name && !nameInput.value) nameInput.value = entry.name;
+                    if (entry.id && !idInput.value && playerIdLabel) idInput.value = entry.id;
+                }
+            }
+            this._updateOkButton();
+            return;
+        }
+
+        const code = document.getElementById("modal-event-title").dataset.code;
+        const eventDef = this._getEventDef(code);
 
         // Hide roster fields for teamOnly, swap, and official
         const hide = (eventDef && (eventDef.teamOnly || eventDef.isSwap)) || this.selectedTeam === "official";
@@ -735,6 +855,27 @@ export const Events = {
     },
 
     async _confirmEvent() {
+        // ── Roster-only mode: save name to roster, no event ──
+        if (this._rosterMode) {
+            const cap = this._capRaw;
+            const team = this.selectedTeam;
+            if (!cap || !team) return;
+
+            const teamKey = team === "W" ? "white" : "dark";
+            if (!this.game[teamKey].roster) this.game[teamKey].roster = {};
+            if (!this.game[teamKey].roster[cap]) this.game[teamKey].roster[cap] = {};
+
+            const nameInput = document.getElementById("modal-input-name");
+            const idInput = document.getElementById("modal-input-id");
+            if (nameInput?.value.trim()) this.game[teamKey].roster[cap].name = nameInput.value.trim();
+            if (idInput?.value.trim()) this.game[teamKey].roster[cap].id = idInput.value.trim();
+
+            Storage.save(this.game);
+            this._closeModal();
+            this._showToast("Name added", "info");
+            return;
+        }
+
         const rules = RULES[this.game.rules];
         const code = document.getElementById("modal-event-title").dataset.code;
         const eventDef = this._getEventDef(code);
@@ -936,6 +1077,41 @@ export const Events = {
         const logEvents = rules.events.filter((e) => !e.statsOnly);
         const statEvents = rules.events.filter((e) => e.statsOnly);
 
+        // ── Helper: append the three grey action buttons ──
+        const appendActionButtons = () => {
+            // Separator above grey action row
+            const sep = document.createElement("div");
+            sep.className = "stats-separator";
+            container.appendChild(sep);
+
+            // Add Name button — roster-only modal (no event logged)
+            const addNameBtn = document.createElement("button");
+            addNameBtn.className = "event-btn event-end-period";
+            addNameBtn.style.gridColumn = "1";
+            addNameBtn.textContent = "Add Name";
+            addNameBtn.addEventListener("click", () => this._openModalForRoster());
+            container.appendChild(addNameBtn);
+
+            // Swap Caps button
+            const swapBtn = document.createElement("button");
+            swapBtn.className = "event-btn event-end-period";
+            swapBtn.style.gridColumn = "2";
+            swapBtn.textContent = "Swap Caps";
+            swapBtn.dataset.code = "Cap swap";
+            swapBtn.addEventListener("click", () => this._openModal(this._getEventDef("Cap swap")));
+            container.appendChild(swapBtn);
+
+            // End Period / End Game — always visible (periods track in all modes)
+            const endBtn = document.createElement("button");
+            endBtn.id = "end-period-btn";
+            endBtn.className = "event-btn event-end-period";
+            endBtn.style.gridColumn = "3";
+            endBtn.textContent = "End Period";
+            endBtn.onclick = () => this._logPeriodEnd();
+            container.appendChild(endBtn);
+            this._updateEndButton();
+        };
+
         // Stats-only mode: show ALL events in config order, all teal
         if (statsOnly) {
             for (const evt of rules.events) {
@@ -946,6 +1122,7 @@ export const Events = {
                 btn.addEventListener("click", () => this._openModal(evt));
                 container.appendChild(btn);
             }
+            appendActionButtons();
         } else {
             // Log-only or hybrid mode
             if (showLog) {
@@ -958,6 +1135,9 @@ export const Events = {
                     container.appendChild(btn);
                 }
             }
+
+            // Grey action buttons — between log events and stats
+            appendActionButtons();
 
             // Hybrid: add separator then stats in teal
             if (showLog && showStats && statEvents.length > 0) {
@@ -977,24 +1157,6 @@ export const Events = {
                 }
             }
         }
-
-        // Swap Caps button — rendered identically following End Period methodology
-        const swapBtn = document.createElement("button");
-        swapBtn.className = "event-btn event-end-period"; // Reuses exact styling of End Period
-        swapBtn.style.gridColumn = "2"; // Implicitly places it next to End Period (which uses grid-column:3)
-        swapBtn.textContent = "Swap Caps";
-        swapBtn.dataset.code = "Cap swap";
-        swapBtn.addEventListener("click", () => this._openModal(this._getEventDef("Cap swap")));
-        container.appendChild(swapBtn);
-
-        // End Period / End Game — always visible (periods track in all modes)
-        const endBtn = document.createElement("button");
-        endBtn.id = "end-period-btn";
-        endBtn.className = "event-btn event-end-period";
-        endBtn.textContent = "End Period";
-        endBtn.onclick = () => this._logPeriodEnd();
-        container.appendChild(endBtn);
-        this._updateEndButton();
     },
 
     _updateEndButton() {
