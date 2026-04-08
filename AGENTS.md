@@ -165,12 +165,17 @@ These were explicitly discussed and agreed with the user:
 | **Home/Away designation** | `homeTeam` is a rule-set property in `config.json` (`_base` defaults to `"W"`, `_academic` overrides to `"D"`). Setup screen shows a ⇄ flip button to override per-game. Flip is locked during active games. All display surfaces (score bar, sheet header, Score by Period, Player Stats, CSV filename) render Home team first, Away second. Event modal button order (W/D) is fixed for muscle memory. |
 | **`DEFAULTS` object** | Centralized fallback defaults in `config.js` for all rule-set properties (`periods`, `periodLength`, `foulOutLimit`, `homeTeam`, `overtime`, `shootout`, `timeouts`, `events`, `statsEvents`). Used by `_getSafeMode()` and the normalization block. Eliminates scattered magic numbers. |
 | **Setup labels** | Team input labels show `"$location Team ($color)"` format — e.g., "Home Team (White)", "Away Team (Dark)". |
+| **Edit-in-place** | Tap any event in the game log to open the modal pre-filled with existing values (time, cap, team, period). Event type is NOT changeable — delete and re-add. Period-end events are NOT editable. OK button shows "Save" in edit mode. Foul-out popup fires if editing causes a foul-out. "Event updated" toast confirms the action. |
+| **Period selector in modal** | Row of `.team-btn` pills above the time field. Shows all periods up to `currentPeriod`. New events default to current period; user can tap a previous period to log missed events. Edits show the event's existing period. Hidden when only one period available. |
+| **Full game log** | Live log shows ALL events (not capped at 15), grouped by period headers using `.log-title` typography. Period headers act as visual separators. Title changed from "Recent Events" to "Game Log". |
+| **CSS reuse over proliferation** | New interactive elements reuse existing CSS classes (`.team-btn` for period pills, `.log-title` for period headers, structural `:not()` selectors for tappable entries) rather than introducing new class names. Scoped overrides via `#id .existing-class`. |
 
 ---
 
 ## Current State (as of 2026-04-08)
 
 ### What's Done ✅
+- Edit-in-place (#23): Tap any event in the game log to edit its time, cap, team, or period. Period selector pills in the modal allow logging missed events in previous periods. Full game log with period grouping replaces the 15-event limit. Foul-out detection on edits. Uses existing `.team-btn` and `.log-title` CSS — zero new class names.
 - Roster CSV bulk management: upload (⬆ button on Setup, inline with team name inputs) and download (Share screen with team selection dialog). CSV parser handles HC→C alias, rejects B caps, warns on duplicates (first wins). Pre-game uploads buffered and applied at game start. Roster is the single authoritative source — every logged cap auto-registers.
 - Fixed stats format reverting bug: Refactored the native print sequence in `js/share.js` and `js/app.js` to decouple overriding logic out of fragile inline listeners and safely route them through persistent global hooks via `Share.printOptions`, handling continuous Safari orientation regeneration natively.
 - Cap Swap persistence integration: Added 'Cap swap' into internal storage validation allowlists automatically protecting structural tracking across PWA loads natively ensuring continuity over structural cache layers stably resolving event UI.

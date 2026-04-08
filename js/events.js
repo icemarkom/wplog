@@ -36,6 +36,8 @@ export const Events = {
     _capRaw: "",            // raw value for cap
     _altCapRaw: "",         // raw value for alt cap
     _teams: null,           // [home, away] team descriptors
+    _editingId: null,       // event ID being edited, or null for new
+    _selectedPeriod: null,  // period selected in modal pill row
 
     init(game) {
         this.game = game;
@@ -77,7 +79,8 @@ export const Events = {
     //   formatTimeDisplay(digits)
 
     _getMaxMinutes() {
-        return getMaxMinutes(this.game.currentPeriod, this.game.periodLength, this.game.otPeriodLength);
+        const period = this._selectedPeriod || this.game.currentPeriod;
+        return getMaxMinutes(period, this.game.periodLength, this.game.otPeriodLength);
     },
 
     _parseTime(digits) {
@@ -85,7 +88,7 @@ export const Events = {
     },
 
     _formatTimeDisplay(digits) {
-        return formatTimeDisplay(digits);
+        return formatTimeDisplay(digits, this._getMaxMinutes());
     },
 
     // ── Modal Controls ──────────────────────────────────────
@@ -412,9 +415,14 @@ export const Events = {
 
     _openModal(eventDef) {
         this._pendingEvent = eventDef;
+        this._editingId = null;
 
         // Set title
         this._setModalTitle(eventDef);
+
+        // Period selector
+        this._selectedPeriod = this.game.currentPeriod;
+        this._buildPeriodPills();
 
         // Reset inputs
         this._timeRaw = "";
@@ -423,7 +431,7 @@ export const Events = {
         this._swapType = "bi";
 
         // Shootout: lock time to 0:00
-        const isSO = this.game.currentPeriod === "SO";
+        const isSO = this._selectedPeriod === "SO";
         const timeField = document.getElementById("field-time");
         if (isSO) {
             this._timeRaw = "000";
@@ -472,6 +480,9 @@ export const Events = {
         if (nameInput) nameInput.value = "";
         if (idInput) idInput.value = "";
         this._refreshRosterFields();
+
+        // OK button text
+        document.getElementById("event-modal-confirm").textContent = "OK";
         this._updateOkButton();
 
         // Show modal
@@ -482,6 +493,8 @@ export const Events = {
         const modal = document.getElementById("event-modal");
         if (modal.open) modal.close();
         this._pendingEvent = null;
+        this._editingId = null;
+        document.getElementById("event-modal-confirm").textContent = "OK";
     },
 
     _refreshRosterFields() {
@@ -533,6 +546,194 @@ export const Events = {
         this._updateOkButton();
     },
 
+    // ── Period Selector ─────────────────────────────────────
+
+    _getAvailablePeriods() {
+        const periods = [];
+        const cp = this.game.currentPeriod;
+
+        // Regulation periods up to current (or all if in OT/SO)
+        const maxReg = typeof cp === "number" ? cp : this.game.periods;
+        for (let i = 1; i <= maxReg; i++) {
+            periods.push(i);
+        }
+
+        // OT periods from log + current
+        if (typeof cp === "string") {
+            const otSet = new Set();
+            for (const e of this.game.log) {
+                if (typeof e.period === "string" && e.period.startsWith("OT")) {
+                    otSet.add(e.period);
+                }
+            }
+            if (cp.startsWith("OT")) otSet.add(cp);
+            const sortedOTs = [...otSet].sort((a, b) => parseInt(a.slice(2)) - parseInt(b.slice(2)));
+            periods.push(...sortedOTs);
+
+            if (cp === "SO" || this.game.log.some(e => e.period === "SO")) {
+                periods.push("SO");
+            }
+        }
+
+        return periods;
+    },
+
+    _buildPeriodPills() {
+        const container = document.getElementById("modal-period-selector");
+        container.innerHTML = "";
+
+        const periods = this._getAvailablePeriods();
+        // Hide selector if only one period available
+        container.style.display = periods.length <= 1 ? "none" : "";
+
+        for (const period of periods) {
+            const pill = document.createElement("button");
+            pill.type = "button";
+            pill.className = "team-btn";
+            pill.textContent = Game.getPeriodLabel(period, this.game.periods);
+            pill.dataset.period = typeof period === "number" ? String(period) : period;
+            if (String(period) === String(this._selectedPeriod)) {
+                pill.classList.add("active");
+            }
+            pill.addEventListener("click", () => this._selectPeriod(period));
+            container.appendChild(pill);
+        }
+    },
+
+    _selectPeriod(period) {
+        this._selectedPeriod = period;
+        // Update pill highlighting
+        document.querySelectorAll("#modal-period-selector .team-btn").forEach(p => {
+            p.classList.toggle("active", p.dataset.period === String(period));
+        });
+
+        // Handle SO lock
+        const isSO = period === "SO";
+        const timeField = document.getElementById("field-time");
+        if (isSO) {
+            this._timeRaw = "000";
+            document.getElementById("time-display").innerHTML = this._formatTimeDisplay("000");
+            timeField.style.pointerEvents = "none";
+            timeField.style.opacity = "0.5";
+        } else {
+            // If switching away from SO, clear the locked time
+            if (this._timeRaw === "000" && timeField.style.pointerEvents === "none") {
+                this._timeRaw = "";
+                document.getElementById("time-display").innerHTML = this._formatTimeDisplay("");
+            }
+            timeField.style.pointerEvents = "";
+            timeField.style.opacity = "";
+        }
+
+        // Truncate time digits if maxLen changed (e.g., switching between OT and regulation)
+        const maxLen = this._getMaxMinutes() >= 10 ? 4 : 3;
+        if (this._timeRaw.length > maxLen) {
+            this._timeRaw = this._timeRaw.slice(0, maxLen);
+            document.getElementById("time-display").innerHTML = this._formatTimeDisplay(this._timeRaw);
+        }
+
+        this._updateOkButton();
+    },
+
+    // ── Edit-in-Place Helpers ───────────────────────────────
+
+    _timeToRawDigits(seconds, maxMinutes) {
+        if (seconds === null || seconds === undefined) return "";
+        const m = Math.floor(seconds / 60);
+        const s = seconds % 60;
+        const isLong = maxMinutes >= 10;
+        if (isLong) {
+            return String(m).padStart(2, "0") + String(s).padStart(2, "0");
+        }
+        return String(m) + String(s).padStart(2, "0");
+    },
+
+    _openModalForEdit(entry) {
+        const eventDef = this._getEventDef(entry.event);
+        if (!eventDef) return;
+
+        this._editingId = entry.id;
+        this._pendingEvent = eventDef;
+
+        // Title (locked — event type not changeable)
+        this._setModalTitle(eventDef);
+
+        // Period
+        this._selectedPeriod = entry.period;
+        this._buildPeriodPills();
+
+        // Time
+        const maxMin = getMaxMinutes(entry.period, this.game.periodLength, this.game.otPeriodLength);
+        this._timeRaw = this._timeToRawDigits(entry.time, maxMin);
+        document.getElementById("time-display").innerHTML = this._formatTimeDisplay(this._timeRaw);
+
+        const isSO = entry.period === "SO";
+        const timeField = document.getElementById("field-time");
+        if (isSO) {
+            timeField.style.pointerEvents = "none";
+            timeField.style.opacity = "0.5";
+        } else {
+            timeField.style.pointerEvents = "";
+            timeField.style.opacity = "";
+        }
+
+        // Cap
+        this._capRaw = entry.cap || "";
+        document.getElementById("cap-display").textContent = this._capRaw;
+
+        // Alt cap + swap type (for cap swaps)
+        this._altCapRaw = (eventDef.isSwap && entry.note) ? entry.note : "";
+        this._swapType = entry.swapType || "bi";
+        const altDisplay = document.getElementById("alt-cap-display");
+        if (altDisplay) altDisplay.textContent = this._altCapRaw;
+
+        // Sections
+        this._updateModalSections();
+
+        // Stats time mode handling
+        const isStatsMode = !this.game.enableLog && this.game.enableStats;
+        const isStatsOnly = eventDef.statsOnly;
+        const timeMode = this.game.statsTimeMode || "off";
+
+        if ((isStatsOnly || isStatsMode) && timeMode === "off") {
+            timeField.style.display = "none";
+            this._setNumpadTarget(eventDef.teamOnly ? "time" : "cap");
+        } else if ((isStatsOnly || isStatsMode) && timeMode === "optional") {
+            timeField.style.display = "";
+            this._setNumpadTarget(eventDef.teamOnly ? "time" : "cap");
+        } else {
+            timeField.style.display = "";
+            this._setNumpadTarget(isSO && !eventDef.teamOnly ? "cap" : "time");
+        }
+
+        // Team
+        if (entry.team === "" && eventDef.allowOfficial) {
+            this.selectedTeam = "official";
+        } else if (entry.team === "W" || entry.team === "D") {
+            this.selectedTeam = entry.team;
+        } else {
+            this.selectedTeam = null;
+        }
+        document.getElementById("team-white-btn").classList.toggle("active", this.selectedTeam === "W");
+        document.getElementById("team-dark-btn").classList.toggle("active", this.selectedTeam === "D");
+        const officialBtn = document.getElementById("team-official-btn");
+        if (officialBtn) officialBtn.classList.toggle("active", this.selectedTeam === "official");
+
+        // Roster fields
+        const nameInput = document.getElementById("modal-input-name");
+        const idInput = document.getElementById("modal-input-id");
+        if (nameInput) nameInput.value = "";
+        if (idInput) idInput.value = "";
+        this._refreshRosterFields();
+
+        // OK button → "Save"
+        document.getElementById("event-modal-confirm").textContent = "Save";
+        this._updateOkButton();
+
+        // Show modal
+        document.getElementById("event-modal").showModal();
+    },
+
     async _confirmEvent() {
         const rules = RULES[this.game.rules];
         const code = document.getElementById("modal-event-title").dataset.code;
@@ -560,7 +761,8 @@ export const Events = {
         }
 
         const cap = this._capRaw;
-        const period = this.game.currentPeriod;
+        const period = this._selectedPeriod;
+        const team = this.selectedTeam === "official" ? "" : this.selectedTeam;
 
         // Validate cap for player events
         if (!eventDef.teamOnly && !cap) {
@@ -583,8 +785,8 @@ export const Events = {
             }
         }
 
-        // Validate time order (skip for statsOnly events without time)
-        if (time) {
+        // Validate time order (skip for edits — user is correcting data)
+        if (time && !this._editingId) {
             const timeCheck = Game.validateTime(this.game, period, time);
             if (!timeCheck.valid) {
                 const ok = await ConfirmDialog.show({
@@ -597,11 +799,6 @@ export const Events = {
             }
         }
 
-        // Check foul-out BEFORE logging (skip for statsOnly events)
-        const foulOut = (eventDef.teamOnly || isStatsOnly)
-            ? null
-            : Game.checkFoulOut(this.game, this.selectedTeam, cap, eventDef.code);
-
         // Ensure cap is registered in roster (single authoritative source per team)
         const nameInput = document.getElementById("modal-input-name");
         const idInput = document.getElementById("modal-input-id");
@@ -613,38 +810,102 @@ export const Events = {
             if (idInput?.value.trim()) this.game[teamKey].roster[cap].id = idInput.value.trim();
         }
 
-        // Log the event
-        Game.addEvent(this.game, {
-            period,
-            time,
-            team: this.selectedTeam === "official" ? "" : this.selectedTeam,
-            cap: eventDef.teamOnly ? "" : cap,
-            event: eventDef.code,
-            note: eventDef.isSwap ? this._altCapRaw : "",
-            swapType: eventDef.isSwap ? this._swapType : undefined
-        });
-        Storage.save(this.game);
+        if (this._editingId) {
+            // ── Edit mode ────────────────────────────────────
+            const updates = {
+                period,
+                time,
+                team: team || "",
+                cap: eventDef.teamOnly ? "" : cap,
+            };
+            if (eventDef.isSwap) {
+                updates.note = this._altCapRaw;
+                updates.swapType = this._swapType;
+            }
 
-        // Close modal
-        this._closeModal();
+            Game.editEvent(this.game, this._editingId, updates);
+            Storage.save(this.game);
 
-        // Show foul-out notification
-        if (foulOut) {
-            const teamLabel = this.selectedTeam === "W" ? "White" : "Dark";
-            if (foulOut.type === "auto") {
-                this._showFoulOutPopup(
-                    `FOUL OUT — ${teamLabel} ${cap}`,
-                    `${foulOut.event} — automatic game exclusion`
-                );
-            } else {
-                this._showFoulOutPopup(
-                    `FOUL OUT — ${teamLabel} ${cap}`,
-                    `${foulOut.count} personal fouls (limit: ${foulOut.limit})`
-                );
+            // Close modal
+            this._closeModal();
+
+            // Check foul-out AFTER edit (event already counted — no +1)
+            if (!eventDef.teamOnly && !isStatsOnly && cap && (team === "W" || team === "D")) {
+                const baseCap = (this.game._activeCaps && this.game._activeCaps[team])
+                    ? (this.game._activeCaps[team][cap] || cap)
+                    : cap;
+
+                let foulOut = null;
+                if (eventDef.autoFoulOut) {
+                    const count = Game.getPlayerEventCount(this.game, team, baseCap, eventDef.code);
+                    if (count >= eventDef.autoFoulOut) {
+                        foulOut = { type: "auto", event: eventDef.name, count };
+                    }
+                }
+                if (!foulOut && eventDef.isPersonalFoul) {
+                    const fouls = Game.getPlayerFouls(this.game, team, baseCap);
+                    if (fouls >= rules.foulOutLimit) {
+                        foulOut = { type: "accumulated", count: fouls, limit: rules.foulOutLimit };
+                    }
+                }
+
+                if (foulOut) {
+                    const teamLabel = team === "W" ? "White" : "Dark";
+                    if (foulOut.type === "auto") {
+                        this._showFoulOutPopup(
+                            `FOUL OUT — ${teamLabel} ${cap}`,
+                            `${foulOut.event} — automatic game exclusion`
+                        );
+                    } else {
+                        this._showFoulOutPopup(
+                            `FOUL OUT — ${teamLabel} ${cap}`,
+                            `${foulOut.count} personal fouls (limit: ${foulOut.limit})`
+                        );
+                    }
+                }
+            }
+
+            this._showToast("Event updated", "info");
+        } else {
+            // ── New event ────────────────────────────────────
+            // Check foul-out BEFORE logging (skip for statsOnly events)
+            const foulOut = (eventDef.teamOnly || isStatsOnly)
+                ? null
+                : Game.checkFoulOut(this.game, this.selectedTeam, cap, eventDef.code);
+
+            // Log the event
+            Game.addEvent(this.game, {
+                period,
+                time,
+                team: team || "",
+                cap: eventDef.teamOnly ? "" : cap,
+                event: eventDef.code,
+                note: eventDef.isSwap ? this._altCapRaw : "",
+                swapType: eventDef.isSwap ? this._swapType : undefined
+            });
+            Storage.save(this.game);
+
+            // Close modal
+            this._closeModal();
+
+            // Show foul-out notification
+            if (foulOut) {
+                const teamLabel = this.selectedTeam === "W" ? "White" : "Dark";
+                if (foulOut.type === "auto") {
+                    this._showFoulOutPopup(
+                        `FOUL OUT — ${teamLabel} ${cap}`,
+                        `${foulOut.event} — automatic game exclusion`
+                    );
+                } else {
+                    this._showFoulOutPopup(
+                        `FOUL OUT — ${teamLabel} ${cap}`,
+                        `${foulOut.count} personal fouls (limit: ${foulOut.limit})`
+                    );
+                }
             }
         }
 
-        // Check timeout over-limit
+        // Check timeout over-limit (both new and edited)
         if (eventDef.code === "TO" || eventDef.code === "TO30") {
             const used = Game.getTimeoutsUsed(this.game, this.selectedTeam);
             const allowed = this.game.timeoutsAllowed || { full: 0, to30: 0 };
@@ -803,15 +1064,24 @@ export const Events = {
         const container = document.getElementById("recent-log");
         container.innerHTML = "";
 
-        const entries = [...this.game.log].reverse().slice(0, 15);
+        const entries = [...this.game.log].reverse();
+        let currentPeriodGroup = null;
 
         for (const entry of entries) {
+            // Period group header
+            if (String(entry.period) !== String(currentPeriodGroup)) {
+                currentPeriodGroup = entry.period;
+                const header = document.createElement("div");
+                header.className = "log-title log-period-header";
+                header.textContent = Game.getPeriodLabel(entry.period, this.game.periods);
+                container.appendChild(header);
+            }
+
             const row = document.createElement("div");
             row.className = "log-entry";
             if (entry.event === "---") {
                 row.classList.add("log-period-end");
                 row.innerHTML = `
-          <span class="log-period">${Game.getPeriodLabel(entry.period, this.game.periods)}</span>
           <span class="log-separator">——— End of Period ———</span>
           <button class="log-delete-btn" data-id="${entry.id}" title="Delete">✕</button>
         `;
@@ -847,6 +1117,12 @@ export const Events = {
           <span class="log-score">${scoreDisplay}</span>
           <button class="log-delete-btn" data-id="${entry.id}" title="Delete">✕</button>
         `;
+
+                // Tap row to open edit modal
+                row.addEventListener("click", ((e) => {
+                    if (e.target.closest(".log-delete-btn")) return;
+                    this._openModalForEdit(entry);
+                }));
             }
             container.appendChild(row);
         }

@@ -953,13 +953,6 @@ select.form-input {
   color: var(--text-secondary);
 }
 
-.log-period {
-  font-size: 11px;
-  font-weight: 600;
-  color: var(--text-muted);
-  min-width: 24px;
-}
-
 .log-team {
   font-weight: 700;
   font-size: 11px;
@@ -1043,6 +1036,56 @@ select.form-input {
 
 .log-entry.event-border-teal {
   border-left: 3px solid var(--event-stat);
+}
+
+/* Editable log entries — all events (not period-end) are tappable */
+.log-entry:not(.log-period-end) {
+  cursor: pointer;
+  transition: background var(--transition), transform 80ms ease;
+}
+
+.log-entry:not(.log-period-end):hover {
+  background: var(--bg-elevated);
+}
+
+.log-entry:not(.log-period-end):active {
+  transform: scale(0.99);
+}
+
+/* Period group headers — layout modifier on .log-title */
+.log-period-header {
+  text-align: center;
+  padding: 12px 0 4px;
+  margin-bottom: 0;
+}
+
+.log-period-header:first-child {
+  padding-top: 0;
+}
+
+/* Period pills in modal — compact .team-btn variant */
+#modal-period-selector {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 1dvh;
+  flex-wrap: wrap;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+#modal-period-selector .team-btn {
+  flex: 0;
+  min-height: 0;
+  padding: 4px 12px;
+  font-size: 12px;
+  border-width: 1px;
+  color: var(--text-secondary);
+}
+
+#modal-period-selector .team-btn.active {
+  background: var(--accent-blue-glow);
+  border-color: var(--accent-blue);
+  color: var(--accent-blue);
 }
 
 /* ============================
