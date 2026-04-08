@@ -18,6 +18,8 @@ import { RULES, DEFAULTS } from './config.js';
 import { ConfirmDialog } from './confirm.js';
 import { Storage, validateGameData } from './storage.js';
 import { Game } from './game.js';
+import { initDialog } from './dialog.js';
+import { parseRosterCSV, mergeRoster } from './roster.js';
 
 // wplog — Setup Screen Logic
 
@@ -25,6 +27,8 @@ export const Setup = {
     _homeTeam: DEFAULTS.homeTeam,  // current home team code
     _teams: null,    // [home, away] team descriptors
     _bound: false,      // guard against duplicate event binding
+    _pendingRosters: null,  // pre-game roster uploads: { white: [...], dark: [...] }
+    _game: null,        // live game reference (set by updateForActiveGame)
 
     init(onStart) {
         this.onStart = onStart;
@@ -32,8 +36,10 @@ export const Setup = {
             this._bindEvents();
             this._bindSteppers();
             this._bindLoggingMode();
+            initDialog("alert-dialog", { dismissId: "alert-dismiss" });
             this._bound = true;
         }
+        this._pendingRosters = { white: [], dark: [] };
         this._resetForm();
         this._setDefaultDate();
         this._populateRules();
@@ -85,6 +91,7 @@ export const Setup = {
 
     updateForActiveGame(game) {
         if (!game) return;
+        this._game = game;
 
         // Set home team from game data
         this._homeTeam = game.homeTeam || DEFAULTS.homeTeam;
@@ -447,6 +454,19 @@ export const Setup = {
         document.getElementById("setup-time").addEventListener("change", (e) => {
             e.target.classList.toggle("has-value", !!e.target.value);
         });
+
+        // Roster upload buttons
+        for (let i = 0; i < 2; i++) {
+            document.getElementById(`setup-roster-upload-${i}`).addEventListener("click", () => {
+                document.getElementById(`setup-roster-file-${i}`).click();
+            });
+            document.getElementById(`setup-roster-file-${i}`).addEventListener("change", (e) => {
+                if (e.target.files.length > 0) {
+                    this._importRoster(i, e.target.files[0]);
+                }
+                e.target.value = "";
+            });
+        }
     },
 
     _getSelectedMode() {
@@ -560,6 +580,14 @@ export const Setup = {
             }
         }
 
+        // Merge any pending roster uploads
+        for (const teamKey of ["white", "dark"]) {
+            if (this._pendingRosters[teamKey].length > 0) {
+                mergeRoster(game, teamKey, this._pendingRosters[teamKey]);
+            }
+        }
+        this._pendingRosters = { white: [], dark: [] };
+
         Storage.save(game);
         this.onStart(game);
     },
@@ -614,6 +642,65 @@ export const Setup = {
     _showLoadError(message) {
         const dialog = document.getElementById("alert-dialog");
         document.getElementById("alert-title").textContent = "Load Failed";
+        document.getElementById("alert-message").textContent = message;
+        dialog.showModal();
+    },
+
+    // ── Roster CSV Import ──
+
+    async _importRoster(posIndex, file) {
+        let text;
+        try {
+            text = await file.text();
+        } catch (e) {
+            this._showAlert("Import Failed", "Could not read file.");
+            return;
+        }
+
+        // Determine which team this position maps to
+        const t = this._teams[posIndex];
+        const teamKey = t.code === "W" ? "white" : "dark";
+        const teamLabel = t.code === "W" ? "White" : "Dark";
+
+        const game = this._game;
+        const rulesKey = game ? game.rules : document.getElementById("setup-rules").value;
+
+        const result = parseRosterCSV(text, rulesKey);
+
+        // Show errors if parsing completely failed
+        if (result.players.length === 0 && result.errors.length > 0) {
+            this._showAlert("Import Failed", result.errors.join("\n"));
+            return;
+        }
+
+        if (game) {
+            // Active game: merge into live reference and save
+            mergeRoster(game, teamKey, result.players);
+            Storage.save(game);
+        } else {
+            // Pre-game: buffer for merge at game start
+            this._pendingRosters[teamKey] = this._pendingRosters[teamKey].concat(result.players);
+        }
+
+        // Build feedback message
+        const lines = [];
+        lines.push(`Imported ${result.players.length} player${result.players.length !== 1 ? "s" : ""} for ${teamLabel}.`);
+        if (result.duplicates.length > 0) {
+            lines.push(`${result.duplicates.length} duplicate cap${result.duplicates.length !== 1 ? "s" : ""} skipped (${result.duplicates.join(", ")}).`);
+        }
+        if (result.errors.length > 0) {
+            lines.push(result.errors.join("\n"));
+        }
+        if (!game) {
+            lines.push("Roster will be applied when the game starts.");
+        }
+
+        this._showAlert("Roster Imported", lines.join("\n"));
+    },
+
+    _showAlert(title, message) {
+        const dialog = document.getElementById("alert-dialog");
+        document.getElementById("alert-title").textContent = title;
         document.getElementById("alert-message").textContent = message;
         dialog.showModal();
     },

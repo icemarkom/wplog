@@ -26,14 +26,23 @@
 <div class="form-row" id="setup-team-row">
   <div class="form-group">
     <label id="setup-team-0-label"></label>
-    <input id="setup-team-0-name" type="text" class="form-input">
+    <div class="input-with-action">
+      <input id="setup-team-0-name" type="text" class="form-input">
+      <button type="button" id="setup-roster-upload-0" class="swap-btn" title="Upload roster CSV" aria-label="Upload roster CSV">⬆</button>
+    </div>
   </div>
-  <button type="button" id="setup-home-flip" class="swap-btn" title="Flip Home/Away">⇄</button>
+  <button type="button" id="setup-home-flip" class="swap-btn" title="Flip Home/Away">⬌</button>
   <div class="form-group">
     <label id="setup-team-1-label"></label>
-    <input id="setup-team-1-name" type="text" class="form-input">
+    <div class="input-with-action">
+      <button type="button" id="setup-roster-upload-1" class="swap-btn" title="Upload roster CSV" aria-label="Upload roster CSV">⬆</button>
+      <input id="setup-team-1-name" type="text" class="form-input">
+    </div>
   </div>
 </div>
+<input type="file" id="setup-roster-file-0" accept=".csv,text/csv" class="sr-only">
+<input type="file" id="setup-roster-file-1" accept=".csv,text/csv" class="sr-only">
+
 
 <!-- ── Logging (collapsed by default) ── -->
 <details id="setup-logging-section" class="setup-foldable">

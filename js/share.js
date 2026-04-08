@@ -15,6 +15,7 @@
  */
 
 import { buildFilename, buildCSV } from './export.js';
+import { buildRosterCSV, buildRosterFilename, hasRosterData } from './roster.js';
 import { Sheet } from './sheet.js';
 import { initDialog } from './dialog.js';
 
@@ -34,6 +35,12 @@ export const Share = {
         csvBtn.disabled = !this.game;
         jsonBtn.disabled = !this.game;
         if (printBtn) printBtn.disabled = !this.game;
+
+        // Roster download: disabled when no roster data
+        const rosterBtn = document.getElementById("export-roster-btn");
+        if (rosterBtn) {
+            rosterBtn.disabled = !this.game || !hasRosterData(this.game);
+        }
         
         if (!this._bound) {
             if (printBtn) {
@@ -60,6 +67,17 @@ export const Share = {
                 dismissId: "download-cancel",
                 onClose: () => this._closeDownloadDialog(),
             });
+
+            // Roster download button
+            const rosterBtn = document.getElementById("export-roster-btn");
+            if (rosterBtn) {
+                rosterBtn.addEventListener("click", () => {
+                    this._showRosterDownloadDialog();
+                });
+            }
+
+            // Roster download dialog
+            this._setupRosterDownloadDialog();
 
             // Print UI Event Delegation
             this._setupPrintDialogOnce();
@@ -231,5 +249,95 @@ export const Share = {
         a.download = document.getElementById(filenameInputId).value || "wplog-export";
         a.click();
         URL.revokeObjectURL(url);
+    },
+
+    _downloadBlobDirect(blob, filename) {
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = filename;
+        a.click();
+        URL.revokeObjectURL(url);
+    },
+
+    // ── Roster Download Dialog ──────────────────────────────
+
+    _setupRosterDownloadDialog() {
+        const teamEls = document.querySelectorAll("#roster-team-select .segment-btn");
+        teamEls.forEach(btn => {
+            btn.addEventListener("click", (e) => {
+                teamEls.forEach(b => b.classList.remove("active"));
+                e.target.classList.add("active");
+                this._updateRosterFilename();
+            });
+        });
+
+        document.getElementById("roster-download-confirm").addEventListener("click", () => {
+            this._doRosterDownload();
+            this._closeRosterDownloadDialog();
+        });
+
+        initDialog("roster-download-dialog", {
+            dismissId: "roster-download-cancel",
+            onClose: () => this._closeRosterDownloadDialog(),
+        });
+    },
+
+    _showRosterDownloadDialog() {
+        if (!this.game) return;
+
+        // Reset to "Both" default
+        const teamEls = document.querySelectorAll("#roster-team-select .segment-btn");
+        teamEls.forEach(b => b.classList.toggle("active", b.dataset.value === "both"));
+
+        this._updateRosterFilename();
+        document.getElementById("roster-download-dialog").showModal();
+    },
+
+    _updateRosterFilename() {
+        if (!this.game) return;
+        const selected = document.querySelector("#roster-team-select .segment-btn.active").dataset.value;
+        const input = document.getElementById("roster-download-filename");
+        if (selected === "both") {
+            const w = (this.game.white.name || "White").replace(/\s+/g, "-").replace(/[^a-zA-Z0-9-]/g, "");
+            const d = (this.game.dark.name || "Dark").replace(/\s+/g, "-").replace(/[^a-zA-Z0-9-]/g, "");
+            const date = this.game.date || new Date().toISOString().slice(0, 10);
+            input.value = `roster-${w}-${d}-${date}.csv`;
+        } else {
+            input.value = buildRosterFilename(this.game, selected);
+        }
+    },
+
+    _closeRosterDownloadDialog() {
+        document.getElementById("roster-download-dialog").close();
+    },
+
+    _doRosterDownload() {
+        if (!this.game) return;
+        const selected = document.querySelector("#roster-team-select .segment-btn.active").dataset.value;
+
+        if (selected === "both") {
+            // Download two files — stagger to avoid browser blocking the second
+            const teams = ["white", "dark"];
+            const downloadTeam = (i) => {
+                if (i >= teams.length) return;
+                const csv = buildRosterCSV(this.game, teams[i]);
+                if (csv) {
+                    const filename = buildRosterFilename(this.game, teams[i]);
+                    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+                    this._downloadBlobDirect(blob, filename);
+                }
+                if (i + 1 < teams.length) {
+                    setTimeout(() => downloadTeam(i + 1), 500);
+                }
+            };
+            downloadTeam(0);
+        } else {
+            const csv = buildRosterCSV(this.game, selected);
+            if (csv) {
+                const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+                this._downloadBlob(blob, "roster-download-filename");
+            }
+        }
     },
 };

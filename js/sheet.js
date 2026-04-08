@@ -516,15 +516,9 @@ export const Sheet = {
         const rules = RULES[game.rules];
         const hasPlayerId = !!(rules && rules.playerId);
 
-        // Collect all caps from game log, grouped by team
-        const whiteCaps = new Set();
-        const darkCaps = new Set();
-        for (const entry of game.log) {
-            if (!entry.cap) continue;
-            const cap = entry.baseCap || entry.cap;
-            if (entry.team === "W") whiteCaps.add(cap);
-            else if (entry.team === "D") darkCaps.add(cap);
-        }
+        // Roster is the single authoritative source for all known caps per team
+        const whiteCaps = new Set(Object.keys(game.white.roster || {}));
+        const darkCaps = new Set(Object.keys(game.dark.roster || {}));
 
         if (whiteCaps.size === 0 && darkCaps.size === 0) return null;
 
