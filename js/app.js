@@ -201,10 +201,12 @@ export const App = {
         // Intercept native print to adjust layout dynamically
         window.addEventListener("beforeprint", () => {
             if (this.game && document.getElementById("sheet-container")) {
-                const po = Share.printOptions || { section: "all", format: Sheet.statsFormat || "cumulative" };
+                const po = Share.printOptions || { section: "all", format: Sheet.statsFormat || "cumulative", roster: "hide" };
 
                 if (po.section === "stats") document.body.classList.add("print-hide-log");
                 else if (po.section === "log") document.body.classList.add("print-hide-stats");
+
+                if (po.roster === "hide") document.body.classList.add("print-hide-roster");
 
                 const origFormat = Sheet.statsFormat;
                 Sheet.statsFormat = po.format;
@@ -213,7 +215,7 @@ export const App = {
             }
         });
         window.addEventListener("afterprint", () => {
-            document.body.classList.remove("print-hide-log", "print-hide-stats");
+            document.body.classList.remove("print-hide-log", "print-hide-stats", "print-hide-roster");
             if (this.game && document.getElementById("sheet-container")) {
                 Sheet.render(this.game, false);
             }

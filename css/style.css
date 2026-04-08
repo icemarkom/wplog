@@ -1532,7 +1532,8 @@ select.form-input {
   table-layout: fixed;
 }
 
-.sheet-stats-table .col-cap {
+.sheet-stats-table .col-cap,
+.sheet-roster-table .col-cap {
   width: 56px;
 }
 
@@ -1566,6 +1567,33 @@ select.form-input {
   color: var(--text-muted);
   font-size: 13px;
 }
+
+/* ── Roster Section ── */
+.sheet-roster-table td.col-roster-name {
+  text-align: left;
+  font-family: var(--font-sans);
+}
+
+.sheet-roster-table td.col-roster-id {
+  text-align: left;
+}
+
+.sheet-roster-print {
+  display: none;
+}
+
+.col-roster-cap-center {
+  font-weight: 700;
+}
+
+td.sheet-roster-home {
+  text-align: right;
+}
+
+.sheet-roster-team-header {
+  font-size: 12px;
+}
+
 
 /* ============================
    Share Screen
