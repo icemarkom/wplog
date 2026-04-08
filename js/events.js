@@ -207,7 +207,7 @@ export const Events = {
                 const eventDef = this._getEventDef(code);
                 const nameField = document.getElementById("field-roster-name");
                 const nameInput = document.getElementById("modal-input-name");
-                const nameVisible = nameField && nameField.style.display !== "none";
+                const nameVisible = nameField && !nameField.classList.contains("hidden");
                 const isInName = e.target === nameInput;
                 const reverse = e.shiftKey;
 
@@ -418,26 +418,22 @@ export const Events = {
         const capField = document.getElementById("field-cap");
         const altCapField = document.getElementById("field-alt-cap");
 
-        if (eventDef && eventDef.teamOnly) {
-            capField.style.display = "none";
-            if (this._numpadTarget === "cap") this._setNumpadTarget("time");
-        } else {
-            capField.style.display = "";
-        }
+        const isTeamOnly = eventDef && eventDef.teamOnly;
+        capField.classList.toggle("hidden", isTeamOnly);
+        if (isTeamOnly && this._numpadTarget === "cap") this._setNumpadTarget("time");
 
         const swapIcon = document.getElementById("modal-swap-btn");
+        const isSwap = eventDef && eventDef.isSwap;
         if (altCapField) {
-            if (eventDef && eventDef.isSwap) {
-                altCapField.style.display = "";
-                if (swapIcon) {
-                    swapIcon.style.display = "flex";
-                    swapIcon.textContent = this._swapType === "uni" ? "\u2192" : "\u21C4";
-                }
+            altCapField.classList.toggle("hidden", !isSwap);
+            if (swapIcon) {
+                swapIcon.classList.toggle("hidden", !isSwap);
+                if (isSwap) swapIcon.textContent = this._swapType === "uni" ? "\u2192" : "\u21C4";
+            }
+            if (isSwap) {
                 document.getElementById("label-cap").textContent = this._swapType === "uni" ? "OLD CAP" : "CAP";
                 document.getElementById("label-alt-cap").textContent = this._swapType === "uni" ? "NEW CAP" : "CAP";
             } else {
-                altCapField.style.display = "none";
-                if (swapIcon) swapIcon.style.display = "none";
                 document.getElementById("label-cap").textContent = "CAP";
             }
         }
@@ -445,7 +441,7 @@ export const Events = {
         // Show/hide Official team button
         const officialBtn = document.getElementById("team-official-btn");
         if (officialBtn) {
-            officialBtn.style.display = (eventDef && eventDef.allowOfficial) ? "" : "none";
+            officialBtn.classList.toggle("hidden", !(eventDef && eventDef.allowOfficial));
         }
 
         this._updateOkButton();
@@ -474,12 +470,10 @@ export const Events = {
         if (isSO) {
             this._timeRaw = "000";
             document.getElementById("time-display").innerHTML = this._formatTimeDisplay("000");
-            timeField.style.pointerEvents = "none";
-            timeField.style.opacity = "0.5";
+            timeField.classList.add("disabled");
         } else {
             document.getElementById("time-display").innerHTML = this._formatTimeDisplay("");
-            timeField.style.pointerEvents = "";
-            timeField.style.opacity = "";
+            timeField.classList.remove("disabled");
         }
         document.getElementById("cap-display").textContent = "";
         const altDisplay = document.getElementById("alt-cap-display");
@@ -496,13 +490,13 @@ export const Events = {
 
         if ((isStatsOnly || isStatsMode) && timeMode === "off") {
             // Hide time field entirely
-            timeField.style.display = "none";
+            timeField.classList.add("hidden");
             this._setNumpadTarget(eventDef.teamOnly ? "time" : "cap");
         } else if ((isStatsOnly || isStatsMode) && timeMode === "optional") {
-            timeField.style.display = "";
+            timeField.classList.remove("hidden");
             this._setNumpadTarget(eventDef.teamOnly ? "time" : "cap");
         } else {
-            timeField.style.display = "";
+            timeField.classList.remove("hidden");
             this._setNumpadTarget(isSO && !eventDef.teamOnly ? "cap" : "time");
         }
 
@@ -549,24 +543,25 @@ export const Events = {
         el.dataset.code = "";
 
         // Hide period selector
-        document.getElementById("modal-period-selector").innerHTML = "";
-        document.getElementById("modal-period-selector").style.display = "none";
+        const periodSelector = document.getElementById("modal-period-selector");
+        periodSelector.innerHTML = "";
+        periodSelector.classList.add("hidden");
 
         // Hide time field
         const timeField = document.getElementById("field-time");
-        timeField.style.display = "none";
+        timeField.classList.add("hidden");
 
         // Show cap field, hide alt cap + swap
-        document.getElementById("field-cap").style.display = "";
+        document.getElementById("field-cap").classList.remove("hidden");
         const altCapField = document.getElementById("field-alt-cap");
-        if (altCapField) altCapField.style.display = "none";
+        if (altCapField) altCapField.classList.add("hidden");
         const swapIcon = document.getElementById("modal-swap-btn");
-        if (swapIcon) swapIcon.style.display = "none";
+        if (swapIcon) swapIcon.classList.add("hidden");
         document.getElementById("label-cap").textContent = "CAP";
 
         // Hide official button
         const officialBtn = document.getElementById("team-official-btn");
-        if (officialBtn) officialBtn.style.display = "none";
+        if (officialBtn) officialBtn.classList.add("hidden");
 
         // Reset inputs
         this._timeRaw = "";
@@ -591,15 +586,15 @@ export const Events = {
         const idInput = document.getElementById("modal-input-id");
         if (nameInput) nameInput.value = "";
         if (idInput) idInput.value = "";
-        if (nameField) nameField.style.display = "";
+        if (nameField) nameField.classList.remove("hidden");
 
         // Show ID field if rule set has playerId
         const rules = RULES[this.game.rules];
         if (rules.playerId && idField) {
-            idField.style.display = "";
+            idField.classList.remove("hidden");
             idInput.placeholder = rules.playerId + " (Optional)";
         } else if (idField) {
-            idField.style.display = "none";
+            idField.classList.add("hidden");
         }
 
         // Listen for name input changes to update OK button
@@ -624,14 +619,14 @@ export const Events = {
 
         // In roster mode, fields are always visible — skip eventDef checks
         if (this._rosterMode) {
-            nameField.style.display = "";
+            nameField.classList.remove("hidden");
             const rules = RULES[this.game.rules];
             const playerIdLabel = rules.playerId;
             if (playerIdLabel) {
-                idField.style.display = "";
+                idField.classList.remove("hidden");
                 idInput.placeholder = playerIdLabel + " (Optional)";
             } else {
-                idField.style.display = "none";
+                idField.classList.add("hidden");
             }
 
             // Pre-fill from existing roster
@@ -654,8 +649,8 @@ export const Events = {
 
         // Hide roster fields for teamOnly, swap, and official
         const hide = (eventDef && (eventDef.teamOnly || eventDef.isSwap)) || this.selectedTeam === "official";
-        nameField.style.display = hide ? "none" : "";
-        idField.style.display = hide ? "none" : "";
+        nameField.classList.toggle("hidden", hide);
+        idField.classList.toggle("hidden", hide);
 
         if (hide) return;
 
@@ -663,10 +658,10 @@ export const Events = {
         const rules = RULES[this.game.rules];
         const playerIdLabel = rules.playerId;
         if (playerIdLabel) {
-            idField.style.display = "";
+            idField.classList.remove("hidden");
             idInput.placeholder = playerIdLabel + " (Optional)";
         } else {
-            idField.style.display = "none";
+            idField.classList.add("hidden");
         }
 
         // Pre-fill from existing roster
@@ -730,7 +725,7 @@ export const Events = {
 
         const periods = this._getAvailablePeriods();
         // Hide selector if only one period available
-        container.style.display = periods.length <= 1 ? "none" : "";
+        container.classList.toggle("hidden", periods.length <= 1);
 
         for (const period of periods) {
             const pill = document.createElement("button");
@@ -759,16 +754,14 @@ export const Events = {
         if (isSO) {
             this._timeRaw = "000";
             document.getElementById("time-display").innerHTML = this._formatTimeDisplay("000");
-            timeField.style.pointerEvents = "none";
-            timeField.style.opacity = "0.5";
+            timeField.classList.add("disabled");
         } else {
             // If switching away from SO, clear the locked time
-            if (this._timeRaw === "000" && timeField.style.pointerEvents === "none") {
+            if (this._timeRaw === "000" && timeField.classList.contains("disabled")) {
                 this._timeRaw = "";
                 document.getElementById("time-display").innerHTML = this._formatTimeDisplay("");
             }
-            timeField.style.pointerEvents = "";
-            timeField.style.opacity = "";
+            timeField.classList.remove("disabled");
         }
 
         // Truncate time digits if maxLen changed (e.g., switching between OT and regulation)
@@ -815,13 +808,7 @@ export const Events = {
 
         const isSO = entry.period === "SO";
         const timeField = document.getElementById("field-time");
-        if (isSO) {
-            timeField.style.pointerEvents = "none";
-            timeField.style.opacity = "0.5";
-        } else {
-            timeField.style.pointerEvents = "";
-            timeField.style.opacity = "";
-        }
+        timeField.classList.toggle("disabled", isSO);
 
         // Cap
         this._capRaw = entry.cap || "";
@@ -842,13 +829,13 @@ export const Events = {
         const timeMode = this.game.statsTimeMode || "off";
 
         if ((isStatsOnly || isStatsMode) && timeMode === "off") {
-            timeField.style.display = "none";
+            timeField.classList.add("hidden");
             this._setNumpadTarget(eventDef.teamOnly ? "time" : "cap");
         } else if ((isStatsOnly || isStatsMode) && timeMode === "optional") {
-            timeField.style.display = "";
+            timeField.classList.remove("hidden");
             this._setNumpadTarget(eventDef.teamOnly ? "time" : "cap");
         } else {
-            timeField.style.display = "";
+            timeField.classList.remove("hidden");
             this._setNumpadTarget(isSO && !eventDef.teamOnly ? "cap" : "time");
         }
 
@@ -1113,7 +1100,6 @@ export const Events = {
             // Add Name button — roster-only modal (no event logged)
             const addNameBtn = document.createElement("button");
             addNameBtn.className = "event-btn event-end-period";
-            addNameBtn.style.gridColumn = "1";
             addNameBtn.textContent = "Add Name";
             addNameBtn.addEventListener("click", () => this._openModalForRoster());
             container.appendChild(addNameBtn);
@@ -1121,7 +1107,6 @@ export const Events = {
             // Swap Caps button
             const swapBtn = document.createElement("button");
             swapBtn.className = "event-btn event-end-period";
-            swapBtn.style.gridColumn = "2";
             swapBtn.textContent = "Swap Caps";
             swapBtn.dataset.code = "Cap swap";
             swapBtn.addEventListener("click", () => this._openModal(this._getEventDef("Cap swap")));
@@ -1131,7 +1116,6 @@ export const Events = {
             const endBtn = document.createElement("button");
             endBtn.id = "end-period-btn";
             endBtn.className = "event-btn event-end-period";
-            endBtn.style.gridColumn = "3";
             endBtn.textContent = "End Period";
             endBtn.onclick = () => this._logPeriodEnd();
             container.appendChild(endBtn);

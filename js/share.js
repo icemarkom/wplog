@@ -94,13 +94,7 @@ export const Share = {
 
         const hideStatsControls = () => {
             const activeSection = document.querySelector("#print-sections-mode .segment-btn.active").dataset.value;
-            if (activeSection === "log") {
-                formatGroup.style.opacity = "0.3";
-                formatGroup.style.pointerEvents = "none";
-            } else {
-                formatGroup.style.opacity = "1";
-                formatGroup.style.pointerEvents = "auto";
-            }
+            formatGroup.classList.toggle("disabled", activeSection === "log");
         };
 
         sectionsEls.forEach(btn => {

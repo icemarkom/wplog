@@ -27,18 +27,18 @@
 </div>
 
 <!-- Cap / Alt Cap Row -->
-<div class="form-row" id="modal-cap-row" style="margin-bottom: 1dvh; align-items: center;">
+<div class="form-row" id="modal-cap-row">
   <!-- Cap (tap to target numpad) -->
-  <div class="modal-field form-group" id="field-cap" data-target="cap" style="margin-bottom: 0;">
+  <div class="modal-field form-group" id="field-cap" data-target="cap">
     <span class="input-label" id="label-cap">CAP</span>
     <div id="cap-display" class="field-display"></div>
   </div>
 
-  <button type="button" id="modal-swap-btn" class="swap-btn" aria-label="Toggle Swap Direction"
-    style="display:none;">⇄</button>
+  <button type="button" id="modal-swap-btn" class="swap-btn hidden" aria-label="Toggle Swap Direction"
+    >⇄</button>
 
   <!-- Alt Cap (tap to target numpad) -->
-  <div class="modal-field form-group" id="field-alt-cap" data-target="altCap" style="display:none; margin-bottom: 0;">
+  <div class="modal-field form-group hidden" id="field-alt-cap" data-target="altCap">
     <span class="input-label" id="label-alt-cap">ALT CAP</span>
     <div id="alt-cap-display" class="field-display"></div>
   </div>
@@ -47,7 +47,7 @@
 <!-- Team Toggle -->
 <div id="modal-team-section" class="team-toggle">
   <button id="team-white-btn" class="team-btn team-btn-white">WHITE</button>
-  <button id="team-official-btn" class="team-btn team-btn-official" style="display:none">OFFICIAL</button>
+  <button id="team-official-btn" class="team-btn team-btn-official hidden">OFFICIAL</button>
   <button id="team-dark-btn" class="team-btn team-btn-dark">DARK</button>
 </div>
 

@@ -115,7 +115,7 @@ export const Setup = {
         }
 
         // Hide Load Game button during active game
-        document.getElementById("setup-load-btn").style.display = "none";
+        document.getElementById("setup-load-btn").classList.add("hidden");
 
         // Disable flip button during active game
         document.getElementById("setup-home-flip").disabled = true;
@@ -327,7 +327,7 @@ export const Setup = {
         const group = document.getElementById("setup-ot-length-group");
         const stepper = document.getElementById("setup-ot-length");
         this._setStepperDisabled(stepper, !otOn);
-        group.style.opacity = otOn ? "" : "0.35";
+        group.classList.toggle("disabled", !otOn);
         // Re-apply boundary states
         if (otOn) this._setStepperValue("setup-ot-length", this._getStepperValue("setup-ot-length"));
     },
