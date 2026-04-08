@@ -19,6 +19,7 @@ import { Game } from './game.js';
 import { formatTime } from './time.js';
 import { escapeHTML } from './sanitize.js';
 import { renderScreen } from './sheet-screen.js';
+import { Storage } from './storage.js';
 
 // wplog — Game Sheet (Stateless Orchestrator + Render Helpers)
 //
@@ -573,9 +574,16 @@ export const Sheet = {
             for (const cap of sortCaps(caps)) {
                 const entry = getRosterEntry(teamKey, cap);
                 const tr = document.createElement("tr");
+                tr.className = "roster-edit-row";
                 let html = `<td class="col-cap">${escapeHTML(cap)}</td><td class="col-roster-name">${escapeHTML(entry && entry.name ? entry.name : "")}</td>`;
                 if (hasPlayerId) html += `<td class="col-roster-id">${escapeHTML(entry && entry.id ? entry.id : "")}</td>`;
                 tr.innerHTML = html;
+
+                // Tap to edit inline
+                tr.addEventListener("click", () => {
+                    this._editRosterRow(tr, game, teamKey, cap, hasPlayerId);
+                });
+
                 tbody.appendChild(tr);
             }
             table.appendChild(tbody);
@@ -656,5 +664,120 @@ export const Sheet = {
         section.appendChild(printDiv);
 
         return section;
+    },
+
+    // ── Inline Roster Editing (screen only) ─────────────────
+
+    _editRosterRow(tr, game, teamKey, cap, hasPlayerId) {
+        // Prevent double-activation
+        if (tr.classList.contains("editing")) return;
+        tr.classList.add("editing");
+
+        const entry = game[teamKey].roster && game[teamKey].roster[cap] || {};
+        const cells = tr.querySelectorAll("td");
+
+        // Cell indices: 0=cap, 1=name, 2=id (if present)
+        const nameCell = cells[1];
+        const idCell = hasPlayerId ? cells[2] : null;
+
+        const origName = entry.name || "";
+        const origId = entry.id || "";
+
+        // Replace name cell with input
+        const nameInput = document.createElement("input");
+        nameInput.type = "text";
+        nameInput.className = "form-input roster-inline-input";
+        nameInput.value = origName;
+        nameInput.placeholder = "Name";
+        nameCell.textContent = "";
+        nameCell.appendChild(nameInput);
+
+        // Replace ID cell with input (if applicable)
+        let idInput = null;
+        if (idCell) {
+            idInput = document.createElement("input");
+            idInput.type = "text";
+            idInput.className = "form-input roster-inline-input";
+            idInput.value = origId;
+            const rules = RULES[game.rules];
+            idInput.placeholder = rules.playerId || "ID";
+            idCell.textContent = "";
+            idCell.appendChild(idInput);
+        }
+
+        // Focus name input
+        nameInput.focus();
+        nameInput.select();
+
+        const save = () => {
+            const newName = nameInput.value.trim();
+            const newId = idInput ? idInput.value.trim() : "";
+
+            // Only save if something changed
+            if (newName !== origName || newId !== origId) {
+                if (!game[teamKey].roster) game[teamKey].roster = {};
+                if (!game[teamKey].roster[cap]) game[teamKey].roster[cap] = {};
+                game[teamKey].roster[cap].name = newName;
+                if (hasPlayerId) game[teamKey].roster[cap].id = newId;
+                Storage.save(game);
+            }
+
+            // Re-render roster section
+            this._rerenderRoster(game);
+        };
+
+        const revert = () => {
+            this._rerenderRoster(game);
+        };
+
+        // Save on blur (with slight delay to allow tab between fields)
+        const blurTimeout = { id: null };
+        const onBlur = () => {
+            blurTimeout.id = setTimeout(() => {
+                // Only save if no other input in this row has focus
+                if (document.activeElement !== nameInput && document.activeElement !== idInput) {
+                    save();
+                }
+            }, 150);
+        };
+
+        const onFocus = () => {
+            if (blurTimeout.id) {
+                clearTimeout(blurTimeout.id);
+                blurTimeout.id = null;
+            }
+        };
+
+        nameInput.addEventListener("blur", onBlur);
+        nameInput.addEventListener("focus", onFocus);
+        if (idInput) {
+            idInput.addEventListener("blur", onBlur);
+            idInput.addEventListener("focus", onFocus);
+        }
+
+        // Save on Enter, revert on Escape
+        const onKeydown = (e) => {
+            if (e.key === "Enter") {
+                e.preventDefault();
+                save();
+            } else if (e.key === "Escape") {
+                e.preventDefault();
+                revert();
+            }
+        };
+        nameInput.addEventListener("keydown", onKeydown);
+        if (idInput) idInput.addEventListener("keydown", onKeydown);
+    },
+
+    _rerenderRoster(game) {
+        const container = document.querySelector(".sheet-roster-section");
+        if (!container) return;
+        const parent = container.parentNode;
+        const newRoster = this._renderRoster(game);
+        if (newRoster) {
+            parent.replaceChild(newRoster, container);
+        } else {
+            parent.removeChild(container);
+        }
     },
 };

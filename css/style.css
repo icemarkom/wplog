@@ -1650,6 +1650,31 @@ td.sheet-roster-home {
   font-size: 12px;
 }
 
+/* ── Tappable Roster Rows (screen only) ── */
+.sheet-roster-screen .roster-edit-row {
+  cursor: pointer;
+  transition: background var(--transition);
+}
+
+.sheet-roster-screen .roster-edit-row:hover {
+  background: var(--bg-elevated) !important;
+}
+
+.sheet-roster-screen .roster-edit-row.editing {
+  cursor: default;
+}
+
+.roster-inline-input {
+  width: 100%;
+  padding: 2px 6px !important;
+  min-height: 28px !important;
+  font-size: 13px !important;
+  font-family: var(--font-sans) !important;
+  background: var(--bg-input) !important;
+  border: 1px solid var(--accent-blue) !important;
+  border-radius: var(--radius-sm);
+  box-sizing: border-box;
+}
 
 /* ============================
    Share Screen

@@ -59,7 +59,7 @@ wplog/
 │   ├── setup.js        # Setup screen (with active-game guards)
 │   ├── events.js       # Live log screen (main UI, owns Storage.save after mutations)
 │   ├── time.js         # Time parsing utilities (pure — no DOM, no game state)
-│   ├── sheet.js        # Game sheet orchestrator + shared render helpers (stateless — no stored game)
+│   ├── sheet.js        # Game sheet orchestrator + shared render helpers (imports Storage for inline roster edits)
 │   ├── sheet-data.js   # Sheet data builders (pure — no DOM)
 │   ├── sheet-screen.js # Game sheet screen rendering (2-page DOM layout)
 │   ├── sheet-print.js  # Game sheet print rendering (DOM only — renders from pagination plans)
@@ -169,12 +169,15 @@ These were explicitly discussed and agreed with the user:
 | **Period selector in modal** | Row of `.team-btn` pills above the time field. Shows all periods up to `currentPeriod`. New events default to current period; user can tap a previous period to log missed events. Edits show the event's existing period. Hidden when only one period available. |
 | **Full game log** | Live log shows ALL events (not capped at 15), grouped by period headers using `.log-title` typography. Period headers act as visual separators. Title changed from "Recent Events" to "Game Log". |
 | **CSS reuse over proliferation** | New interactive elements reuse existing CSS classes (`.team-btn` for period pills, `.log-title` for period headers, structural `:not()` selectors for tappable entries) rather than introducing new class names. Scoped overrides via `#id .existing-class`. |
+| **"Add Name" button** | Grey button on Live screen (alongside Swap Caps and End Period) that opens the event modal in roster-only mode: team + cap + name/ID fields, no time, no period selector, no event logged. Saves directly to `game[teamKey].roster[cap]`. Order: Add Name → Swap Caps → End Period. All three use explicit `gridColumn` 1/2/3 with a separator above. |
+| **Tappable roster rows** | On the Game Sheet screen, roster rows are tappable to edit name/ID inline. Tap → static text replaced with `<input>` → blur/Enter saves + `Storage.save()` + re-renders roster section. Escape reverts. Print layout stays static. |
 
 ---
 
 ## Current State (as of 2026-04-08)
 
 ### What's Done ✅
+- Inline roster editing: "Add Name" grey button on Live screen opens modal in roster-only mode (team + cap + name, no event logged). Roster rows on the Game Sheet are tappable to edit name/ID inline with blur/Enter save. Separator above grey action buttons row. Help docs updated.
 - Edit-in-place (#23): Tap any event in the game log to edit its time, cap, team, or period. Period selector pills in the modal allow logging missed events in previous periods. Full game log with period grouping replaces the 15-event limit. Foul-out detection on edits. Uses existing `.team-btn` and `.log-title` CSS — zero new class names.
 - Roster CSV bulk management: upload (⬆ button on Setup, inline with team name inputs) and download (Share screen with team selection dialog). CSV parser handles HC→C alias, rejects B caps, warns on duplicates (first wins). Pre-game uploads buffered and applied at game start. Roster is the single authoritative source — every logged cap auto-registers.
 - Fixed stats format reverting bug: Refactored the native print sequence in `js/share.js` and `js/app.js` to decouple overriding logic out of fragile inline listeners and safely route them through persistent global hooks via `Share.printOptions`, handling continuous Safari orientation regeneration natively.
@@ -319,7 +322,7 @@ These were explicitly discussed and agreed with the user:
 - Help documentation kept current alongside feature delivery — geronimo and kraken workflows include help.html check steps, bazinga establishes doc-as-delivery principle
 - `Game` decoupled from `Storage`: mutation methods (`addEvent`, `deleteEvent`, `editEvent`, `advancePeriod`) no longer call `Storage.save()` — UI layer (`events.js`) owns persistence
 - Score formatting extracted: `formatFractionalScore()` exported from `game.js` as a pure utility
-- Stateless Sheet: `Sheet.game` removed, `Sheet.init()` replaced with `Sheet.render(game)` — all render methods accept `game` as parameter
+- Stateless Sheet: `Sheet.game` removed, `Sheet.init()` replaced with `Sheet.render(game)` — all render methods accept `game` as parameter. Imports `Storage` only for inline roster saves.
 - Legacy JS pagination engine, data builders, and `sheet-print.js` removed entirely in favor of native CSS printing
 - Time parsing extracted: `time.js` exports pure functions (`getMaxMinutes`, `parseTime`, `formatTimeDisplay`) — `events.js` delegates via thin wrappers
 - Export module extracted: `export.js` exports pure functions (`buildCSV`, `makeFilename`) — CSV/filename builders with zero DOM dependency
