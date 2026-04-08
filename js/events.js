@@ -199,7 +199,8 @@ export const Events = {
                 return;
             }
 
-            // Tab = cycle through fields: time → cap → [altCap] → name → time
+            // Tab = cycle through fields: time → cap → [altCap] → name
+            // Shift+Tab = reverse: name → [altCap] → cap → time
             if (key === "Tab") {
                 e.preventDefault();
                 const code = document.getElementById("modal-event-title").dataset.code;
@@ -208,25 +209,50 @@ export const Events = {
                 const nameInput = document.getElementById("modal-input-name");
                 const nameVisible = nameField && nameField.style.display !== "none";
                 const isInName = e.target === nameInput;
+                const reverse = e.shiftKey;
 
-                if (isInName) {
-                    // Leave name → back to time
-                    nameInput.blur();
-                    this._setNumpadTarget("time", true);
-                } else {
-                    let next;
-                    if (this._numpadTarget === "time") {
-                        next = "cap";
-                    } else if (this._numpadTarget === "cap" && eventDef && eventDef.isSwap) {
-                        next = "altCap";
-                    } else if (nameVisible) {
-                        // cap (or altCap) → name
-                        nameInput.focus();
-                        return;
+                if (reverse) {
+                    // Shift+Tab: move up
+                    if (isInName) {
+                        nameInput.blur();
+                        if (eventDef && eventDef.isSwap) {
+                            this._setNumpadTarget("altCap", true);
+                        } else {
+                            this._setNumpadTarget("cap", true);
+                        }
+                    } else if (this._numpadTarget === "altCap") {
+                        this._setNumpadTarget("cap", true);
+                    } else if (this._numpadTarget === "cap") {
+                        this._setNumpadTarget("time", true);
                     } else {
-                        next = "time";
+                        // time → wrap to name (or last numpad field)
+                        if (nameVisible) {
+                            nameInput.focus();
+                        } else if (eventDef && eventDef.isSwap) {
+                            this._setNumpadTarget("altCap", true);
+                        } else {
+                            this._setNumpadTarget("cap", true);
+                        }
                     }
-                    this._setNumpadTarget(next, true);
+                } else {
+                    // Tab: move down
+                    if (isInName) {
+                        nameInput.blur();
+                        this._setNumpadTarget("time", true);
+                    } else {
+                        let next;
+                        if (this._numpadTarget === "time") {
+                            next = "cap";
+                        } else if (this._numpadTarget === "cap" && eventDef && eventDef.isSwap) {
+                            next = "altCap";
+                        } else if (nameVisible) {
+                            nameInput.focus();
+                            return;
+                        } else {
+                            next = "time";
+                        }
+                        this._setNumpadTarget(next, true);
+                    }
                 }
                 return;
             }
