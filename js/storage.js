@@ -132,7 +132,7 @@ export function validateGameData(parsed) {
             return _fail("homeTeam must be 'W' or 'D'.");
         }
 
-        // white, dark (required objects with name)
+        // white, dark (required objects with name and optional roster)
         if (!_isTeamObject(parsed.white)) {
             return _fail("Invalid white team data.");
         }
@@ -226,6 +226,9 @@ export function validateGameData(parsed) {
                 }
             }
 
+            // ── Migrate legacy coach cap "C" → "HC" ──
+            if (entry.cap === "C") entry.cap = "HC";
+
             // ── Build clean entry (allowlisted fields only) ──
             cleanLog.push({
                 id: entry.id,
@@ -264,8 +267,8 @@ export function validateGameData(parsed) {
             enableStats: parsed.enableStats,
             statsTimeMode: parsed.statsTimeMode,
             homeTeam: parsed.homeTeam || DEFAULTS.homeTeam,
-            white: { name: parsed.white.name },
-            dark: { name: parsed.dark.name },
+            white: { name: parsed.white.name, roster: _migrateRosterKeys(_isRosterObject(parsed.white.roster) ? parsed.white.roster : {}) },
+            dark: { name: parsed.dark.name, roster: _migrateRosterKeys(_isRosterObject(parsed.dark.roster) ? parsed.dark.roster : {}) },
             currentPeriod: parsed.currentPeriod,
             log: cleanLog,
             _nextId: _isPositiveInt(parsed._nextId) ? parsed._nextId : (cleanLog.length > 0 ? Math.max(...cleanLog.map(e => e.id)) + 1 : 1),
@@ -316,6 +319,26 @@ function _isTeamObject(val) {
         _isString(val.name) && val.name.length <= MAX_TEAM_NAME;
 }
 
+function _isRosterObject(val) {
+    if (!val || typeof val !== "object" || Array.isArray(val)) return false;
+    // ensure all keys are strings and values are objects with optional 'name' and 'id'
+    for (const [key, player] of Object.entries(val)) {
+        if (!_isString(key)) return false;
+        if (!player || typeof player !== "object" || Array.isArray(player)) return false;
+        if (player.name != null && !_isString(player.name)) return false;
+        if (player.id != null && !_isString(player.id)) return false;
+    }
+    return true;
+}
+
+function _migrateRosterKeys(roster) {
+    if (roster["C"] && !roster["HC"]) {
+        roster["HC"] = roster["C"];
+        delete roster["C"];
+    }
+    return roster;
+}
+
 function _isValidPeriod(val, maxPeriod) {
     if (_isIntInRange(val, 1, maxPeriod)) return true;
     if (_isString(val)) {
@@ -327,7 +350,7 @@ function _isValidPeriod(val, maxPeriod) {
 
 function _isValidCap(val) {
     if (!_isString(val)) return false;
-    if (val === "" || val === "C" || val === "AC" || val === "B") return true;
+    if (val === "" || val === "HC" || val === "C" || val === "AC" || val === "B") return true;
     return RE_CAP.test(val);
 }
 

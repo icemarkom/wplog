@@ -16,7 +16,7 @@
 
 // wplog — Application Version
 // Default is "dev"; deploy workflow injects the release tag.
-export const APP_VERSION = "2.10.6";
+export const APP_VERSION = "3.0.0";
 
 // App-level defaults — fallbacks for missing rule-set properties
 export const DEFAULTS = {
@@ -55,6 +55,10 @@ export const DEFAULTS = {
 //   allowPlayer   — (optional, default: true) false to block digit cap input (non-player events)
 //   allowNoCap    — (optional) true to allow submitting without a cap number
 //   allowOfficial — (optional) true to allow "Official" team selection (team-neutral; teamOnly events only)
+//
+// Rule-set level properties:
+//   playerId     — (optional) string label for the player ID field in the event modal (e.g. "Membership ID").
+//                  When present, an additional text input appears in the modal. When absent, the field is hidden.
 //
 // Rule sets support inheritance via the `inherits` key:
 //   inherits     — (optional) key of parent rule set; child overrides only what differs

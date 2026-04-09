@@ -19,6 +19,7 @@ import { Game } from './game.js';
 import { formatTime } from './time.js';
 import { escapeHTML } from './sanitize.js';
 import { renderScreen } from './sheet-screen.js';
+import { Storage } from './storage.js';
 
 // wplog — Game Sheet (Stateless Orchestrator + Render Helpers)
 //
@@ -510,5 +511,273 @@ export const Sheet = {
         }
 
         return wrapper;
+    },
+
+    _renderRoster(game) {
+        const rules = RULES[game.rules];
+        const hasPlayerId = !!(rules && rules.playerId);
+
+        // Roster is the single authoritative source for all known caps per team
+        const whiteCaps = new Set(Object.keys(game.white.roster || {}));
+        const darkCaps = new Set(Object.keys(game.dark.roster || {}));
+
+        if (whiteCaps.size === 0 && darkCaps.size === 0) return null;
+
+        const section = document.createElement("div");
+        section.className = "sheet-section sheet-roster-section";
+
+        const title = document.createElement("h3");
+        title.className = "sheet-section-title";
+        title.textContent = "Roster";
+        section.appendChild(title);
+
+        const teams = Game.getTeams(game);
+        const sortCaps = (caps) => [...caps].sort((a, b) => (parseInt(a) || 0) - (parseInt(b) || 0));
+
+        const getRosterEntry = (teamKey, cap) => {
+            return game[teamKey] && game[teamKey].roster && game[teamKey].roster[cap];
+        };
+
+        // ── Screen layout: stacked per-team tables ──
+        const screenDiv = document.createElement("div");
+        screenDiv.className = "sheet-roster-screen";
+
+        for (const t of teams) {
+            const teamKey = t.code === "W" ? "white" : "dark";
+            const caps = t.code === "W" ? whiteCaps : darkCaps;
+            if (caps.size === 0) continue;
+
+            const teamName = game[teamKey].name === (t.code === "W" ? "White" : "Dark")
+                ? (t.code === "W" ? "White" : "Dark")
+                : `${t.code === "W" ? "White" : "Dark"} (${game[teamKey].name})`;
+
+            const wrapper = document.createElement("div");
+            wrapper.className = "sheet-section";
+
+            const subTitle = document.createElement("h3");
+            subTitle.className = "sheet-section-title";
+            subTitle.textContent = teamName;
+            wrapper.appendChild(subTitle);
+
+            const table = document.createElement("table");
+            table.className = "sheet-table sheet-table-compact sheet-roster-table";
+
+            let theadHtml = "<tr><th class=\"col-cap\">Cap</th><th class=\"col-roster-name\">Name</th>";
+            if (hasPlayerId) theadHtml += `<th class="col-roster-id">${escapeHTML(rules.playerId)}</th>`;
+            theadHtml += "</tr>";
+
+            const thead = document.createElement("thead");
+            thead.innerHTML = theadHtml;
+            table.appendChild(thead);
+
+            const tbody = document.createElement("tbody");
+            for (const cap of sortCaps(caps)) {
+                const entry = getRosterEntry(teamKey, cap);
+                const tr = document.createElement("tr");
+                tr.className = "roster-edit-row";
+                let html = `<td class="col-cap">${escapeHTML(cap)}</td><td class="col-roster-name">${escapeHTML(entry && entry.name ? entry.name : "")}</td>`;
+                if (hasPlayerId) html += `<td class="col-roster-id">${escapeHTML(entry && entry.id ? entry.id : "")}</td>`;
+                tr.innerHTML = html;
+
+                // Tap to edit inline
+                tr.addEventListener("click", () => {
+                    this._editRosterRow(tr, game, teamKey, cap, hasPlayerId);
+                });
+
+                tbody.appendChild(tr);
+            }
+            table.appendChild(tbody);
+            wrapper.appendChild(table);
+            screenDiv.appendChild(wrapper);
+        }
+        section.appendChild(screenDiv);
+
+        // ── Print layout: side-by-side with shared Cap column ──
+        const printDiv = document.createElement("div");
+        printDiv.className = "sheet-roster-print";
+
+        // Build union of all caps, sorted
+        const allCaps = sortCaps(new Set([...whiteCaps, ...darkCaps]));
+
+        // Determine home/away team keys
+        const homeTeam = teams[0];
+        const awayTeam = teams[1];
+        const homeKey = homeTeam.code === "W" ? "white" : "dark";
+        const awayKey = awayTeam.code === "W" ? "white" : "dark";
+        const homeCaps = homeTeam.code === "W" ? whiteCaps : darkCaps;
+        const awayCaps = awayTeam.code === "W" ? whiteCaps : darkCaps;
+
+        const homeLabel = game[homeKey].name === (homeTeam.code === "W" ? "White" : "Dark")
+            ? (homeTeam.code === "W" ? "White" : "Dark")
+            : `${homeTeam.code === "W" ? "White" : "Dark"} (${game[homeKey].name})`;
+        const awayLabel = game[awayKey].name === (awayTeam.code === "W" ? "White" : "Dark")
+            ? (awayTeam.code === "W" ? "White" : "Dark")
+            : `${awayTeam.code === "W" ? "White" : "Dark"} (${game[awayKey].name})`;
+
+        const printTable = document.createElement("table");
+        printTable.className = "sheet-table sheet-table-compact sheet-roster-table sheet-roster-table-print";
+
+        // Header row 1: team names spanning columns
+        const homeCols = hasPlayerId ? 2 : 1;
+        const awayCols = hasPlayerId ? 2 : 1;
+        const thead2 = document.createElement("thead");
+        let headerRow1 = "<tr>";
+        headerRow1 += `<th class="sheet-roster-team-header" colspan="${homeCols}">${escapeHTML(homeLabel)}</th>`;
+        headerRow1 += `<th class="col-roster-cap-center col-cap" rowspan="2">Cap</th>`;
+        headerRow1 += `<th class="sheet-roster-team-header" colspan="${awayCols}">${escapeHTML(awayLabel)}</th>`;
+        headerRow1 += "</tr>";
+
+        // Header row 2: column labels (mirrored for home side)
+        let headerRow2 = "<tr>";
+        if (hasPlayerId) headerRow2 += `<th class="col-roster-id">${escapeHTML(rules.playerId)}</th>`;
+        headerRow2 += `<th class="col-roster-name">Name</th>`;
+        headerRow2 += `<th class="col-roster-name">Name</th>`;
+        if (hasPlayerId) headerRow2 += `<th class="col-roster-id">${escapeHTML(rules.playerId)}</th>`;
+        headerRow2 += "</tr>";
+
+        thead2.innerHTML = headerRow1 + headerRow2;
+        printTable.appendChild(thead2);
+
+        const tbody2 = document.createElement("tbody");
+        for (const cap of allCaps) {
+            const tr = document.createElement("tr");
+            const homeHas = homeCaps.has(cap);
+            const awayHas = awayCaps.has(cap);
+            const homeEntry = homeHas ? getRosterEntry(homeKey, cap) : null;
+            const awayEntry = awayHas ? getRosterEntry(awayKey, cap) : null;
+
+            let html = "";
+            // Home side (mirrored: ID | Name)
+            if (hasPlayerId) html += `<td class="col-roster-id sheet-roster-home">${homeHas ? escapeHTML(homeEntry && homeEntry.id ? homeEntry.id : "") : ""}</td>`;
+            html += `<td class="col-roster-name sheet-roster-home">${homeHas ? escapeHTML(homeEntry && homeEntry.name ? homeEntry.name : "") : ""}</td>`;
+            // Center cap
+            html += `<td class="col-roster-cap-center col-cap">${escapeHTML(cap)}</td>`;
+            // Away side (normal: Name | ID)
+            html += `<td class="col-roster-name">${awayHas ? escapeHTML(awayEntry && awayEntry.name ? awayEntry.name : "") : ""}</td>`;
+            if (hasPlayerId) html += `<td class="col-roster-id">${awayHas ? escapeHTML(awayEntry && awayEntry.id ? awayEntry.id : "") : ""}</td>`;
+
+            tr.innerHTML = html;
+            tbody2.appendChild(tr);
+        }
+        printTable.appendChild(tbody2);
+        printDiv.appendChild(printTable);
+        section.appendChild(printDiv);
+
+        return section;
+    },
+
+    // ── Inline Roster Editing (screen only) ─────────────────
+
+    _editRosterRow(tr, game, teamKey, cap, hasPlayerId) {
+        // Prevent double-activation
+        if (tr.classList.contains("editing")) return;
+        tr.classList.add("editing");
+
+        const entry = game[teamKey].roster && game[teamKey].roster[cap] || {};
+        const cells = tr.querySelectorAll("td");
+
+        // Cell indices: 0=cap, 1=name, 2=id (if present)
+        const nameCell = cells[1];
+        const idCell = hasPlayerId ? cells[2] : null;
+
+        const origName = entry.name || "";
+        const origId = entry.id || "";
+
+        // Replace name cell with input
+        const nameInput = document.createElement("input");
+        nameInput.type = "text";
+        nameInput.className = "form-input roster-inline-input";
+        nameInput.value = origName;
+        nameInput.placeholder = "Name";
+        nameCell.textContent = "";
+        nameCell.appendChild(nameInput);
+
+        // Replace ID cell with input (if applicable)
+        let idInput = null;
+        if (idCell) {
+            idInput = document.createElement("input");
+            idInput.type = "text";
+            idInput.className = "form-input roster-inline-input";
+            idInput.value = origId;
+            const rules = RULES[game.rules];
+            idInput.placeholder = rules.playerId || "ID";
+            idCell.textContent = "";
+            idCell.appendChild(idInput);
+        }
+
+        // Focus name input
+        nameInput.focus();
+        nameInput.select();
+
+        const save = () => {
+            const newName = nameInput.value.trim();
+            const newId = idInput ? idInput.value.trim() : "";
+
+            // Only save if something changed
+            if (newName !== origName || newId !== origId) {
+                if (!game[teamKey].roster) game[teamKey].roster = {};
+                if (!game[teamKey].roster[cap]) game[teamKey].roster[cap] = {};
+                game[teamKey].roster[cap].name = newName;
+                if (hasPlayerId) game[teamKey].roster[cap].id = newId;
+                Storage.save(game);
+            }
+
+            // Re-render roster section
+            this._rerenderRoster(game);
+        };
+
+        const revert = () => {
+            this._rerenderRoster(game);
+        };
+
+        // Save on blur (with slight delay to allow tab between fields)
+        const blurTimeout = { id: null };
+        const onBlur = () => {
+            blurTimeout.id = setTimeout(() => {
+                // Only save if no other input in this row has focus
+                if (document.activeElement !== nameInput && document.activeElement !== idInput) {
+                    save();
+                }
+            }, 150);
+        };
+
+        const onFocus = () => {
+            if (blurTimeout.id) {
+                clearTimeout(blurTimeout.id);
+                blurTimeout.id = null;
+            }
+        };
+
+        nameInput.addEventListener("blur", onBlur);
+        nameInput.addEventListener("focus", onFocus);
+        if (idInput) {
+            idInput.addEventListener("blur", onBlur);
+            idInput.addEventListener("focus", onFocus);
+        }
+
+        // Save on Enter, revert on Escape
+        const onKeydown = (e) => {
+            if (e.key === "Enter") {
+                e.preventDefault();
+                save();
+            } else if (e.key === "Escape") {
+                e.preventDefault();
+                revert();
+            }
+        };
+        nameInput.addEventListener("keydown", onKeydown);
+        if (idInput) idInput.addEventListener("keydown", onKeydown);
+    },
+
+    _rerenderRoster(game) {
+        const container = document.querySelector(".sheet-roster-section");
+        if (!container) return;
+        const parent = container.parentNode;
+        const newRoster = this._renderRoster(game);
+        if (newRoster) {
+            parent.replaceChild(newRoster, container);
+        } else {
+            parent.removeChild(container);
+        }
     },
 };

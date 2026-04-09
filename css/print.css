@@ -155,4 +155,21 @@
   .inline-toggle-link.active {
     color: #000000 !important;
   }
+
+  /* Roster: hide stacked screen layout, show side-by-side print layout */
+  .sheet-roster-screen {
+    display: none !important;
+  }
+
+  .sheet-roster-print {
+    display: block !important;
+  }
+
+  .sheet-roster-table-print {
+    table-layout: fixed;
+  }
+
+  body.print-hide-roster .sheet-roster-section {
+    display: none !important;
+  }
 }
