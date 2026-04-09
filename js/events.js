@@ -128,7 +128,9 @@ export const Events = {
         if (swapIcon) {
             swapIcon.addEventListener("click", () => {
                 this._swapType = this._swapType === "bi" ? "uni" : "bi";
-                swapIcon.textContent = this._swapType === "uni" ? "\u2192" : "\u21C4";
+                swapIcon.innerHTML = this._swapType === "uni" 
+                    ? '<img src="img/icon-arrow-right.svg" class="btn-icon" alt="Right">' 
+                    : '<img src="img/icon-swap.svg" class="btn-icon" alt="Swap">';
                 document.getElementById("label-cap").textContent = this._swapType === "uni" ? "OLD CAP" : "CAP";
                 document.getElementById("label-alt-cap").textContent = this._swapType === "uni" ? "NEW CAP" : "CAP";
             });
@@ -479,17 +481,21 @@ export const Events = {
         const capField = document.getElementById("field-cap");
         const altCapField = document.getElementById("field-alt-cap");
 
-        const isTeamOnly = eventDef && eventDef.teamOnly;
+        const isTeamOnly = !!(eventDef && eventDef.teamOnly);
         capField.classList.toggle("hidden", isTeamOnly);
         if (isTeamOnly && this._numpadTarget === "cap") this._setNumpadTarget("time");
 
         const swapIcon = document.getElementById("modal-swap-btn");
-        const isSwap = eventDef && eventDef.isSwap;
+        const isSwap = !!(eventDef && eventDef.isSwap);
         if (altCapField) {
             altCapField.classList.toggle("hidden", !isSwap);
             if (swapIcon) {
                 swapIcon.classList.toggle("hidden", !isSwap);
-                if (isSwap) swapIcon.textContent = this._swapType === "uni" ? "\u2192" : "\u21C4";
+                if (isSwap) {
+                    swapIcon.innerHTML = this._swapType === "uni" 
+                        ? '<img src="img/icon-arrow-right.svg" class="btn-icon" alt="Right">' 
+                        : '<img src="img/icon-swap.svg" class="btn-icon" alt="Swap">';
+                }
             }
             if (isSwap) {
                 document.getElementById("label-cap").textContent = this._swapType === "uni" ? "OLD CAP" : "CAP";
@@ -711,7 +717,7 @@ export const Events = {
         const eventDef = this._getEventDef(code);
 
         // Hide roster fields for teamOnly, swap, and official
-        const hide = (eventDef && (eventDef.teamOnly || eventDef.isSwap)) || this.selectedTeam === "official";
+        const hide = !!((eventDef && (eventDef.teamOnly || eventDef.isSwap)) || this.selectedTeam === "official");
         nameField.classList.toggle("hidden", hide);
         idField.classList.toggle("hidden", hide);
 
