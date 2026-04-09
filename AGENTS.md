@@ -177,6 +177,7 @@ These were explicitly discussed and agreed with the user:
 ## Current State (as of 2026-04-09)
 
 ### What's Done ✅
+- Coaching staff caps in Add Name (#221): Enabled "HC" and "AC" coaching cap numbers within the Roster-only "Add Name" flow by bypassing the missing `eventDef` check, while strictly maintaining the explicit rejection of bare "B" inputs globally.
 - Added Roster Delete Button (#218): Injected a native `✕` action button gracefully aligned via `absolute` positioning into the final data cell of screen-rendered roster rows. Masked the delete click behind strict bounds interception (`e.stopPropagation()`) against the `.roster-edit-row` trigger, and validated the action using the standard `ConfirmDialog` overlay with dynamic player name referencing.
 - Fixed Cap Input Validation (#216): Prevented incomplete coaching staff caps (e.g., "H" or "A") and zero-prefixed integers ("0") from enabling the modal submission button via a rigorous `_isValidCap` validator. Fixed the numpad `Backspace` macro regression clearing single-press coaching staff inputs fully back to `""` in one stroke.
 - Fixed Game Sheet display regression (#213): Resolved an uncaught TypeError where coaching staff card events (Yellow/Red Card) broke the DOM rendering sequence. Formatted integer event times as strings upstream to guarantee sheet evaluation completes successfully.
