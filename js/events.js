@@ -301,14 +301,15 @@ export const Events = {
                     targetRaw = targetRaw.slice(0, -1);
                 }
             } else if (["A", "B", "C"].includes(val)) {
-                const hasStaff = eventDef && (eventDef.allowCoach || eventDef.allowAssistant || eventDef.allowBench);
+                const isRoster = this._rosterMode;
+                const hasStaff = isRoster || (eventDef && (eventDef.allowCoach || eventDef.allowAssistant || eventDef.allowBench));
                 if (hasStaff && targetRaw === "") {
                     // Single-press coaching staff caps
-                    if (val === "C" && eventDef.allowCoach) {
+                    if (val === "C" && (isRoster || eventDef.allowCoach)) {
                         targetRaw = "HC";
-                    } else if (val === "A" && eventDef.allowAssistant) {
+                    } else if (val === "A" && (isRoster || eventDef.allowAssistant)) {
                         targetRaw = "AC";
-                    } else if (val === "B" && eventDef.allowBench) {
+                    } else if (val === "B" && (!isRoster && eventDef.allowBench)) {
                         targetRaw = "B";
                     }
                 } else if (targetRaw === "1") {
@@ -351,7 +352,8 @@ export const Events = {
         const targetRaw = this._numpadTarget === "cap" ? this._capRaw
             : this._numpadTarget === "altCap" ? this._altCapRaw : "";
 
-        const hasStaff = eventDef && (eventDef.allowCoach || eventDef.allowAssistant || eventDef.allowBench);
+        const isRoster = this._rosterMode;
+        const hasStaff = isRoster || (eventDef && (eventDef.allowCoach || eventDef.allowAssistant || eventDef.allowBench));
         const isGoalieModifier = targetRaw === "1";
         const isEmpty = targetRaw === "";
         const isCapTarget = this._numpadTarget === "cap" || this._numpadTarget === "altCap";
@@ -369,8 +371,8 @@ export const Events = {
             btnC.textContent = "C";
         } else if (hasStaff && isEmpty) {
             // Coaching staff: show labels per flag
-            btnC.textContent = eventDef.allowCoach ? "HC" : "C";
-            btnA.textContent = eventDef.allowAssistant ? "AC" : "A";
+            btnC.textContent = (isRoster || eventDef.allowCoach) ? "HC" : "C";
+            btnA.textContent = (isRoster || eventDef.allowAssistant) ? "AC" : "A";
             btnB.textContent = "B";
         } else {
             // Default
@@ -392,9 +394,9 @@ export const Events = {
             btnC.disabled = false;
         } else if (hasStaff && isEmpty) {
             // Coaching staff: enabled per flag
-            btnC.disabled = !eventDef.allowCoach;
-            btnA.disabled = !eventDef.allowAssistant;
-            btnB.disabled = !eventDef.allowBench;
+            btnC.disabled = !(isRoster || eventDef.allowCoach);
+            btnA.disabled = !(isRoster || eventDef.allowAssistant);
+            btnB.disabled = isRoster || !eventDef.allowBench;
         } else {
             // Default: all disabled
             btnA.disabled = true;
@@ -415,6 +417,9 @@ export const Events = {
                 if (capRaw === "HC" && !eventDef.allowCoach) return false;
                 if (capRaw === "AC" && !eventDef.allowAssistant) return false;
                 if (capRaw === "B" && !eventDef.allowBench) return false;
+            } else {
+                // Roster mode
+                if (capRaw === "B") return false;
             }
             return true;
         }
