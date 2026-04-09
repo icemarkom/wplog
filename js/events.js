@@ -479,12 +479,12 @@ export const Events = {
         const capField = document.getElementById("field-cap");
         const altCapField = document.getElementById("field-alt-cap");
 
-        const isTeamOnly = eventDef && eventDef.teamOnly;
+        const isTeamOnly = !!(eventDef && eventDef.teamOnly);
         capField.classList.toggle("hidden", isTeamOnly);
         if (isTeamOnly && this._numpadTarget === "cap") this._setNumpadTarget("time");
 
         const swapIcon = document.getElementById("modal-swap-btn");
-        const isSwap = eventDef && eventDef.isSwap;
+        const isSwap = !!(eventDef && eventDef.isSwap);
         if (altCapField) {
             altCapField.classList.toggle("hidden", !isSwap);
             if (swapIcon) {
@@ -711,7 +711,7 @@ export const Events = {
         const eventDef = this._getEventDef(code);
 
         // Hide roster fields for teamOnly, swap, and official
-        const hide = (eventDef && (eventDef.teamOnly || eventDef.isSwap)) || this.selectedTeam === "official";
+        const hide = !!((eventDef && (eventDef.teamOnly || eventDef.isSwap)) || this.selectedTeam === "official");
         nameField.classList.toggle("hidden", hide);
         idField.classList.toggle("hidden", hide);
 
