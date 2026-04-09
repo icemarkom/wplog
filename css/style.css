@@ -416,32 +416,6 @@ select.form-input {
   color: var(--accent-blue);
 }
 
-.btn-icon {
-  width: 1em;
-  height: 1em;
-  opacity: 0.6;
-  pointer-events: none;
-  transition: opacity var(--transition);
-}
-
-[data-theme="dark"] .btn-icon {
-  filter: invert(0.85);
-}
-
-.btn-icon-danger {
-  width: 1em;
-  height: 1em;
-  opacity: 0.75;
-  pointer-events: none;
-  transition: opacity var(--transition);
-}
-
-button:hover .btn-icon,
-.stepper-btn:hover .btn-icon,
-button:hover .btn-icon-danger {
-  opacity: 1;
-}
-
 #setup-home-flip {
   align-self: flex-start;
   margin-top: 20px;
@@ -851,9 +825,6 @@ button:hover .btn-icon-danger {
   transition: all var(--transition);
   touch-action: manipulation;
   min-height: 48px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
 }
 
 .numpad-btn:active {
@@ -1725,18 +1696,6 @@ td.sheet-roster-home {
 .sheet-roster-screen .roster-edit-row {
   cursor: pointer;
   transition: background var(--transition);
-}
-
-.sheet-roster-screen .roster-edit-row td:last-child {
-  position: relative;
-  padding-right: 28px;
-}
-
-.sheet-roster-screen .roster-edit-row .log-delete-btn {
-  position: absolute;
-  right: 4px;
-  top: 50%;
-  transform: translateY(-50%);
 }
 
 .sheet-roster-screen .roster-edit-row:hover {

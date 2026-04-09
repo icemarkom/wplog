@@ -128,9 +128,7 @@ export const Events = {
         if (swapIcon) {
             swapIcon.addEventListener("click", () => {
                 this._swapType = this._swapType === "bi" ? "uni" : "bi";
-                swapIcon.innerHTML = this._swapType === "uni" 
-                    ? '<img src="img/icon-arrow-right.svg" class="btn-icon" alt="Right">' 
-                    : '<img src="img/icon-swap.svg" class="btn-icon" alt="Swap">';
+                swapIcon.textContent = this._swapType === "uni" ? "\u2192" : "\u21C4";
                 document.getElementById("label-cap").textContent = this._swapType === "uni" ? "OLD CAP" : "CAP";
                 document.getElementById("label-alt-cap").textContent = this._swapType === "uni" ? "NEW CAP" : "CAP";
             });
@@ -295,11 +293,7 @@ export const Events = {
             let targetRaw = this._numpadTarget === "cap" ? this._capRaw : this._altCapRaw;
 
             if (val === "clear") {
-                if (targetRaw === "HC" || targetRaw === "AC") {
-                    targetRaw = "";
-                } else {
-                    targetRaw = targetRaw.slice(0, -1);
-                }
+                targetRaw = targetRaw.slice(0, -1);
             } else if (["A", "B", "C"].includes(val)) {
                 const hasStaff = eventDef && (eventDef.allowCoach || eventDef.allowAssistant || eventDef.allowBench);
                 if (hasStaff && targetRaw === "") {
@@ -403,38 +397,13 @@ export const Events = {
         }
     },
 
-    _isValidCap(capRaw, eventDef) {
-        if (!capRaw) return !!(eventDef && eventDef.allowNoCap);
-
-        // Goalie modifiers
-        if (capRaw === "1A" || capRaw === "1B" || capRaw === "1C") return true;
-
-        // Coaching staff caps
-        if (capRaw === "HC" || capRaw === "AC" || capRaw === "B") {
-            if (eventDef) {
-                if (capRaw === "HC" && !eventDef.allowCoach) return false;
-                if (capRaw === "AC" && !eventDef.allowAssistant) return false;
-                if (capRaw === "B" && !eventDef.allowBench) return false;
-            }
-            return true;
-        }
-
-        // Single letters from incomplete coaching cap entry or other letters
-        if (/^[a-zA-Z]+$/.test(capRaw)) return false;
-
-        // Normal numeric caps (allowPlayer is true by default)
-        if (eventDef && eventDef.allowPlayer === false) return false;
-
-        return /^[1-9]\d*$/.test(capRaw);
-    },
-
     _updateOkButton() {
         const btn = document.getElementById("event-modal-confirm");
 
         // Roster mode: require team + cap + name
         if (this._rosterMode) {
             const hasTeam = this.selectedTeam !== null;
-            const hasCap = this._isValidCap(this._capRaw, null);
+            const hasCap = this._capRaw.length > 0;
             const nameInput = document.getElementById("modal-input-name");
             const hasName = nameInput && nameInput.value.trim().length > 0;
             btn.disabled = !(hasTeam && hasCap && hasName);
@@ -447,9 +416,9 @@ export const Events = {
         const teamOnly = eventDef && eventDef.teamOnly;
         const isSwap = eventDef && eventDef.isSwap;
         
-        let hasCap = teamOnly || this._isValidCap(this._capRaw, eventDef);
+        let hasCap = teamOnly || this._capRaw.length > 0;
         if (isSwap) {
-            hasCap = this._isValidCap(this._capRaw, eventDef) && this._isValidCap(this._altCapRaw, eventDef);
+            hasCap = this._capRaw.length > 0 && this._altCapRaw.length > 0;
         }
         
         const hasTeam = this.selectedTeam !== null;
@@ -520,11 +489,7 @@ export const Events = {
             altCapField.classList.toggle("hidden", !isSwap);
             if (swapIcon) {
                 swapIcon.classList.toggle("hidden", !isSwap);
-                if (isSwap) {
-                    swapIcon.innerHTML = this._swapType === "uni" 
-                        ? '<img src="img/icon-arrow-right.svg" class="btn-icon" alt="Right">' 
-                        : '<img src="img/icon-swap.svg" class="btn-icon" alt="Swap">';
-                }
+                if (isSwap) swapIcon.textContent = this._swapType === "uni" ? "\u2192" : "\u21C4";
             }
             if (isSwap) {
                 document.getElementById("label-cap").textContent = this._swapType === "uni" ? "OLD CAP" : "CAP";

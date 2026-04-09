@@ -574,7 +574,7 @@ export const Game = {
             return {
                 team,
                 period: this.getPeriodLabel(entry.period, game.periods),
-                time: entry.time !== null ? formatTime(entry.time).replace(/^0(\d:)/, "$1") : "",
+                time: entry.time.replace(/^0(\d:)/, "$1"),
                 type: eventDef ? eventDef.name : entry.event,
             };
         });
@@ -595,7 +595,7 @@ export const Game = {
                 team: entry.team === "W" ? "White" : entry.team === "D" ? "Dark" : "—",
                 cap: entry.cap || "—",
                 period: this.getPeriodLabel(entry.period, game.periods),
-                time: entry.time !== null ? formatTime(entry.time).replace(/^0(\d:)/, "$1") : "",
+                time: entry.time.replace(/^0(\d:)/, "$1"),
                 type: eventDef ? eventDef.name : entry.event,
             };
         });
