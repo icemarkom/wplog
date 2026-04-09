@@ -284,7 +284,7 @@ export const Sheet = {
             tr.innerHTML = `
         <td>${entry.team}</td>
         <td>${entry.period}</td>
-        <td>${entry.time !== null ? formatTime(entry.time) : ""}</td>
+        <td>${escapeHTML(entry.time)}</td>
         <td>${entry.type}</td>
       `;
             tbody.appendChild(tr);
@@ -324,7 +324,7 @@ export const Sheet = {
         <td>${entry.team}</td>
         <td>${escapeHTML(entry.cap)}</td>
         <td>${entry.period}</td>
-        <td>${escapeHTML(entry.time !== null ? formatTime(entry.time) : "")}</td>
+        <td>${escapeHTML(entry.time)}</td>
         <td>${entry.type}</td>
       `;
             tbody.appendChild(tr);
