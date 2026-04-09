@@ -1737,11 +1737,6 @@ td.sheet-roster-home {
   right: 4px;
   top: 50%;
   transform: translateY(-50%);
-  display: none;
-}
-
-.sheet-roster-screen .roster-edit-row:hover .log-delete-btn {
-  display: block;
 }
 
 .sheet-roster-screen .roster-edit-row:hover {
