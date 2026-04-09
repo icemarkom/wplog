@@ -56,6 +56,10 @@ export const DEFAULTS = {
 //   allowNoCap    — (optional) true to allow submitting without a cap number
 //   allowOfficial — (optional) true to allow "Official" team selection (team-neutral; teamOnly events only)
 //
+// Rule-set level properties:
+//   playerId     — (optional) string label for the player ID field in the event modal (e.g. "Membership ID").
+//                  When present, an additional text input appears in the modal. When absent, the field is hidden.
+//
 // Rule sets support inheritance via the `inherits` key:
 //   inherits     — (optional) key of parent rule set; child overrides only what differs
 //   addEvents    — (optional) array of { before|after: "CODE", event: {...} } insertion directives

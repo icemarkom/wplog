@@ -59,13 +59,14 @@ wplog/
 │   ├── setup.js        # Setup screen (with active-game guards)
 │   ├── events.js       # Live log screen (main UI, owns Storage.save after mutations)
 │   ├── time.js         # Time parsing utilities (pure — no DOM, no game state)
-│   ├── sheet.js        # Game sheet orchestrator + shared render helpers (stateless — no stored game)
+│   ├── sheet.js        # Game sheet orchestrator + shared render helpers (imports Storage for inline roster edits)
 │   ├── sheet-data.js   # Sheet data builders (pure — no DOM)
 │   ├── sheet-screen.js # Game sheet screen rendering (2-page DOM layout)
 │   ├── sheet-print.js  # Game sheet print rendering (DOM only — renders from pagination plans)
 │   ├── pagination.js   # Print pagination engine (pure — no DOM)
 │   ├── share.js        # Share/Print functionality
 │   ├── export.js       # Export utilities — filename, CSV builders (pure — no DOM)
+│   ├── roster.js       # Roster CSV parser, builder, merge logic (pure — no DOM)
 │   └── app.js          # App init + screen navigation + version display
 ├── .agents/
 │   ├── skills/
@@ -107,7 +108,7 @@ These were explicitly discussed and agreed with the user:
 
 | Decision | Detail |
 |---|---|
-| **No roster/player entry** | Cap numbers are entered per-event, not pre-game. No player names. |
+| **Roster is authoritative** | `game.white.roster` / `game.dark.roster` is the single source of truth for all known caps per team. Every logged cap is auto-registered in roster. CSV uploads merge into roster. Sheet reads only from roster. |
 | **Team names in UI vs reports** | UI always shows "White"/"Dark". Game sheet shows "White (Team Name)" when custom name set. |
 | **Cap numbers are strings** | Support goalie modifiers: `"1A"`, `"1B"`, `"1C"` (max C). Input via 4-column numpad (digits + A/B/C column). |
 | **Game clock time format** | `M:SS` or `MM:SS` (dynamic 3 or 4 digits). Digits fill right-to-left. Stored as `"4:53"` or `"10:00"`. NOT rigid `MM:SS` for short periods. Max time capped by config (up to 20:00). Start/end times remain `HH:MM` (separate wall clock). |
@@ -127,12 +128,12 @@ These were explicitly discussed and agreed with the user:
 | **Dynamic Print Chunking** | Player Stats matrix dynamically expands from 11 columns on-screen to 22 columns via `window.beforeprint`/`afterprint` hooks to maximize ink density at print time without breaking responsive layouts. |
 | **USAWP + NFHS + NCAA supported** | USAWP (8-min default, 7-min, 6-min variants), NFHS Varsity (7-min, OT, MAM), NFHS JV (6-min, no OT), NCAA (8-min, OT, YRC). Additional rule sets added via inheritance. |
 | **Rule set inheritance** | `inherits` key chains parent→child. `addEvents`/`removeEvents` directives for per-ruleset event list mutations. `_base` and `_academic` are internal (hidden from dropdown). `STATS_EVENTS` auto-appended to all rule sets. |
-| **Cap flags** | `allowCoach`, `allowAssistant`, `allowBench` enable C/AC/B cap values. `allowPlayer` (default true) can be set false to block digit input. `allowNoCap` allows submitting without cap. `teamOnly` (renamed from `noPlayer`) hides cap field entirely. |
+| **Cap flags** | `allowCoach`, `allowAssistant`, `allowBench` enable HC/AC/B cap values. `allowPlayer` (default true) can be set false to block digit input. `allowNoCap` allows submitting without cap. `teamOnly` (renamed from `noPlayer`) hides cap field entirely. |
 | **`allowOfficial` flag** | Config-driven flag (valid on `teamOnly` events only). Shows a third "OFFICIAL" team toggle button in the modal. Selecting it stores `team: ""` — no new team code. TOL counting naturally excludes official timeouts. `O` keyboard shortcut. Button order: WHITE → OFFICIAL → DARK (Dark stays rightmost for muscle memory). |
 | **No `#` in Cap display** | Cap numbers shown without `#` prefix everywhere (modal, live log, sheet tables). |
 | **Score on Goals only** | Score column in game log (live + sheet) only shows on Goal events. Other events leave it empty. |
 | **Responsive modal** | Compact content-sized on mobile (default), fixed centered 480px dialog on desktop (`@media min-width:900px and min-height:700px`). Numpad button height capped at 72px for landscape aspect ratio. |
-| **Numpad layout** | 4 columns: digits 1-9/0, A/B/C in rightmost column, backspace next to 0. |
+| **Numpad layout** | 4 columns: digits 1-9/0, A/B/C in rightmost column, backspace next to 0. For events with coaching staff flags, letter buttons contextually relabel to HC/AC/B (single-press, enabled per flag). When cap is `"1"`, buttons revert to A/B/C for goalie modifiers. `H` keyboard shortcut triggers HC. |
 | **Auto-close disabled** | GitHub auto-close via commit messages is disabled in this repo. Close issues manually with `gh issue close`. |
 | **Don't commit without confirmation** | Always wait for user to confirm before committing and pushing. |
 | **"Geronimo" workflow** | When user says "geronimo", it's one-time approval to commit, push, and close the relevant issue. Branch-aware: on long-lived feature branches, skip PR/merge. See `.agents/workflows/geronimo.md`. |
@@ -164,12 +165,23 @@ These were explicitly discussed and agreed with the user:
 | **Home/Away designation** | `homeTeam` is a rule-set property in `config.json` (`_base` defaults to `"W"`, `_academic` overrides to `"D"`). Setup screen shows a ⇄ flip button to override per-game. Flip is locked during active games. All display surfaces (score bar, sheet header, Score by Period, Player Stats, CSV filename) render Home team first, Away second. Event modal button order (W/D) is fixed for muscle memory. |
 | **`DEFAULTS` object** | Centralized fallback defaults in `config.js` for all rule-set properties (`periods`, `periodLength`, `foulOutLimit`, `homeTeam`, `overtime`, `shootout`, `timeouts`, `events`, `statsEvents`). Used by `_getSafeMode()` and the normalization block. Eliminates scattered magic numbers. |
 | **Setup labels** | Team input labels show `"$location Team ($color)"` format — e.g., "Home Team (White)", "Away Team (Dark)". |
+| **Edit-in-place** | Tap any event in the game log to open the modal pre-filled with existing values (time, cap, team, period). Event type is NOT changeable — delete and re-add. Period-end events are NOT editable. OK button shows "Save" in edit mode. Foul-out popup fires if editing causes a foul-out. "Event updated" toast confirms the action. |
+| **Period selector in modal** | Row of `.team-btn` pills above the time field. Shows all periods up to `currentPeriod`. New events default to current period; user can tap a previous period to log missed events. Edits show the event's existing period. Hidden when only one period available. |
+| **Full game log** | Live log shows ALL events (not capped at 15), grouped by period headers using `.log-title` typography. Period headers act as visual separators. Title changed from "Recent Events" to "Game Log". |
+| **CSS reuse over proliferation** | New interactive elements reuse existing CSS classes (`.team-btn` for period pills, `.log-title` for period headers, structural `:not()` selectors for tappable entries) rather than introducing new class names. Scoped overrides via `#id .existing-class`. |
+| **"Add Name" button** | Grey button on Live screen (alongside Swap Caps and End Period) that opens the event modal in roster-only mode: team + cap + name/ID fields, no time, no period selector, no event logged. Saves directly to `game[teamKey].roster[cap]`. Order: Add Name → Swap Caps → End Period. All three follow a `.stats-separator` and auto-flow into the 3-column grid. |
+| **Tappable roster rows** | On the Game Sheet screen, roster rows are tappable to edit name/ID inline. Tap → static text replaced with `<input>` → blur/Enter saves + `Storage.save()` + re-renders roster section. Escape reverts. Print layout stays static. |
 
 ---
 
-## Current State (as of 2026-04-07)
+## Current State (as of 2026-04-09)
 
 ### What's Done ✅
+- Coaching staff cap overhaul (#198): Internal coach cap code changed from `C` to `HC` (Head Coach). Numpad letter buttons contextually relabel to HC/AC/B for events with coaching staff flags — single-press entry, no two-step sequence. Buttons show labels only when enabled; revert to A/B/C for goalie modifiers or when disabled. `H` keyboard shortcut. Old `C` data auto-migrates on load via `storage.js`. `.hidden` utility class fixed with `!important` to override `display:flex` on `.swap-btn`/`.modal-field`. Grey action button grid layout fixed (`grid-column:3` scoped to `#end-period-btn` only).
+- Inline styles elimination (#203): Migrated all inline `style="..."` attributes from HTML (modal.html, setup.html, help.html) and all `element.style.*` JS manipulation (events.js, setup.js, share.js) to CSS classes. Two utility classes (`.hidden`, `.disabled`) + scoped ID rules. Zero inline styles remain in the codebase.
+- Inline roster editing: "Add Name" grey button on Live screen opens modal in roster-only mode (team + cap + name, no event logged). Roster rows on the Game Sheet are tappable to edit name/ID inline with blur/Enter save. Separator above grey action buttons row. Help docs updated.
+- Edit-in-place (#23): Tap any event in the game log to edit its time, cap, team, or period. Period selector pills in the modal allow logging missed events in previous periods. Full game log with period grouping replaces the 15-event limit. Foul-out detection on edits. Uses existing `.team-btn` and `.log-title` CSS — zero new class names.
+- Roster CSV bulk management: upload (⬆ button on Setup, inline with team name inputs) and download (Share screen with team selection dialog). CSV parser handles HC→C alias, rejects B caps, warns on duplicates (first wins). Pre-game uploads buffered and applied at game start. Roster is the single authoritative source — every logged cap auto-registers.
 - Fixed stats format reverting bug: Refactored the native print sequence in `js/share.js` and `js/app.js` to decouple overriding logic out of fragile inline listeners and safely route them through persistent global hooks via `Share.printOptions`, handling continuous Safari orientation regeneration natively.
 - Cap Swap persistence integration: Added 'Cap swap' into internal storage validation allowlists automatically protecting structural tracking across PWA loads natively ensuring continuity over structural cache layers stably resolving event UI.
 - Time Engine Restructure: Internally transitioned time structures globally natively out into numerical integer intervals exclusively handling math mapping instead of formatted sequences implicitly bypassing edge-case comparison blocks across rules dynamically.
@@ -246,6 +258,7 @@ These were explicitly discussed and agreed with the user:
 - Tap-to-expand QR overlay: full-screen on mobile, dialog-sized on desktop, high-contrast (black on white)
 - Service worker: network-first in dev, cache-first in production
 - `.btn:disabled` styling matching nav tab pattern (opacity 0.3)
+- CSS utility classes: `.hidden` (display:none !important) and `.disabled` (opacity:0.5, pointer-events:none) replace all inline `style.*` manipulation in JS and inline `style="..."` attributes in HTML. All visibility/state toggling uses `classList.toggle()` exclusively.
 - "Kraken" workflow for version tagging and release
 - Help screen: 5th nav tab with quick-reference guide (9 sections, always enabled), includes keyboard shortcut tip
 - Privacy policy: standalone `privacy.html` + `PRIVACY.md`, linked from footer and About dialog
@@ -254,7 +267,7 @@ These were explicitly discussed and agreed with the user:
 - Unified `.fetched-content` class for privacy + help content styles
 - Shared `.overlay-title`/`.overlay-message` base classes for dialog content
 - Consistent `letter-spacing: 0.04em` on all uppercase labels app-wide
-- Consistent `opacity: 0.3` on all disabled elements
+- Consistent `opacity: 0.5` on `.disabled` utility class (replaces inline style toggles)
 - Version link in About dialog: links to GitHub release page in production, plain text in dev
 - Inline license display: clickable "Apache 2.0" in About opens scrollable license overlay
 - Apache 2.0 copyright headers on all source files via `addlicense`
@@ -312,7 +325,7 @@ These were explicitly discussed and agreed with the user:
 - Help documentation kept current alongside feature delivery — geronimo and kraken workflows include help.html check steps, bazinga establishes doc-as-delivery principle
 - `Game` decoupled from `Storage`: mutation methods (`addEvent`, `deleteEvent`, `editEvent`, `advancePeriod`) no longer call `Storage.save()` — UI layer (`events.js`) owns persistence
 - Score formatting extracted: `formatFractionalScore()` exported from `game.js` as a pure utility
-- Stateless Sheet: `Sheet.game` removed, `Sheet.init()` replaced with `Sheet.render(game)` — all render methods accept `game` as parameter
+- Stateless Sheet: `Sheet.game` removed, `Sheet.init()` replaced with `Sheet.render(game)` — all render methods accept `game` as parameter. Imports `Storage` only for inline roster saves.
 - Legacy JS pagination engine, data builders, and `sheet-print.js` removed entirely in favor of native CSS printing
 - Time parsing extracted: `time.js` exports pure functions (`getMaxMinutes`, `parseTime`, `formatTimeDisplay`) — `events.js` delegates via thin wrappers
 - Export module extracted: `export.js` exports pure functions (`buildCSV`, `makeFilename`) — CSV/filename builders with zero DOM dependency

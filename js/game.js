@@ -44,8 +44,8 @@ export const Game = {
             enableLog: true,
             enableStats: false,
             statsTimeMode: "off",
-            white: { name: "White" },
-            dark: { name: "Dark" },
+            white: { name: "White", roster: {} },
+            dark: { name: "Dark", roster: {} },
             currentPeriod: 1,
             log: [],
             _nextId: 1,
@@ -128,6 +128,11 @@ export const Game = {
     editEvent(game, eventId, updates) {
         const entry = game.log.find((e) => e.id === eventId);
         if (!entry) return;
+        // If moving to a different period, assign new seq to place at end
+        if (updates.period !== undefined && updates.period !== entry.period) {
+            entry.seq = game._nextSeq;
+            game._nextSeq += 10;
+        }
         Object.assign(entry, updates);
         this._sortLog(game);
         this._recalcScores(game);

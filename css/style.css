@@ -198,6 +198,15 @@
   border: 0;
 }
 
+.hidden {
+  display: none !important;
+}
+
+.disabled {
+  opacity: 0.5;
+  pointer-events: none;
+}
+
 /* ============================
    Reset + Base
    ============================ */
@@ -410,6 +419,19 @@ select.form-input {
 #setup-home-flip {
   align-self: flex-start;
   margin-top: 20px;
+  font-size: 24px;
+}
+
+/* Input with inline action button */
+.input-with-action {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.input-with-action .form-input {
+  flex: 1;
+  min-width: 0;
 }
 
 
@@ -612,6 +634,15 @@ select.form-input {
   font-size: 12px;
 }
 
+#screen-help .inline-menu {
+  margin-top: 48px;
+  margin-bottom: 24px;
+}
+
+#setup-theme-inline {
+  margin-bottom: 16px;
+}
+
 /* ============================
    Score Bar
    ============================ */
@@ -692,10 +723,13 @@ select.form-input {
 
 /* End Period grid button */
 .event-end-period {
-  grid-column: 3;
   background: var(--bg-card);
   border-color: var(--border);
   color: var(--text-secondary);
+}
+
+#end-period-btn {
+  grid-column: 3;
 }
 
 /* ============================
@@ -806,6 +840,16 @@ select.form-input {
 .numpad-clear {
   color: var(--danger);
   font-size: 20px;
+}
+
+.numpad-btn:disabled {
+  opacity: 0.25;
+  cursor: default;
+}
+
+.numpad-btn:disabled:active {
+  transform: none;
+  background: var(--bg-card);
 }
 
 /* ============================
@@ -940,13 +984,6 @@ select.form-input {
   color: var(--text-secondary);
 }
 
-.log-period {
-  font-size: 11px;
-  font-weight: 600;
-  color: var(--text-muted);
-  min-width: 24px;
-}
-
 .log-team {
   font-weight: 700;
   font-size: 11px;
@@ -1030,6 +1067,56 @@ select.form-input {
 
 .log-entry.event-border-teal {
   border-left: 3px solid var(--event-stat);
+}
+
+/* Editable log entries — all events (not period-end) are tappable */
+.log-entry:not(.log-period-end) {
+  cursor: pointer;
+  transition: background var(--transition), transform 80ms ease;
+}
+
+.log-entry:not(.log-period-end):hover {
+  background: var(--bg-elevated);
+}
+
+.log-entry:not(.log-period-end):active {
+  transform: scale(0.99);
+}
+
+/* Period group headers — layout modifier on .log-title */
+.log-period-header {
+  text-align: center;
+  padding: 12px 0 4px;
+  margin-bottom: 0;
+}
+
+.log-period-header:first-child {
+  padding-top: 0;
+}
+
+/* Period pills in modal — compact .team-btn variant */
+#modal-period-selector {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 1dvh;
+  flex-wrap: wrap;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+#modal-period-selector .team-btn {
+  flex: 0;
+  min-height: 0;
+  padding: 4px 12px;
+  font-size: 12px;
+  border-width: 1px;
+  color: var(--text-secondary);
+}
+
+#modal-period-selector .team-btn.active {
+  background: var(--accent-blue-glow);
+  border-color: var(--accent-blue);
+  color: var(--accent-blue);
 }
 
 /* ============================
@@ -1192,6 +1279,15 @@ select.form-input {
   flex-shrink: 0;
 }
 
+#modal-cap-row {
+  margin-bottom: 1dvh;
+  align-items: center;
+}
+
+#modal-cap-row .modal-field {
+  margin-bottom: 0;
+}
+
 .modal-field.active {
   border-color: var(--accent-blue);
   box-shadow: 0 0 12px var(--accent-blue-glow);
@@ -1237,6 +1333,19 @@ select.form-input {
   min-height: 48px;
   font-size: 15px;
   border-radius: var(--radius-md);
+}
+
+/* Modal roster inputs — compact text inputs for Name / ID */
+.modal-roster {
+  margin-bottom: 1dvh;
+}
+
+.modal-roster .form-input {
+  padding: 0 12px;
+  min-height: 48px;
+  font-size: 15px;
+  background: transparent;
+  border: 2px solid var(--border);
 }
 
 /* ============================
@@ -1424,6 +1533,7 @@ select.form-input {
   color: var(--text-muted);
   cursor: pointer;
   transition: color var(--transition);
+  text-decoration: none;
 }
 
 .inline-toggle-link:hover {
@@ -1440,6 +1550,7 @@ select.form-input {
 .inline-toggle-sep {
   color: var(--text-muted);
   font-weight: 300;
+  margin: 0 12px;
 }
 
 .sheet-table {
@@ -1519,7 +1630,8 @@ select.form-input {
   table-layout: fixed;
 }
 
-.sheet-stats-table .col-cap {
+.sheet-stats-table .col-cap,
+.sheet-roster-table .col-cap {
   width: 56px;
 }
 
@@ -1552,6 +1664,58 @@ select.form-input {
   font-style: italic;
   color: var(--text-muted);
   font-size: 13px;
+}
+
+/* ── Roster Section ── */
+.sheet-roster-table td.col-roster-name {
+  text-align: left;
+  font-family: var(--font-sans);
+}
+
+.sheet-roster-table td.col-roster-id {
+  text-align: left;
+}
+
+.sheet-roster-print {
+  display: none;
+}
+
+.col-roster-cap-center {
+  font-weight: 700;
+}
+
+td.sheet-roster-home {
+  text-align: right;
+}
+
+.sheet-roster-team-header {
+  font-size: 12px;
+}
+
+/* ── Tappable Roster Rows (screen only) ── */
+.sheet-roster-screen .roster-edit-row {
+  cursor: pointer;
+  transition: background var(--transition);
+}
+
+.sheet-roster-screen .roster-edit-row:hover {
+  background: var(--bg-elevated) !important;
+}
+
+.sheet-roster-screen .roster-edit-row.editing {
+  cursor: default;
+}
+
+.roster-inline-input {
+  width: 100%;
+  padding: 2px 6px !important;
+  min-height: 28px !important;
+  font-size: 13px !important;
+  font-family: var(--font-sans) !important;
+  background: var(--bg-input) !important;
+  border: 1px solid var(--accent-blue) !important;
+  border-radius: var(--radius-sm);
+  box-sizing: border-box;
 }
 
 /* ============================
@@ -2016,6 +2180,10 @@ select.form-input {
 
   .modal-action-btn {
     min-height: 48px;
+  }
+
+  .modal-roster {
+    margin-bottom: 8px;
   }
 }
 

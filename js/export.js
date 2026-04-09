@@ -76,8 +76,16 @@ export function csvEscape(val) {
  * @returns {string} CSV string with header and trailing newline
  */
 export function buildCSV(game) {
-    const header = "deviceTime,seq,period,time,team,cap,event";
+    const header = "deviceTime,seq,period,time,team,cap,name,event";
     const rows = game.log.map((e) => {
+        // Lookup roster name
+        let name = "";
+        if (e.cap && (e.team === "W" || e.team === "D")) {
+            const teamKey = e.team === "W" ? "white" : "dark";
+            const rosterCap = e.baseCap || e.cap;
+            const entry = game[teamKey].roster && game[teamKey].roster[rosterCap];
+            if (entry && entry.name) name = entry.name;
+        }
         return [
             e.deviceTime || "",
             e.seq || "",
@@ -85,6 +93,7 @@ export function buildCSV(game) {
             (e.time !== null && e.time !== undefined) ? formatTime(e.time) : "",
             e.team || "",
             csvEscape(e.cap || ""),
+            csvEscape(name),
             csvEscape(e.event || ""),
         ].join(",");
     });

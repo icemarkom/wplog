@@ -42,6 +42,7 @@ const ASSETS = [
     "./js/share.js",
     "./js/app.js",
     "./js/export.js",
+    "./js/roster.js",
     "./img/qr-wplog.svg",
     "./img/favicon-32.png",
     "./img/favicon-192.png",
