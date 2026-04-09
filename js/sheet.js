@@ -20,6 +20,7 @@ import { formatTime } from './time.js';
 import { escapeHTML } from './sanitize.js';
 import { renderScreen } from './sheet-screen.js';
 import { Storage } from './storage.js';
+import { ConfirmDialog } from './confirm.js';
 
 // wplog — Game Sheet (Stateless Orchestrator + Render Helpers)
 //
@@ -284,7 +285,7 @@ export const Sheet = {
             tr.innerHTML = `
         <td>${entry.team}</td>
         <td>${entry.period}</td>
-        <td>${entry.time !== null ? formatTime(entry.time) : ""}</td>
+        <td>${escapeHTML(entry.time)}</td>
         <td>${entry.type}</td>
       `;
             tbody.appendChild(tr);
@@ -324,7 +325,7 @@ export const Sheet = {
         <td>${entry.team}</td>
         <td>${escapeHTML(entry.cap)}</td>
         <td>${entry.period}</td>
-        <td>${escapeHTML(entry.time !== null ? formatTime(entry.time) : "")}</td>
+        <td>${escapeHTML(entry.time)}</td>
         <td>${entry.type}</td>
       `;
             tbody.appendChild(tr);
@@ -575,14 +576,44 @@ export const Sheet = {
                 const entry = getRosterEntry(teamKey, cap);
                 const tr = document.createElement("tr");
                 tr.className = "roster-edit-row";
-                let html = `<td class="col-cap">${escapeHTML(cap)}</td><td class="col-roster-name">${escapeHTML(entry && entry.name ? entry.name : "")}</td>`;
-                if (hasPlayerId) html += `<td class="col-roster-id">${escapeHTML(entry && entry.id ? entry.id : "")}</td>`;
+                let html = `<td class="col-cap">${escapeHTML(cap)}</td>`;
+                if (hasPlayerId) {
+                    html += `<td class="col-roster-name">${escapeHTML(entry && entry.name ? entry.name : "")}</td>`;
+                    html += `<td class="col-roster-id">${escapeHTML(entry && entry.id ? entry.id : "")}<button class="log-delete-btn" aria-label="Delete" title="Delete">✕</button></td>`;
+                } else {
+                    html += `<td class="col-roster-name">${escapeHTML(entry && entry.name ? entry.name : "")}<button class="log-delete-btn" aria-label="Delete" title="Delete">✕</button></td>`;
+                }
                 tr.innerHTML = html;
 
                 // Tap to edit inline
-                tr.addEventListener("click", () => {
+                tr.addEventListener("click", (e) => {
+                    if (e.target.closest(".log-delete-btn")) return;
                     this._editRosterRow(tr, game, teamKey, cap, hasPlayerId);
                 });
+
+                // Tap to delete
+                const delBtn = tr.querySelector(".log-delete-btn");
+                if (delBtn) {
+                    delBtn.addEventListener("click", async (e) => {
+                        e.stopPropagation();
+                        // Provide name context in message
+                        const nameDisplay = (entry && entry.name) ? ` (${entry.name})` : "";
+                        const teamDisplay = teamKey === "white" ? "White" : "Dark";
+                        
+                        const ok = await ConfirmDialog.show({
+                            title: "Delete Entry",
+                            message: `Remove cap ${cap}${nameDisplay} from ${teamDisplay} roster?`,
+                            confirmLabel: "Delete",
+                            type: "danger",
+                        });
+                        
+                        if (ok) {
+                            delete game[teamKey].roster[cap];
+                            Storage.save(game);
+                            this._rerenderRoster(game);
+                        }
+                    });
+                }
 
                 tbody.appendChild(tr);
             }
