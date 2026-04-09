@@ -31,7 +31,7 @@ const MAX_NOTE = 500;
 
 const RE_DATE = /^\d{4}-\d{2}-\d{2}$/;
 const RE_TIME_HM = /^\d{2}:\d{2}$/;
-const RE_GAME_TIME = /^\d:[0-5]\d$/;
+const RE_GAME_TIME = /^\d{1,2}:[0-5]\d(?::[0-5]\d)?$/;
 const RE_CAP = /^[1-9]\d?[ABC]?$/;
 const RE_PERIOD_OT = /^OT([1-9]\d?)$/;
 
@@ -187,7 +187,11 @@ export function validateGameData(parsed) {
                     entry.time = null;
                 } else if (RE_GAME_TIME.test(entry.time)) {
                     const parts = entry.time.split(":");
-                    entry.time = parseInt(parts[0], 10) * 60 + parseInt(parts[1], 10);
+                    if (parts.length === 3) {
+                        entry.time = parseInt(parts[1], 10) * 60 + parseInt(parts[2], 10);
+                    } else {
+                        entry.time = parseInt(parts[0], 10) * 60 + parseInt(parts[1], 10);
+                    }
                 } else {
                     return _fail(`Log entry ${i + 1}: invalid legacy time "${entry.time}".`);
                 }
