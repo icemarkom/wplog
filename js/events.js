@@ -1444,7 +1444,7 @@ export const Events = {
 
         Game.addEvent(this.game, {
             period,
-            time: "00:00",
+            time: 0,
             team: "",
             cap: "",
             event: "---",
