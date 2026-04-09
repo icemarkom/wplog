@@ -295,7 +295,11 @@ export const Events = {
             let targetRaw = this._numpadTarget === "cap" ? this._capRaw : this._altCapRaw;
 
             if (val === "clear") {
-                targetRaw = targetRaw.slice(0, -1);
+                if (targetRaw === "HC" || targetRaw === "AC") {
+                    targetRaw = "";
+                } else {
+                    targetRaw = targetRaw.slice(0, -1);
+                }
             } else if (["A", "B", "C"].includes(val)) {
                 const hasStaff = eventDef && (eventDef.allowCoach || eventDef.allowAssistant || eventDef.allowBench);
                 if (hasStaff && targetRaw === "") {
@@ -399,13 +403,38 @@ export const Events = {
         }
     },
 
+    _isValidCap(capRaw, eventDef) {
+        if (!capRaw) return !!(eventDef && eventDef.allowNoCap);
+
+        // Goalie modifiers
+        if (capRaw === "1A" || capRaw === "1B" || capRaw === "1C") return true;
+
+        // Coaching staff caps
+        if (capRaw === "HC" || capRaw === "AC" || capRaw === "B") {
+            if (eventDef) {
+                if (capRaw === "HC" && !eventDef.allowCoach) return false;
+                if (capRaw === "AC" && !eventDef.allowAssistant) return false;
+                if (capRaw === "B" && !eventDef.allowBench) return false;
+            }
+            return true;
+        }
+
+        // Single letters from incomplete coaching cap entry or other letters
+        if (/^[a-zA-Z]+$/.test(capRaw)) return false;
+
+        // Normal numeric caps (allowPlayer is true by default)
+        if (eventDef && eventDef.allowPlayer === false) return false;
+
+        return /^[1-9]\d*$/.test(capRaw);
+    },
+
     _updateOkButton() {
         const btn = document.getElementById("event-modal-confirm");
 
         // Roster mode: require team + cap + name
         if (this._rosterMode) {
             const hasTeam = this.selectedTeam !== null;
-            const hasCap = this._capRaw.length > 0;
+            const hasCap = this._isValidCap(this._capRaw, null);
             const nameInput = document.getElementById("modal-input-name");
             const hasName = nameInput && nameInput.value.trim().length > 0;
             btn.disabled = !(hasTeam && hasCap && hasName);
@@ -418,9 +447,9 @@ export const Events = {
         const teamOnly = eventDef && eventDef.teamOnly;
         const isSwap = eventDef && eventDef.isSwap;
         
-        let hasCap = teamOnly || this._capRaw.length > 0;
+        let hasCap = teamOnly || this._isValidCap(this._capRaw, eventDef);
         if (isSwap) {
-            hasCap = this._capRaw.length > 0 && this._altCapRaw.length > 0;
+            hasCap = this._isValidCap(this._capRaw, eventDef) && this._isValidCap(this._altCapRaw, eventDef);
         }
         
         const hasTeam = this.selectedTeam !== null;
