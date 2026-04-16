@@ -33,6 +33,7 @@ const ASSETS = [
     "./js/dialog.js",
     "./js/storage.js",
     "./js/time.js",
+    "./js/clock.js",
     "./js/wakelock.js",
     "./js/game.js",
     "./js/setup.js",

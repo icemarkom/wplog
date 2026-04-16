@@ -132,3 +132,36 @@ export function formatTimeDisplay(digits, maxMinutes = 9) {
         return `<span class="time-formatted">${parts[0]}<span${colonClass}>:</span>${parts[1]}${parts[2]}</span>`;
     }
 }
+
+/**
+ * Formats subsecond (decisecond) hardware time for UI display.
+ * @param {number|null} t - Time in deciseconds
+ * @param {Object} options - Formatting options
+ * @param {boolean} [options.showSubseconds=true] - If true, evaluates subsecond display thresholds.
+ * @param {boolean} [options.isShotClock=false] - Used to determine the threshold (<10s vs <60s).
+ * @returns {string} Formatted string
+ */
+export function formatDeviceClock(t, options = {}) {
+    if (t == null || t >= 99999) return '--';
+    const { showSubseconds = true, isShotClock = false } = options;
+    
+    const s = Math.floor(t / 10);
+    const r = t % 10;
+    
+    // Shot Clock: Subseconds only under 10s
+    if (isShotClock) {
+        if (showSubseconds && s < 10) return s + '.' + r;
+        return String(s);
+    }
+    
+    // Game Clock: Subseconds under 1 minute (m === 0)
+    const m = Math.floor(s / 60);
+    const sec = s % 60;
+    
+    if (showSubseconds && m === 0) {
+        return sec + '.' + r;
+    }
+    
+    if (m > 0) return m + ':' + (sec < 10 ? '0' : '') + sec;
+    return String(sec);
+}

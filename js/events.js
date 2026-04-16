@@ -21,6 +21,7 @@ import { escapeHTML } from './sanitize.js';
 import { initDialog } from './dialog.js';
 import { Storage } from './storage.js';
 import { getMaxMinutes, parseTime, formatTimeDisplay, formatTime } from './time.js';
+import { ClockEngine } from './clock.js';
 
 // wplog — Live Log Screen (Event Logging)
 // Event-first workflow: tap event button → modal opens → enter details → OK
@@ -573,7 +574,13 @@ export const Events = {
             document.getElementById("time-display").innerHTML = this._formatTimeDisplay("000");
             timeField.classList.add("disabled");
         } else {
-            document.getElementById("time-display").innerHTML = this._formatTimeDisplay("");
+            const clockSecs = ClockEngine.getSeconds();
+            if (clockSecs != null) {
+                this._timeRaw = this._timeToRawDigits(clockSecs, this._getMaxMinutes());
+                document.getElementById("time-display").innerHTML = this._formatTimeDisplay(this._timeRaw);
+            } else {
+                document.getElementById("time-display").innerHTML = this._formatTimeDisplay("");
+            }
             timeField.classList.remove("disabled");
         }
         document.getElementById("cap-display").textContent = "";

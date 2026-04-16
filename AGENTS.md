@@ -174,9 +174,10 @@ These were explicitly discussed and agreed with the user:
 
 ---
 
-## Current State (as of 2026-04-09)
+## Current State (as of 2026-04-16)
 
 ### What's Done ✅
+- Hardware Clock Unification (v4): Added `js/clock.js` to optionally consume hardware SSE telemetry (`ClockEngine.startFeed('/events')`). When activated, `wplog` automatically drives high-framerate `.game-clock`/`.shot-clock` scoreboard UI injected into `.score-center-col`. It cleanly isolates mathematical state formatting via unified `formatDeviceClock` helper in `js/time.js` and transparently auto-fills referee Numpad timestamps in `events.js` exactly as if hand-typed via `_timeToRawDigits`. App remains totally dormant and strictly standalone if not manually embedded.
 - Fixed Legacy Time Storage Validation (#224): Augmented `storage.js` backward-compatibility parsing logic via `RE_GAME_TIME` (`/^\d{1,2}:[0-5]\d(?::[0-5]\d)?$/`) to safely absorb and migrate `"00:00"` and `"HH:MM:SS"` string formats into runtime integer values during JSON hydration. Migrated standard `_logPeriodEnd()` payload execution explicitly from `time: "00:00"` string writes over to strict integer logic (`time: 0`) to prevent further export pollution.
 - Coaching staff caps in Add Name (#221): Enabled "HC" and "AC" coaching cap numbers within the Roster-only "Add Name" flow by bypassing the missing `eventDef` check, while strictly maintaining the explicit rejection of bare "B" inputs globally.
 - Added Roster Delete Button (#218): Injected a native `✕` action button gracefully aligned via `absolute` positioning into the final data cell of screen-rendered roster rows. Masked the delete click behind strict bounds interception (`e.stopPropagation()`) against the `.roster-edit-row` trigger, and validated the action using the standard `ConfirmDialog` overlay with dynamic player name referencing.
