@@ -24,6 +24,7 @@ export const ClockEngine = {
     period: null
   },
   _animationId: null,
+  _containerShown: false,
   _lastGameStr: null,
   _lastShotStr: null,
 
@@ -37,11 +38,8 @@ export const ClockEngine = {
         this.state.shot = data.shot;
         this.state.period = data.period;
 
-        if (!this._animationId) {
-          const container = document.getElementById('hardware-clocks');
-          if (container) container.classList.remove('hidden');
+        if (!this._animationId)
           this._animationId = requestAnimationFrame(() => this.tick());
-        }
       } catch (err) {
         console.warn("Invalid clock payload", err);
       }
@@ -54,6 +52,13 @@ export const ClockEngine = {
   },
 
   tick: function() {
+    if (!this._containerShown) {
+      const container = document.getElementById('hardware-clocks');
+      if (container) {
+        container.classList.remove('hidden');
+        this._containerShown = true;
+      }
+    }
     this._renderGameClock();
     this._renderShotClock();
     this._animationId = requestAnimationFrame(() => this.tick());
