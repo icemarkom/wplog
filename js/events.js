@@ -556,15 +556,8 @@ export const Events = {
         // Set title
         this._setModalTitle(eventDef);
 
-        // Period selector - prefer hardware period if available and valid
+        // Period selector
         this._selectedPeriod = this.game.currentPeriod;
-        const hwPeriod = ClockEngine.getPeriod();
-        if (hwPeriod != null) {
-            const available = this._getAvailablePeriods();
-            if (available.some(p => String(p) === String(hwPeriod))) {
-                this._selectedPeriod = hwPeriod;
-            }
-        }
         this._buildPeriodPills();
 
         // Reset inputs
@@ -1319,16 +1312,6 @@ export const Events = {
         // and reverts by deleting the End of Period event.
         const container = document.getElementById("period-tabs");
         container.innerHTML = "";
-    },
-
-    /**
-     * Public entry point for external callers to repaint the score bar.
-     * Called by settings.js after applyPeriodToGame() advances the period.
-     * No-ops when Events has not been initialized.
-     */
-    refreshScoreBar() {
-        if (!this.game) return;
-        this._updateScoreBar();
     },
 
     _updateScoreBar() {
