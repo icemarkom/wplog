@@ -32,6 +32,9 @@ export const App = {
     currentScreen: "setup",
     game: null,
 
+    // Tab registry — populated via App.registerTab()
+    _tabs: [],
+
     init() {
         // Initialize confirm dialog
         ConfirmDialog.init();
@@ -310,13 +313,20 @@ export const App = {
             btn.classList.toggle("active", btn.id === "nav-" + name);
         });
 
-        // Disable nav buttons that require a game
-        const hasGame = !!this.game;
-        document.getElementById("nav-live").disabled = !hasGame;
-        document.getElementById("nav-sheet").disabled = !hasGame;
+        // Update disabled states — native buttons and any registered tabs
+        this._updateNavDisabled();
+
+        // Deactivate all registered tab screens/nav (native showScreen
+        // owns the active class sweep above; registered tabs are not in the switch)
+        this._tabs.forEach((reg) => {
+            const nav = document.getElementById(reg.navId);
+            const screen = document.getElementById(reg.screenId);
+            if (nav) nav.classList.remove("active");
+            if (screen) screen.classList.remove("active");
+        });
 
         // Manage Wake Lock precisely for active games on Live screen
-        if (name === "live" && hasGame) {
+        if (name === "live" && !!this.game) {
             WakeLock.acquire();
         } else {
             WakeLock.release();
@@ -326,6 +336,13 @@ export const App = {
 
     // Show a screen and initialize its module (used for restore on reload)
     _showScreenWithInit(name) {
+        // Check registered tabs first — restored by session key
+        const ext = this._tabs.find((r) => r.screenId === "screen-" + name);
+        if (ext) {
+            this._activateTab(ext);
+            return;
+        }
+
         switch (name) {
             case "setup":
                 this.showScreen("setup");
@@ -361,6 +378,65 @@ export const App = {
                 }
                 break;
         }
+    },
+
+    // ── Tab Registration API ─────────────────────────────────
+
+    /**
+     * Register a nav/screen tab pair with the wplog tab manager.
+     *
+     * Registered tabs participate in showScreen() active-state management,
+     * disabled-state management, and session restore on reload.
+     *
+     * @param {string} navId     - id of the <button class="nav-btn"> element
+     * @param {string} screenId  - id of the <section class="screen"> element
+     * @param {object} [opts]
+     * @param {boolean} [opts.requiresGame=false] - disable tab when no game is loaded
+     * @param {function} [opts.onActivate]        - called with current game on activation
+     */
+    registerTab(navId, screenId, opts = {}) {
+        const { requiresGame = false, onActivate = null } = opts;
+        const reg = { navId, screenId, requiresGame, onActivate };
+        this._tabs.push(reg);
+
+        const nav = document.getElementById(navId);
+        if (!nav) return;
+
+        nav.addEventListener("click", () => {
+            if (reg.requiresGame && !this.game) return;
+            this._activateTab(reg);
+        });
+    },
+
+    // Activate a registered tab — deactivates all native screens/nav.
+    _activateTab(reg) {
+        const key = reg.screenId.replace(/^screen-/, "");
+        this.currentScreen = key;
+        sessionStorage.setItem("wplog-screen", key);
+
+        document.querySelectorAll(".screen").forEach((el) => el.classList.remove("active"));
+        document.querySelectorAll(".nav-btn").forEach((btn) => btn.classList.remove("active"));
+
+        const nav = document.getElementById(reg.navId);
+        const screen = document.getElementById(reg.screenId);
+        if (nav) nav.classList.add("active");
+        if (screen) screen.classList.add("active");
+
+        this._updateNavDisabled();
+        WakeLock.release();
+
+        if (reg.onActivate) reg.onActivate(this.game);
+    },
+
+    // Centralizes disabled-state management for native and registered tabs.
+    _updateNavDisabled() {
+        const hasGame = !!this.game;
+        document.getElementById("nav-live").disabled = !hasGame;
+        document.getElementById("nav-sheet").disabled = !hasGame;
+        this._tabs.forEach((reg) => {
+            const nav = document.getElementById(reg.navId);
+            if (nav) nav.disabled = reg.requiresGame && !hasGame;
+        });
     },
 };
 
