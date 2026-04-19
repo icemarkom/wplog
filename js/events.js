@@ -556,7 +556,9 @@ export const Events = {
         // Set title
         this._setModalTitle(eventDef);
 
-        // Period selector
+        // Period selector — apply hardware period to game state synchronously,
+        // then use the (possibly advanced) currentPeriod as the selected period.
+        window._wpbApplyPeriod?.(this.game);
         this._selectedPeriod = this.game.currentPeriod;
         this._buildPeriodPills();
 
@@ -574,7 +576,7 @@ export const Events = {
             document.getElementById("time-display").innerHTML = this._formatTimeDisplay("000");
             timeField.classList.add("disabled");
         } else {
-            const clockSecs = ClockEngine.getSeconds();
+            const clockSecs = (window._wpbGetSeconds?.() ?? ClockEngine.getSeconds());
             if (clockSecs != null) {
                 this._timeRaw = this._timeToRawDigits(clockSecs, this._getMaxMinutes());
                 document.getElementById("time-display").innerHTML = this._formatTimeDisplay(this._timeRaw);
@@ -1314,6 +1316,15 @@ export const Events = {
         container.innerHTML = "";
     },
 
+    /**
+     * Public entry point for external callers to repaint the score bar.
+     * Called by settings.js after applyPeriodToGame() advances the period.
+     */
+    refreshScoreBar() {
+        if (!this.game) return;
+        this._updateScoreBar();
+    },
+
     _updateScoreBar() {
         const score = Game.getDisplayScore(this.game);
         for (let i = 0; i < 2; i++) {
@@ -1321,8 +1332,10 @@ export const Events = {
             const val = t.code === "W" ? score.white : score.dark;
             document.getElementById(`score-value-${i}`).textContent = val;
         }
+        const hwPeriod = window._wpbGetPeriod?.();
+        const periodKey = hwPeriod != null ? hwPeriod : this.game.currentPeriod;
         document.getElementById("current-period").textContent = Game.getPeriodLabel(
-            this.game.currentPeriod, this.game.periods
+            periodKey, this.game.periods
         );
         this._updateTOL(this._teams[0].code, "tol-0");
         this._updateTOL(this._teams[1].code, "tol-1");
