@@ -27,6 +27,52 @@ export const ClockEngine = {
   _containerShown: false,
   _lastGameStr: null,
   _lastShotStr: null,
+  _lastPeriodStr: null,
+
+  /**
+   * Map raw hardware period integer to a wplog period key.
+   * Firmware encoding (game_state.c "period" JSON field):
+   *   <= 0  = non-playing state (break, half, unset) -> null
+   *   1–4   = regulation quarters                    -> 1–4 (number)
+   *   5+    = overtime                               -> "OT1", "OT2", …
+   */
+  getPeriod: function() {
+    const p = this.state.period;
+    if (p == null || p <= 0) return null;
+    if (p <= 4) return p;
+    return 'OT' + (p - 4);
+  },
+
+  /**
+   * Advance game.currentPeriod from the hardware period — forward-only.
+   * Safe for mid-game reconnect and break frames (period <= 0 returns null).
+   * Shootout ("SO") is wplog-internal and is never touched here.
+   * @param {Object|null} game  wplog game object, or null
+   * @returns {boolean} true if currentPeriod was changed
+   */
+  applyPeriodToGame: function(game) {
+    if (!game) return false;
+    const hw = this.getPeriod();
+    if (hw == null) return false;
+    const cur = game.currentPeriod;
+    // Numeric regulation: advance if hardware is strictly ahead
+    if (typeof hw === 'number' && typeof cur === 'number') {
+      if (hw > cur) { game.currentPeriod = hw; return true; }
+      return false;
+    }
+    // Hardware in OT, game still in regulation
+    if (typeof hw === 'string' && hw.startsWith('OT') && typeof cur === 'number') {
+      game.currentPeriod = hw; return true;
+    }
+    // Both OT: advance if hardware OT number is strictly higher
+    if (typeof hw === 'string' && hw.startsWith('OT') &&
+        typeof cur === 'string' && cur.startsWith('OT')) {
+      if (parseInt(hw.slice(2)) > parseInt(cur.slice(2))) {
+        game.currentPeriod = hw; return true;
+      }
+    }
+    return false;
+  },
 
   startFeed: function(url = '/events') {
     if (this.feed) return;
@@ -61,6 +107,7 @@ export const ClockEngine = {
     }
     this._renderGameClock();
     this._renderShotClock();
+    this._renderPeriod();
     this._animationId = requestAnimationFrame(() => this.tick());
   },
 
@@ -78,13 +125,20 @@ export const ClockEngine = {
   _renderShotClock: function() {
     const el = document.getElementById('display-shot-clock');
     if (!el) return;
-    
-    // We let the renderer decide to show subseconds when appropriate
     const str = formatDeviceClock(this.state.shot, { showSubseconds: true, isShotClock: true });
     if (str !== this._lastShotStr) {
       el.textContent = str;
       this._lastShotStr = str;
     }
+  },
+
+  _renderPeriod: function() {
+    const p = this.state.period;
+    if (p == null || p <= 0) return;
+    const label = p <= 4 ? 'Q' + p : 'OT' + (p - 4);
+    if (label === this._lastPeriodStr) return;
+    const el = document.getElementById('current-period');
+    if (el) { el.textContent = label; this._lastPeriodStr = label; }
   },
 
   /**

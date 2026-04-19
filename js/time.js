@@ -142,7 +142,7 @@ export function formatTimeDisplay(digits, maxMinutes = 9) {
  * @returns {string} Formatted string
  */
 export function formatDeviceClock(t, options = {}) {
-    if (t == null || t >= 99999) return '--';
+    if (t == null || t >= 65535) return '--';
     const { showSubseconds = true, isShotClock = false } = options;
     
     const s = Math.floor(t / 10);
