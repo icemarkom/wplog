@@ -25,6 +25,7 @@ const ASSETS = [
     "./css/style.css",
     "./css/print.css",
     "./js/sanitize.js",
+    "./js/theme.js",
     "./js/loader.js",
     "./js/year.js",
     "./config.json",
