@@ -172,12 +172,15 @@ These were explicitly discussed and agreed with the user:
 | **CSS reuse over proliferation** | New interactive elements reuse existing CSS classes (`.team-btn` for period pills, `.log-title` for period headers, structural `:not()` selectors for tappable entries) rather than introducing new class names. Scoped overrides via `#id .existing-class`. |
 | **"Add Name" button** | Grey button on Live screen (alongside Swap Caps and End Period) that opens the event modal in roster-only mode: team + cap + name/ID fields, no time, no period selector, no event logged. Saves directly to `game[teamKey].roster[cap]`. Order: Add Name → Swap Caps → End Period. All three follow a `.stats-separator` and auto-flow into the 3-column grid. |
 | **Tappable roster rows** | On the Game Sheet screen, roster rows are tappable to edit name/ID inline. Tap → static text replaced with `<input>` → blur/Enter saves + `Storage.save()` + re-renders roster section. Escape reverts. Print layout stays static. |
+| **`Setup._config` as live model** | `Setup._config` is the canonical source of truth for all setup-controllable fields (`rules`, `periods`, `periodLength`, `otPeriodLength`, `overtime`, `shootout`, `timeoutsAllowed`, `enableLog`, `enableStats`, `statsTimeMode`, `homeTeam`). Event handlers write to it; `_startGame()` reads from it; DOM is a view via `_applyConfigToDOM()`. `_savePrefs()` persists it atomically to `wplog_setup_prefs`; `_restorePrefs()` restores it on next new-game init. Game-specific fields (date, team names, etc.) are read from DOM only. |
 
 ---
 
-## Current State (as of 2026-04-20)
+## Current State (as of 2026-04-21)
 
 ### What's Done ✅
+- Minor display fix: setup multiplier now consistently shown as NxM (#235): Removed spaces around × in the period summary (`"4×8 min"`) to match the existing timeout formatter style (`"2×TO"`).
+- Game setup selections persist between games (#233): Introduced `Setup._config` as the live setup model. All event handlers write to it; `_startGame()` reads from it; `_savePrefs()` / `_restorePrefs()` are trivial one-liners. `_applyConfigToDOM()` is the single render function (formal inverse of `_startGame()`). `Storage.savePrefs()` / `Storage.loadPrefs()` persist the config under `wplog_setup_prefs`. Game-specific fields (date, time, location, game #, team names) are intentionally excluded.
 - System theme default + anti-FOUC bootstrap (#232): Default theme changed from `"dark"` to `"system"` (follows OS preference). New `js/theme.js` synchronous bootstrap script runs in `<head>` before first CSS paint, seeding `localStorage` on first visit and immediately resolving the OS preference — eliminating theme flash. `app.js` and `setup.js` read `localStorage` directly (no fallback needed). Single source of truth for default lives in `theme.js`. Branching skill updated to reflect `v4` as the long-lived integration branch.
 
 ## Current State (as of 2026-04-18)

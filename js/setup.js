@@ -29,6 +29,7 @@ export const Setup = {
     _bound: false,      // guard against duplicate event binding
     _pendingRosters: null,  // pre-game roster uploads: { white: [...], dark: [...] }
     _game: null,        // live game reference (set by updateForActiveGame)
+    _config: null,      // canonical setup state (model for the setup form)
 
     init(onStart) {
         this.onStart = onStart;
@@ -40,53 +41,65 @@ export const Setup = {
             this._bound = true;
         }
         this._pendingRosters = { white: [], dark: [] };
+        this._initConfig();
         this._resetForm();
         this._setDefaultDate();
         this._populateRules();
+        this._restorePrefs();
+    },
+
+    _initConfig() {
+        // Build _config from the defaults of the first visible rule set.
+        // _restorePrefs() will overwrite this immediately if saved data exists.
+        const firstKey = Object.keys(RULES).find((k) => !k.startsWith("_"));
+        const rules = RULES[firstKey];
+        this._config = {
+            rules:           firstKey,
+            periods:         rules.periods          || DEFAULTS.periods,
+            periodLength:    rules.periodLength      || DEFAULTS.periodLength,
+            otPeriodLength:  rules.otPeriodLength    || 3,
+            overtime:        rules.overtime          ?? DEFAULTS.overtime,
+            shootout:        rules.shootout          ?? DEFAULTS.shootout,
+            timeoutsAllowed: {
+                full: rules.timeouts?.full ?? DEFAULTS.timeouts.full,
+                to30: rules.timeouts?.to30 ?? DEFAULTS.timeouts.to30,
+            },
+            enableLog:       true,
+            enableStats:     false,
+            statsTimeMode:   "off",
+            homeTeam:        rules.homeTeam          || DEFAULTS.homeTeam,
+        };
+        this._homeTeam = this._config.homeTeam;
     },
 
     _resetForm() {
-        // Re-enable everything (in case previously disabled)
+        // Re-enable everything (in case previously disabled by an active game)
         document.getElementById("setup-start-btn").disabled = false;
         document.getElementById("setup-start-btn").textContent = "Start Game";
         document.getElementById("setup-rules").disabled = false;
         document.getElementById("setup-home-flip").disabled = false;
 
-        // Reset logging mode segmented control
+        // Re-enable logging mode control
         const modeControl = document.getElementById("setup-logging-mode");
         modeControl.classList.remove("disabled");
-        modeControl.querySelectorAll(".segment-btn").forEach((btn) => {
-            btn.disabled = false;
-            btn.classList.toggle("active", btn.dataset.mode === "log");
-        });
+        modeControl.querySelectorAll(".segment-btn").forEach((btn) => { btn.disabled = false; });
 
-        // Reset stats time segmented control
-        const timeControl = document.getElementById("setup-stats-time-mode");
-        timeControl.querySelectorAll(".segment-btn").forEach((btn) => {
-            btn.classList.toggle("active", btn.dataset.value === "off");
-        });
-
-        // Reset theme setting
-        const currentTheme = localStorage.getItem("wplog_theme");
-        const themeInline = document.getElementById("setup-theme-inline");
-        themeInline.querySelectorAll(".inline-toggle-link").forEach((link) => {
-            link.classList.toggle("active", link.dataset.theme === currentTheme);
-        });
-
-        // Reset post-regulation segmented control
+        // Re-enable post-regulation control
         const prControl = document.getElementById("setup-post-regulation");
         prControl.classList.remove("disabled");
-        prControl.querySelectorAll(".segment-btn").forEach((btn) => {
-            btn.disabled = false;
-        });
+        prControl.querySelectorAll(".segment-btn").forEach((btn) => { btn.disabled = false; });
 
         // Re-enable all steppers
         document.querySelectorAll("#setup-advanced-section .stepper").forEach((s) => {
             this._setStepperDisabled(s, false);
         });
 
-        this._updateLoggingHeader();
-        this._updateStatsTimeState();
+        // Reset theme setting (not part of _config — per-device preference)
+        const currentTheme = localStorage.getItem("wplog_theme");
+        const themeInline = document.getElementById("setup-theme-inline");
+        themeInline.querySelectorAll(".inline-toggle-link").forEach((link) => {
+            link.classList.toggle("active", link.dataset.theme === currentTheme);
+        });
     },
 
     updateForActiveGame(game) {
@@ -282,6 +295,17 @@ export const Setup = {
         el.querySelectorAll(".stepper-btn").forEach((b) => { b.disabled = disabled; });
     },
 
+    _syncStepperToConfig(stepperId) {
+        const val = this._getStepperValue(stepperId);
+        switch (stepperId) {
+            case "setup-num-periods":   this._config.periods = val; break;
+            case "setup-period-length": this._config.periodLength = val; break;
+            case "setup-ot-length":     this._config.otPeriodLength = val; break;
+            case "setup-to-full":       this._config.timeoutsAllowed.full = val; break;
+            case "setup-to-30":         this._config.timeoutsAllowed.to30 = val; break;
+        }
+    },
+
     _bindSteppers() {
         document.querySelectorAll(".stepper").forEach((stepper) => {
             stepper.addEventListener("click", (e) => {
@@ -291,6 +315,7 @@ export const Setup = {
                 // Shortcut button (Off / ∞)
                 if (btn.classList.contains("stepper-set")) {
                     this._setStepperValue(stepper.id, parseInt(btn.dataset.set));
+                    this._syncStepperToConfig(stepper.id);
                     this._updateGameSetupHeader();
                     return;
                 }
@@ -309,6 +334,7 @@ export const Setup = {
                     const next = (cur === -1) ? max : Math.max(min, cur - 1);
                     this._setStepperValue(stepper.id, next);
                 }
+                this._syncStepperToConfig(stepper.id);
                 this._updateGameSetupHeader();
             });
         });
@@ -336,7 +362,7 @@ export const Setup = {
         const pNum = this._getStepperValue("setup-num-periods");
         const qLen = this._getStepperValue("setup-period-length");
         const pr = this._getPostRegulation();
-        const parts = [pNum + " × " + qLen + " min"];
+        const parts = [pNum + "×" + qLen + " min"];
 
         if (pr === "overtime") {
             const otLen = this._getStepperValue("setup-ot-length");
@@ -363,28 +389,87 @@ export const Setup = {
     },
 
     _updateToggles() {
-        const rulesKey = document.getElementById("setup-rules").value;
+        // Called when the rules dropdown changes. Resets all _config fields to
+        // the new rule's defaults, then re-renders the form.
+        const rulesKey = this._config.rules;
         const rules = RULES[rulesKey];
 
-        // Reset home team to rule set default
-        this._homeTeam = rules.homeTeam || DEFAULTS.homeTeam;
+        this._config.homeTeam        = rules.homeTeam         || DEFAULTS.homeTeam;
+        this._config.overtime        = rules.overtime         ?? DEFAULTS.overtime;
+        this._config.shootout        = rules.shootout         ?? DEFAULTS.shootout;
+        this._config.periods         = rules.periods          || DEFAULTS.periods;
+        this._config.periodLength    = rules.periodLength     || DEFAULTS.periodLength;
+        this._config.otPeriodLength  = rules.otPeriodLength   || 3;
+        this._config.timeoutsAllowed = {
+            full: rules.timeouts?.full ?? DEFAULTS.timeouts.full,
+            to30: rules.timeouts?.to30 ?? DEFAULTS.timeouts.to30,
+        };
+
+        this._applyConfigToDOM();
+    },
+
+    _applyConfigToDOM() {
+        const cfg = this._config;
+
+        // Rules dropdown
+        document.getElementById("setup-rules").value = cfg.rules;
+
+        // Home team
+        this._homeTeam = cfg.homeTeam;
         this._updateTeamLabels();
 
-        // Post-regulation segmented control
-        const prValue = rules.overtime ? "overtime" : rules.shootout ? "shootout" : "none";
+        // Steppers
+        this._setStepperValue("setup-num-periods",  cfg.periods);
+        this._setStepperValue("setup-period-length", cfg.periodLength);
+        this._setStepperValue("setup-ot-length",     cfg.otPeriodLength);
+        this._setStepperValue("setup-to-full",       cfg.timeoutsAllowed.full);
+        this._setStepperValue("setup-to-30",         cfg.timeoutsAllowed.to30);
+
+        // Post-regulation segment
+        const prValue = cfg.overtime ? "overtime" : cfg.shootout ? "shootout" : "none";
         document.querySelectorAll("#setup-post-regulation .segment-btn").forEach((btn) => {
             btn.classList.toggle("active", btn.dataset.value === prValue);
         });
 
-        // Steppers
-        this._setStepperValue("setup-num-periods", rules.periods || 4);
-        this._setStepperValue("setup-period-length", rules.periodLength);
-        this._setStepperValue("setup-ot-length", rules.otPeriodLength || 3);
-        this._setStepperValue("setup-to-full", rules.timeouts.full);
-        this._setStepperValue("setup-to-30", rules.timeouts.to30);
+        // Logging mode segment
+        const modeValue = cfg.enableLog && cfg.enableStats ? "full"
+            : cfg.enableStats ? "stats"
+            : "log";
+        document.querySelectorAll("#setup-logging-mode .segment-btn").forEach((btn) => {
+            btn.classList.toggle("active", btn.dataset.mode === modeValue);
+        });
 
+        // Stats time mode segment
+        document.querySelectorAll("#setup-stats-time-mode .segment-btn").forEach((btn) => {
+            btn.classList.toggle("active", btn.dataset.value === cfg.statsTimeMode);
+        });
+
+        // Cascade dependent state
         this._updateOTLengthState();
         this._updateGameSetupHeader();
+        this._updateLoggingHeader();
+        this._updateStatsTimeState();
+    },
+
+    _savePrefs() {
+        Storage.savePrefs(this._config);
+    },
+
+    _restorePrefs() {
+        const saved = Storage.loadPrefs();
+        if (!saved) return;
+        // Guard: drop saved rule key if it no longer exists in config
+        const validKeys = Object.keys(RULES).filter((k) => !k.startsWith("_"));
+        if (saved.rules && !validKeys.includes(saved.rules)) delete saved.rules;
+        Object.assign(this._config, saved);
+        // Nested object must be merged explicitly
+        if (saved.timeoutsAllowed && typeof saved.timeoutsAllowed === "object") {
+            this._config.timeoutsAllowed = {
+                full: saved.timeoutsAllowed.full ?? this._config.timeoutsAllowed.full,
+                to30: saved.timeoutsAllowed.to30 ?? this._config.timeoutsAllowed.to30,
+            };
+        }
+        this._applyConfigToDOM();
     },
 
     // Update team labels and placeholders based on _homeTeam
@@ -403,6 +488,7 @@ export const Setup = {
 
     _bindEvents() {
         document.getElementById("setup-rules").addEventListener("change", () => {
+            this._config.rules = document.getElementById("setup-rules").value;
             this._updateToggles();
         });
 
@@ -412,8 +498,9 @@ export const Setup = {
             const val0 = document.getElementById("setup-team-0-name").value;
             const val1 = document.getElementById("setup-team-1-name").value;
 
-            // Flip home team
-            this._homeTeam = this._homeTeam === "W" ? "D" : "W";
+            // Flip home team in both _config and display state
+            this._config.homeTeam = this._config.homeTeam === "W" ? "D" : "W";
+            this._homeTeam = this._config.homeTeam;
             this._updateTeamLabels();
 
             // Swap the input values so team names stay with their cap color
@@ -428,6 +515,8 @@ export const Setup = {
             if (!btn || btn.disabled) return;
             prControl.querySelectorAll(".segment-btn").forEach((b) => b.classList.remove("active"));
             btn.classList.add("active");
+            this._config.overtime = btn.dataset.value === "overtime";
+            this._config.shootout = btn.dataset.value === "shootout";
             this._updateOTLengthState();
             this._updateGameSetupHeader();
         });
@@ -484,6 +573,10 @@ export const Setup = {
             modeControl.querySelectorAll(".segment-btn").forEach((b) => b.classList.remove("active"));
             btn.classList.add("active");
 
+            const mode = btn.dataset.mode;
+            this._config.enableLog   = mode === "log"  || mode === "full";
+            this._config.enableStats = mode === "full" || mode === "stats";
+
             this._updateLoggingHeader();
             this._updateStatsTimeState();
         });
@@ -496,6 +589,8 @@ export const Setup = {
 
             timeControl.querySelectorAll(".segment-btn").forEach((b) => b.classList.remove("active"));
             btn.classList.add("active");
+
+            this._config.statsTimeMode = btn.dataset.value;
         });
 
         // Theme inline control
@@ -540,34 +635,26 @@ export const Setup = {
     },
 
     _startGame() {
-        const rulesKey = document.getElementById("setup-rules").value;
-        const game = Game.create(rulesKey);
+        const cfg = this._config;
+        const game = Game.create(cfg.rules);
 
-        game.date = document.getElementById("setup-date").value;
+        // Game-specific fields — read from DOM (not part of _config)
+        game.date      = document.getElementById("setup-date").value;
         game.startTime = document.getElementById("setup-time").value;
-        game.location = document.getElementById("setup-location").value;
-        game.gameId = document.getElementById("setup-game-id").value.trim();
-        const pr = this._getPostRegulation();
-        game.overtime = pr === "overtime";
-        game.shootout = pr === "shootout";
-        game.periods = this._getStepperValue("setup-num-periods");
-        game.periodLength = this._getStepperValue("setup-period-length");
-        game.otPeriodLength = game.overtime
-            ? this._getStepperValue("setup-ot-length")
-            : null;
-        game.timeoutsAllowed = {
-            full: this._getStepperValue("setup-to-full"),
-            to30: this._getStepperValue("setup-to-30"),
-        };
+        game.location  = document.getElementById("setup-location").value;
+        game.gameId    = document.getElementById("setup-game-id").value.trim();
 
-        // Home team
-        game.homeTeam = this._homeTeam;
-
-        // Logging mode from segmented control
-        const mode = this._getSelectedMode();
-        game.enableLog = mode === "log" || mode === "full";
-        game.enableStats = mode === "full" || mode === "stats";
-        game.statsTimeMode = this._getStatsTimeMode();
+        // Setup config fields — read from _config
+        game.overtime        = cfg.overtime;
+        game.shootout        = cfg.shootout;
+        game.periods         = cfg.periods;
+        game.periodLength    = cfg.periodLength;
+        game.otPeriodLength  = cfg.overtime ? cfg.otPeriodLength : null;
+        game.timeoutsAllowed = { full: cfg.timeoutsAllowed.full, to30: cfg.timeoutsAllowed.to30 };
+        game.homeTeam        = cfg.homeTeam;
+        game.enableLog       = cfg.enableLog;
+        game.enableStats     = cfg.enableStats;
+        game.statsTimeMode   = cfg.statsTimeMode;
 
         // Read team names from position-based inputs, map back to white/dark
         for (let i = 0; i < 2; i++) {
@@ -589,6 +676,7 @@ export const Setup = {
         this._pendingRosters = { white: [], dark: [] };
 
         Storage.save(game);
+        this._savePrefs();
         this.onStart(game);
     },
 
