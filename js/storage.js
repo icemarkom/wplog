@@ -362,6 +362,7 @@ function _isValidCap(val) {
 
 export const Storage = {
     KEY: "wplog_game",
+    PREFS_KEY: "wplog_setup_prefs",
     MAX_FILE_SIZE,
 
     save(game) {
@@ -390,5 +391,23 @@ export const Storage = {
 
     clear() {
         localStorage.removeItem(this.KEY);
+    },
+
+    savePrefs(prefs) {
+        try {
+            localStorage.setItem(this.PREFS_KEY, JSON.stringify(prefs));
+        } catch (e) {
+            console.error("Failed to save setup prefs:", e);
+        }
+    },
+
+    loadPrefs() {
+        try {
+            const data = localStorage.getItem(this.PREFS_KEY);
+            if (!data) return null;
+            return JSON.parse(data);
+        } catch (e) {
+            return null;
+        }
     },
 };
