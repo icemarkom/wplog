@@ -67,7 +67,7 @@ export const Setup = {
         });
 
         // Reset theme setting
-        const currentTheme = localStorage.getItem("wplog_theme") || "dark";
+        const currentTheme = localStorage.getItem("wplog_theme");
         const themeInline = document.getElementById("setup-theme-inline");
         themeInline.querySelectorAll(".inline-toggle-link").forEach((link) => {
             link.classList.toggle("active", link.dataset.theme === currentTheme);
