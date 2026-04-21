@@ -362,7 +362,7 @@ export const Setup = {
         const pNum = this._getStepperValue("setup-num-periods");
         const qLen = this._getStepperValue("setup-period-length");
         const pr = this._getPostRegulation();
-        const parts = [pNum + " × " + qLen + " min"];
+        const parts = [pNum + "×" + qLen + " min"];
 
         if (pr === "overtime") {
             const otLen = this._getStepperValue("setup-ot-length");
