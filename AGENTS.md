@@ -51,6 +51,7 @@ wplog/
 │   ├── sanitize.js    # escapeHTML() utility (ES module)
 │   ├── loader.js      # App shell loader — fetches screens, imports app module, inits app
 │   ├── year.js        # Copyright year display (standalone script, shared by all pages)
+│   ├── theme.js       # Anti-FOUC theme bootstrap (synchronous script, resolves system preference before first paint)
 │   ├── config.js       # APP_VERSION + DEFAULTS + RULES definitions (USAWP, NFHS Varsity, NFHS JV, NCAA)
 │   ├── confirm.js      # Custom confirmation dialog (replaces native confirm(), uses dialog.js)
 │   ├── dialog.js       # Shared dialog utilities (initDialog — backdrop click + dismiss button)
