@@ -40,10 +40,12 @@ export const App = {
         ConfirmDialog.init();
 
         // Load Theme
+        // theme.js (sync, in <head>) already set data-theme before first paint.
+        // Re-apply here to wire the OS-change listener and handle any edge cases.
         const applyTheme = () => {
-            const theme = localStorage.getItem("wplog_theme") || "dark";
+            const theme = localStorage.getItem("wplog_theme");
             if (theme === "system") {
-                const isLight = window.matchMedia("(prefers-color-scheme: light)").matches;
+                const isLight = window.matchMedia && window.matchMedia("(prefers-color-scheme: light)").matches;
                 document.documentElement.setAttribute("data-theme", isLight ? "light" : "dark");
             } else {
                 document.documentElement.setAttribute("data-theme", theme);
