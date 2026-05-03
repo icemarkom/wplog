@@ -147,6 +147,8 @@ These were explicitly discussed and agreed with the user:
 | **About dialog** | Native `<dialog>` popup (not a screen) accessible via footer "About" link. Shows version, license, author, source link. Privacy and License open as stacked content dialogs on top. |
 | **SW cache = version** | Service worker cache name is `"wplog-" + APP_VERSION`. Each release busts stale caches automatically. |
 | **SW dev vs prod** | Service worker uses network-first strategy in dev mode (no stale cache issues) and cache-first in production (offline reliability). |
+| **SW SSE passthrough** | `sw.js` fetch handler skips `respondWith()` for requests with `Accept: text/event-stream` or pathname `/events`. SSE streams are infinite responses — intercepting them leaves a never-resolving SW-managed fetch, which blocks iOS Safari's print dialog until the HTTP timeout fires (~60s). Passthrough lets the browser manage SSE natively, outside the service worker. |
+
 | **Interactive SW Updates** | `sw.js` safely idles downloaded updates in the `waiting` queue until the UI commands otherwise. `js/loader.js` tracks `updatefound` hooks to generate a native `popover` Toast prompting the user. Clicking 'Reload' signals `skipWaiting` via `postMessage` and instantly reboots `wplog` into the new cache layer seamlessly, avoiding aggressive auto-refreshes that clear out midway data entry. |
 | **QR code sharing** | Single SVG (`img/qr-wplog.svg`) with white modules on transparent background. CSS `filter: invert(1)` for high-contrast overlay. Share screen always accessible. |
 | **Share tab always active** | Share tab is always enabled. Print Game Sheet button is disabled when no game is active. |
@@ -180,8 +182,10 @@ These were explicitly discussed and agreed with the user:
 ## Current State (as of 2026-05-03)
 
 ### What's Done ✅
+- SW SSE passthrough (#69): `sw.js` fetch handler now returns immediately (without calling `respondWith()`) for any request with `Accept: text/event-stream` or pathname `/events`. The service worker was wrapping the persistent `EventSource` connection in a `fetch()` promise that never resolves — iOS Safari will not show the print dialog until all SW-managed fetches settle, causing print to block for ~60 seconds until the HTTP timeout fires. Passthrough guard applies in both dev (network-first) and production (cache-first) modes.
 - Interval tracking in period display (#67): `_renderPeriod()` now maps hardware period values -1 and -2 to "BREAK" and "HALF" labels respectively, instead of silently skipping the update and leaving the display frozen at the last playing period. Period 0 / null is still treated as unset (no-op).
 - Shot clock blanking (#68): `_renderShotClock()` refactored with a single `shouldBlank` boolean covering three conditions: (1) interval frames (period <= 0), (2) hardware blank sentinel (shot >= 65535 / 0xFFFF), (3) GT <= SC - game clock at or below shot clock, making the shot clock irrelevant regardless of what hardware sends. All three conditions produce empty string (truly invisible element), not '--'.
+
 
 ## Current State (as of 2026-05-02)
 

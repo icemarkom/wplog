@@ -94,6 +94,16 @@ self.addEventListener("activate", (event) => {
 
 // Fetch — network-first in dev, cache-first in production
 self.addEventListener("fetch", (event) => {
+    // Never intercept SSE streams. Wrapping an EventSource in respondWith() leaves
+    // a service-worker-managed fetch that never resolves (SSE is an infinite stream).
+    // iOS Safari will not show the print dialog until all SW-managed fetches settle,
+    // so intercepting /events blocks print for ~60s until the HTTP timeout fires (#69).
+    const url = new URL(event.request.url);
+    if (event.request.headers.get("Accept")?.includes("text/event-stream") ||
+        url.pathname === "/events") {
+        return;
+    }
+
     if (APP_VERSION === "dev") {
         // Dev: always fetch from network, fall back to cache
         event.respondWith(
