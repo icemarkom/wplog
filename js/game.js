@@ -96,9 +96,14 @@ export const Game = {
             else scoreD++;
         }
 
+        // Assign seq: slot into correct chronological position if out of order
+        const seq = (time !== null && event !== "---")
+            ? this._findInsertionSeq(game, period, time)
+            : game._nextSeq;
+
         const entry = {
             id: game._nextId++,
-            seq: game._nextSeq,
+            seq,
             deviceTime: new Date().toISOString(),
             period,
             time,
@@ -128,19 +133,54 @@ export const Game = {
     editEvent(game, eventId, updates) {
         const entry = game.log.find((e) => e.id === eventId);
         if (!entry) return;
-        // If moving to a different period, assign new seq to place at end
-        if (updates.period !== undefined && updates.period !== entry.period) {
-            entry.seq = game._nextSeq;
-            game._nextSeq += 10;
+
+        // Recalculate seq whenever period or time changes, using the same
+        // insertion logic as addEvent(). excludeId prevents the entry from
+        // influencing its own placement.
+        const newPeriod = updates.period ?? entry.period;
+        const newTime   = updates.time   ?? entry.time;
+        if (newTime !== null && entry.event !== "---" &&
+            (updates.period !== undefined || updates.time !== undefined)) {
+            entry.seq = this._findInsertionSeq(game, newPeriod, newTime, eventId);
+            if (updates.period !== undefined && updates.period !== entry.period) {
+                game._nextSeq += 10;
+            }
         }
+
         Object.assign(entry, updates);
         this._sortLog(game);
         this._recalcScores(game);
     },
 
-    // Sort events within each period by game time (descending).
+    /**
+     * Return the correct seq for a new or moved timed event within a period.
+     * Finds the gap between the two surrounding entries (by existing seq order)
+     * whose times bracket the new time, and returns the midpoint.
+     *
+     * Pass excludeId when editing so the entry being moved is not in the
+     * candidate list and does not influence its own placement.
+     *
+     * Null-time events and Period End callers should use _nextSeq directly.
+     */
+    _findInsertionSeq(game, period, time, excludeId = null) {
+        const periodEntries = game.log
+            .filter(e =>
+                e.period === period &&
+                e.time !== null &&
+                e.event !== "---" &&
+                e.id !== excludeId
+            )
+            .sort((a, b) => a.seq - b.seq);
+
+        // idx is the first entry that comes *after* the new one (lower time value)
+        const idx = periodEntries.findIndex(e => e.time < time);
+        if (periodEntries.length === 0 || idx === -1) return game._nextSeq; // append
+        if (idx === 0) return Math.floor(periodEntries[0].seq / 2);         // prepend
+        return Math.floor((periodEntries[idx - 1].seq + periodEntries[idx].seq) / 2);
+    },
+
+    // Sort events within each period by seq.
     // Period End ("---") events always sort last within their period.
-    // Equal times preserve entry order (stable sort by id).
     _sortLog(game) {
         // Build ordered list of unique periods as they appear
         const periodOrder = [];
