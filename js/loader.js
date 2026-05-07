@@ -19,6 +19,7 @@
 // JS dependencies are resolved automatically via ES module imports.
 
 import { App } from './app.js';
+import { ClockEngine } from './clock.js';
 import { loadConfig } from './config.js';
 
 (async function () {
@@ -53,6 +54,11 @@ import { loadConfig } from './config.js';
 
     // DOMContentLoaded already fired, so manually init the app
     App.init();
+
+    // Start the hardware SSE clock feed. Points to the iOS HTTPBridge
+    // on localhost:5640. On wpboard hardware, settings.js calls
+    // startFeed('/events') first and this is a no-op (guard in startFeed).
+    ClockEngine.startFeed('http://localhost:5640/events');
 
     // Register service worker for offline caching.
     // type: 'module' is required because sw.js uses ES module imports.
