@@ -14,14 +14,14 @@
  * limitations under the License.
  */
 
-import { RULES } from './config.js';
+import { RULES } from '../core/config.js';
 import { ConfirmDialog } from './confirm.js';
-import { Game } from './game.js';
-import { escapeHTML } from './sanitize.js';
+import { Game } from '../core/game.js';
+import { escapeHTML } from '../core/sanitize.js';
 import { initDialog } from './dialog.js';
 import { Storage } from './storage.js';
-import { getMaxMinutes, parseTime, formatTimeDisplay, formatTime } from './time.js';
-import { ClockEngine } from './clock.js';
+import { getMaxMinutes, parseTime, formatTimeDisplay, formatTime } from '../core/time.js';
+import { sharedClockEngine as ClockEngine } from '../core/clock.js';
 
 // wplog — Live Log Screen (Event Logging)
 // Event-first workflow: tap event button → modal opens → enter details → OK

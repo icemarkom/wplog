@@ -16,11 +16,11 @@
 
 import { RULES, DEFAULTS } from './config.js';
 
-// wplog — localStorage Persistence + Game Data Validation
+// wplog — Game Data Validation (Pure Logic)
 
 // ── Constants ────────────────────────────────────────────────
 
-const MAX_FILE_SIZE = 128 * 1024;   // 128 KB
+export const MAX_FILE_SIZE = 128 * 1024;   // 128 KB
 const MAX_LOG_ENTRIES = 10000;
 const MAX_TEAM_NAME = 100;
 const MAX_LOCATION = 200;
@@ -357,57 +357,3 @@ function _isValidCap(val) {
     if (val === "" || val === "HC" || val === "C" || val === "AC" || val === "B") return true;
     return RE_CAP.test(val);
 }
-
-// ── Storage ──────────────────────────────────────────────────
-
-export const Storage = {
-    KEY: "wplog_game",
-    PREFS_KEY: "wplog_setup_prefs",
-    MAX_FILE_SIZE,
-
-    save(game) {
-        try {
-            localStorage.setItem(this.KEY, JSON.stringify(game));
-        } catch (e) {
-            console.error("Failed to save game:", e);
-        }
-    },
-
-    load() {
-        try {
-            const data = localStorage.getItem(this.KEY);
-            if (!data) return null;
-            const game = JSON.parse(data);
-            if (!game || typeof game.rules !== "string" || !Array.isArray(game.log)) {
-                console.warn("Invalid game data in localStorage, ignoring.");
-                return null;
-            }
-            return game;
-        } catch (e) {
-            console.error("Failed to load game:", e);
-            return null;
-        }
-    },
-
-    clear() {
-        localStorage.removeItem(this.KEY);
-    },
-
-    savePrefs(prefs) {
-        try {
-            localStorage.setItem(this.PREFS_KEY, JSON.stringify(prefs));
-        } catch (e) {
-            console.error("Failed to save setup prefs:", e);
-        }
-    },
-
-    loadPrefs() {
-        try {
-            const data = localStorage.getItem(this.PREFS_KEY);
-            if (!data) return null;
-            return JSON.parse(data);
-        } catch (e) {
-            return null;
-        }
-    },
-};

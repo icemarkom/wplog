@@ -15,7 +15,7 @@
  */
 
 // wplog — HTML Sanitization Utility
-// Escapes user-supplied strings before interpolation into innerHTML templates.
+// Escapes user-supplied strings before interpolation into HTML templates.
 
 export function escapeHTML(str) {
     return String(str).replace(/[&<>"']/g,

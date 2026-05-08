@@ -34,11 +34,11 @@ export function sanitizeName(name) {
  * @param {string} ext - File extension including dot (e.g., ".csv")
  * @returns {string} Filename
  */
-export function buildFilename(game, ext) {
+export function buildFilename(game, ext, now = new Date()) {
     const parts = ["wplog"];
 
     // Date
-    const date = game.date || new Date().toISOString().slice(0, 10);
+    const date = game.date || now.toISOString().slice(0, 10);
     parts.push(date);
 
     // Teams (only if custom) — ordered home-first
@@ -52,7 +52,7 @@ export function buildFilename(game, ext) {
     // Time: startTime if set, else current time
     const time = game.startTime
         ? game.startTime.replace(":", "")
-        : new Date().toTimeString().slice(0, 5).replace(":", "");
+        : now.toTimeString().slice(0, 5).replace(":", "");
     parts.push(time);
 
     return parts.join("-") + ext;

@@ -14,10 +14,10 @@
  * limitations under the License.
  */
 
-import { RULES } from './config.js';
-import { Game } from './game.js';
-import { formatTime } from './time.js';
-import { escapeHTML } from './sanitize.js';
+import { RULES } from '../core/config.js';
+import { Game } from '../core/game.js';
+import { formatTime } from '../core/time.js';
+import { escapeHTML } from '../core/sanitize.js';
 import { renderScreen } from './sheet-screen.js';
 import { Storage } from './storage.js';
 import { ConfirmDialog } from './confirm.js';

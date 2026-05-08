@@ -19,8 +19,8 @@
 // JS dependencies are resolved automatically via ES module imports.
 
 import { App } from './app.js';
-import { ClockEngine } from './clock.js';
-import { loadConfig } from './config.js';
+import { ClockUI } from './clock.js';
+import { initConfig } from '../core/config.js';
 
 (async function () {
     const _cb = "?v=" + Date.now();
@@ -50,7 +50,21 @@ import { loadConfig } from './config.js';
     }
 
     // Load external configuration before binding UI logic
-    await loadConfig();
+    let configData = null;
+    try {
+        const res = await fetch('config.json' + _cb);
+        if (res.ok) {
+            configData = await res.json();
+        } else {
+            console.warn("config.json not found (" + res.status + "), falling back to safe mode.");
+        }
+    } catch (e) {
+        console.warn("Failed to fetch or parse config.json, falling back to safe mode.", e);
+    }
+    const configResult = initConfig(configData);
+    if (!configResult.ok) {
+        console.warn("Config initialization issue:", configResult.error);
+    }
 
     // DOMContentLoaded already fired, so manually init the app
     App.init();
@@ -58,7 +72,7 @@ import { loadConfig } from './config.js';
     // Start the hardware SSE clock feed. Points to the iOS HTTPBridge
     // on localhost:5640. On wpboard hardware, settings.js calls
     // startFeed('/events') first and this is a no-op (guard in startFeed).
-    ClockEngine.startFeed('http://localhost:5640/events');
+    ClockUI.startFeed('http://localhost:5640/events');
 
     // Register service worker for offline caching.
     // type: 'module' is required because sw.js uses ES module imports.

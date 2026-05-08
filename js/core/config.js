@@ -156,20 +156,21 @@ function _getSafeMode() {
     };
 }
 
-export async function loadConfig() {
-    let data;
-    try {
-        const res = await fetch('config.json?v=' + Date.now());
-        if (!res.ok) throw new Error("config.json not found (" + res.status + ")");
-        data = await res.json();
-    } catch (e) {
-        console.warn("Failed to load or parse config.json, falling back to safe mode.", e);
+export function initConfig(data) {
+    let hadError = false;
+    let errorMsg = null;
+
+    if (!data) {
         data = _getSafeMode();
+        hadError = true;
+        errorMsg = "No configuration data provided.";
     }
 
     // Defensive normalization
     if (!data.RULES || typeof data.RULES !== 'object') {
         data = _getSafeMode();
+        hadError = true;
+        errorMsg = errorMsg || "Invalid configuration format: missing RULES object.";
     }
     const resolvedStats = Array.isArray(data.STATS_EVENTS) ? data.STATS_EVENTS : [];
 
@@ -187,11 +188,15 @@ export async function loadConfig() {
         _resolveRules(data.RULES, resolvedStats);
         RULES = data.RULES;
         STATS_EVENTS = resolvedStats;
+        if (hadError) {
+            return { ok: false, error: errorMsg };
+        }
+        return { ok: true };
     } catch (e) {
-        console.error("Error resolving inheritance rules, falling back to safe mode.", e);
         const safe = _getSafeMode();
         _resolveRules(safe.RULES, safe.STATS_EVENTS);
         RULES = safe.RULES;
         STATS_EVENTS = safe.STATS_EVENTS;
+        return { ok: false, error: `Error resolving inheritance rules: ${e.message}` };
     }
 }

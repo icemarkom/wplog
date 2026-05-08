@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import { APP_VERSION } from './config.js';
+import { APP_VERSION } from '../core/config.js';
 import { ConfirmDialog } from './confirm.js';
 import { Storage } from './storage.js';
 import { Setup } from './setup.js';
@@ -23,7 +23,7 @@ import { Sheet } from './sheet.js';
 import { Share } from './share.js';
 import { initDialog } from './dialog.js';
 import { WakeLock } from './wakelock.js';
-import { Game } from './game.js';
+import { Game } from '../core/game.js';
 
 
 // wplog — App Initialization + Screen Navigation

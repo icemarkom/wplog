@@ -48,27 +48,30 @@ wplog/
 │   ├── print.css       # Print-only B&W styles for game sheet
 │   └── standalone.css  # Shared styles for standalone pages (privacy, help)
 ├── js/
-│   ├── sanitize.js    # escapeHTML() utility (ES module)
-│   ├── loader.js      # App shell loader — fetches screens, imports app module, inits app
-│   ├── year.js        # Copyright year display (standalone script, shared by all pages)
-│   ├── theme.js       # Anti-FOUC theme bootstrap (synchronous script, resolves system preference before first paint)
-│   ├── config.js       # APP_VERSION + DEFAULTS + RULES definitions (USAWP, NFHS Varsity, NFHS JV, NCAA)
-│   ├── confirm.js      # Custom confirmation dialog (replaces native confirm(), uses dialog.js)
-│   ├── dialog.js       # Shared dialog utilities (initDialog — backdrop click + dismiss button)
-│   ├── storage.js      # localStorage wrapper (with schema validation)
-│   ├── game.js         # Core data model + game logic (pure — no Storage dependency)
-│   ├── setup.js        # Setup screen (with active-game guards)
-│   ├── events.js       # Live log screen (main UI, owns Storage.save after mutations)
-│   ├── time.js         # Time parsing utilities (pure — no DOM, no game state)
-│   ├── sheet.js        # Game sheet orchestrator + shared render helpers (imports Storage for inline roster edits)
-│   ├── sheet-data.js   # Sheet data builders (pure — no DOM)
-│   ├── sheet-screen.js # Game sheet screen rendering (2-page DOM layout)
-│   ├── sheet-print.js  # Game sheet print rendering (DOM only — renders from pagination plans)
-│   ├── pagination.js   # Print pagination engine (pure — no DOM)
-│   ├── share.js        # Share/Print functionality
-│   ├── export.js       # Export utilities — filename, CSV builders (pure — no DOM)
-│   ├── roster.js       # Roster CSV parser, builder, merge logic (pure — no DOM)
-│   └── app.js          # App init + screen navigation + version display
+│   ├── core/               # Pure JavaScript — zero DOM, zero browser APIs, runs in JavaScriptCore
+│   │   ├── config.js       # APP_VERSION + DEFAULTS + RULES resolver (initConfig accepts pre-parsed JSON)
+│   │   ├── game.js         # Core data model + game logic (state machine, stats aggregation)
+│   │   ├── clock.js        # ClockEngine class — hardware telemetry state container
+│   │   ├── storage.js      # validateGameData() — schema validation, legacy migration
+│   │   ├── time.js         # Time parsing utilities (formatTime, formatDeviceClock, getMaxMinutes)
+│   │   ├── export.js       # Export utilities — filename, CSV builders
+│   │   ├── roster.js       # Roster CSV parser, builder, merge logic
+│   │   └── sanitize.js     # escapeHTML() utility
+│   └── ui/                 # Platform layer — DOM, EventSource, localStorage, rAF
+│       ├── loader.js       # App shell loader — fetches screens + config.json, imports app module
+│       ├── app.js          # App init + screen navigation + version display
+│       ├── events.js       # Live log screen (main UI, owns Storage.save after mutations)
+│       ├── setup.js        # Setup screen (with active-game guards)
+│       ├── clock.js        # ClockUI — EventSource client, requestAnimationFrame render loop
+│       ├── storage.js      # localStorage wrapper (thin CRUD over core/storage validation)
+│       ├── sheet.js        # Game sheet orchestrator + shared render helpers
+│       ├── sheet-screen.js # Game sheet screen rendering (2-page DOM layout)
+│       ├── share.js        # Share/Print functionality
+│       ├── theme.js        # Anti-FOUC theme bootstrap (synchronous, resolves system preference)
+│       ├── dialog.js       # Shared dialog utilities (initDialog — backdrop click + dismiss)
+│       ├── confirm.js      # Custom confirmation dialog (replaces native confirm())
+│       ├── wakelock.js     # Screen Wake Lock API wrapper
+│       └── year.js         # Copyright year display (standalone script, shared by all pages)
 ├── .agents/
 │   ├── skills/
 │   │   └── branching/
@@ -87,7 +90,9 @@ wplog/
 └── privacy.html        # Privacy policy (HTML, canonical for OAuth consent)
 ```
 
-All JS files (except `year.js`) use native ES modules with `import`/`export`. The browser resolves the dependency tree automatically from the entry point (`loader.js` → `app.js` → all other modules). `year.js` is a standalone `<script defer>` for copyright year display on all pages.
+`js/core/` files are strictly headless — they contain zero references to `document`, `window`, `localStorage`, `fetch()`, `EventSource`, `requestAnimationFrame`, or any browser API. This enables iOS to run the game engine natively in `JavaScriptCore` while the web PWA continues to use the full `ui/` layer.
+
+All JS files (except `year.js`) use native ES modules with `import`/`export`. The browser resolves the dependency tree automatically from the entry point (`loader.js` → `app.js` → all other modules). `year.js` is a standalone `<script defer>` for copyright year display on all pages. `core/` files only import from `core/`. `ui/` files import from both `core/` and `ui/`. No reverse dependencies.
 
 ---
 
@@ -179,6 +184,11 @@ These were explicitly discussed and agreed with the user:
 | **`Setup._config` as live model** | `Setup._config` is the canonical source of truth for all setup-controllable fields (`rules`, `periods`, `periodLength`, `otPeriodLength`, `overtime`, `shootout`, `timeoutsAllowed`, `enableLog`, `enableStats`, `statsTimeMode`, `homeTeam`). Event handlers write to it; `_startGame()` reads from it; DOM is a view via `_applyConfigToDOM()`. `_savePrefs()` persists it atomically to `wplog_setup_prefs`; `_restorePrefs()` restores it on next new-game init. Game-specific fields (date, team names, etc.) are read from DOM only. |
 
 ---
+
+## Current State (as of 2026-05-07)
+
+### What's Done ✅
+- Headless architecture decoupling (v4): Bifurcated `js/` into `js/core/` (pure JavaScript, zero browser APIs) and `js/ui/` (DOM, EventSource, localStorage). Three files genuinely split: `clock.js` (ClockEngine class + state vs. EventSource+DOM), `storage.js` (validateGameData vs. localStorage CRUD), `config.js` (initConfig accepting pre-parsed JSON vs. fetch in loader). View controllers (`events.js`, `setup.js`, `app.js`) moved whole to `ui/` — their business logic was already in `core/game.js` and `core/config.js`. `ClockEngine` refactored from singleton object literal to ES6 class (multi-instance for iOS). All `new Date()` calls made injectable via default parameters for deterministic testing. `initConfig()` returns `{ ok, error }` instead of using `console.error`. Import graph is strictly one-directional: `core/` → `core/` only, `ui/` → both. `sw.js` ASSETS and import path updated. `index.html` script tags updated.
 
 ## Current State (as of 2026-05-04)
 

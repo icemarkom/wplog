@@ -14,12 +14,13 @@
  * limitations under the License.
  */
 
-import { RULES, DEFAULTS } from './config.js';
+import { RULES, DEFAULTS } from '../core/config.js';
 import { ConfirmDialog } from './confirm.js';
-import { Storage, validateGameData } from './storage.js';
-import { Game } from './game.js';
+import { validateGameData } from '../core/storage.js';
+import { Storage } from './storage.js';
+import { Game } from '../core/game.js';
 import { initDialog } from './dialog.js';
-import { parseRosterCSV, mergeRoster } from './roster.js';
+import { parseRosterCSV, mergeRoster } from '../core/roster.js';
 
 // wplog — Setup Screen Logic
 

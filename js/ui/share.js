@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-import { buildFilename, buildCSV } from './export.js';
-import { buildRosterCSV, buildRosterFilename, hasRosterData } from './roster.js';
+import { buildFilename, buildCSV } from '../core/export.js';
+import { buildRosterCSV, buildRosterFilename, hasRosterData } from '../core/roster.js';
 import { Sheet } from './sheet.js';
 import { initDialog } from './dialog.js';
 

@@ -205,10 +205,10 @@ export function buildRosterCSV(game, teamKey) {
  * @param {string} teamKey - "white" or "dark"
  * @returns {string} Filename like "roster-TeamName-2026-04-08.csv"
  */
-export function buildRosterFilename(game, teamKey) {
+export function buildRosterFilename(game, teamKey, now = new Date()) {
     const teamName = game[teamKey].name || (teamKey === "white" ? "White" : "Dark");
     const safeName = teamName.replace(/\s+/g, "-").replace(/[^a-zA-Z0-9-]/g, "");
-    const date = game.date || new Date().toISOString().slice(0, 10);
+    const date = game.date || now.toISOString().slice(0, 10);
     return `roster-${safeName}-${date}.csv`;
 }
 

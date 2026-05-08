@@ -26,11 +26,11 @@ export function formatFractionalScore(totalScore, soGoals) {
 
 export const Game = {
     // Create a new game with defaults from rules
-    create(rulesKey = "USAWP") {
+    create(rulesKey = "USAWP", now = new Date()) {
         const rules = RULES[rulesKey];
         return {
             rules: rulesKey,
-            date: new Date().toISOString().slice(0, 10),
+            date: now.toISOString().slice(0, 10),
             startTime: "",
             location: "",
             gameId: "",
@@ -81,7 +81,7 @@ export const Game = {
     },
 
     // Add an event to the game log
-    addEvent(game, { period, time, team, cap, event, note, swapType }) {
+    addEvent(game, { period, time, team, cap, event, note, swapType, now = new Date() }) {
         const rules = RULES[game.rules];
         const eventDef = rules.events.find((e) => e.code === event);
         const isStatsOnly = eventDef && eventDef.statsOnly;
@@ -104,7 +104,7 @@ export const Game = {
         const entry = {
             id: game._nextId++,
             seq,
-            deviceTime: new Date().toISOString(),
+            deviceTime: now.toISOString(),
             period,
             time,
             team: team || "",
