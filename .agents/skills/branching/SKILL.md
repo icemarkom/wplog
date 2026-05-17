@@ -11,8 +11,8 @@ description: >-
 
 ## Current state
 
-- **`main`** — stable, production-ready v3.x line (all v3.x releases deploy from here)
-- **`v4`** — long-lived integration branch for v4.0.0 features (branches from `main`, merges back when ready)
+- **`main`** - stable, production-ready v3.x line (all v3.x releases deploy from here)
+- **`v4`** - long-lived integration branch for v4.0.0 features (branches from `main`, merges back when ready)
 - **Live site** deploys from `gh-pages` via release tags on `main`
 
 ## Branch types
@@ -71,10 +71,10 @@ git merge main -m "Sync main into v4"
 
 ## Gotchas
 
-- **Never commit directly to `main`** — always use short-lived branches and PRs
-- **Geronimo on `main`** is an escape hatch (commit + push only, no PR) — not the norm
-- **`v4` is long-lived** — don't delete it until v4.0.0 ships
-- **Ask which train** — when starting work, confirm whether it targets v3.x or v4
+- **Never commit directly to `main`** - always use short-lived branches and PRs
+- **Geronimo on `main`** is an escape hatch (commit + push only, no PR) - not the norm
+- **`v4` is long-lived** - don't delete it until v4.0.0 ships
+- **Ask which train** - when starting work, confirm whether it targets v3.x or v4
 
 ## Validation
 

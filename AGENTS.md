@@ -1,28 +1,28 @@
-# wplog — Agent Handoff & Continuation Guide
+# wplog - Agent Handoff & Continuation Guide
 
 ## Rules for Next Agent
 
-- **The user knows water polo deeply** — they're a referee. Trust their domain knowledge on events, rules, and terminology.
-- **Keep it simple** — the user deliberately chose "no framework, no build tools." Honor that.
-- **Event codes** — the user specifically chose codes like `"E-Game"` (not abbreviated). Don't change them without asking.
-- **The user is iterative** — expect inline comments on artifacts with specific feedback. Incorporate exactly what they say.
-- **Answer users's questions** — if the user asks a question, answer it. The user is seeking further understanding to make decisions. A question is not an instruction for you to do. It's an instruction for iteration. If the question is mixed with an instruction, determine whether to ask clarification on action, or do the action, but the question **must** be answered.
-- **Do not commit/push without confirmation** — always wait for the user to say it's ready before `git commit` and `git push`. Exception: "geronimo" = one-time blanket approval.
-- **Close issues manually** — auto-close is disabled. Use `gh issue close N -c "comment"` after pushing.
-- **Release to publish** — stable releases from `main`. Use `gh release create` to deploy to GitHub Pages. See the `branching` skill (`.agents/skills/branching/SKILL.md`) for the branching strategy.
-- **Game clock is M:SS** — max time is capped by period length (not hardcoded 9:59). Right-to-left digit entry. Start/end times remain HH:MM.
-- **Modal uses responsive breakpoints** — default is full-screen (mobile), `@media (min-width: 900px) and (min-height: 700px)` switches to desktop dialog.
-- **Personal fouls are config-driven** — use `isPersonalFoul: true` on events. Don't hardcode event codes for foul counting.
-- **MAM is a dual-trigger event** — `isPersonalFoul: true` + `autoFoulOut: 2`. This pattern was explicitly designed for NFHS/NCAA.
-- **Version system** — `APP_VERSION` lives in `config.js`. Default is `"dev"`. Deploy workflow injects release tag. Dev mode auto-detects file timestamp via `HEAD` requests. Don't hardcode versions elsewhere.
-- **About is a native dialog** — not a screen/section. Uses native `<dialog>` element with `showModal()`/`close()`. All overlays (About, Confirm, Alert, Content, Download, Print, QR, Event Modal) are native `<dialog>` elements.
-- **Always use `escapeHTML()`** — when building `innerHTML` templates with user-supplied data (team names, cap numbers, Game #, location, etc.), wrap them in `escapeHTML()`. This is mandatory — see `sanitize.js`.
-- **Update sw.js ASSETS** — whenever adding a new file (HTML, CSS, JS, image) to the application, you MUST add it to the `ASSETS` array in `sw.js` to ensure the app continues to work completely offline.
+- **The user knows water polo deeply** - they're a referee. Trust their domain knowledge on events, rules, and terminology.
+- **Keep it simple** - the user deliberately chose "no framework, no build tools." Honor that.
+- **Event codes** - the user specifically chose codes like `"E-Game"` (not abbreviated). Don't change them without asking.
+- **The user is iterative** - expect inline comments on artifacts with specific feedback. Incorporate exactly what they say.
+- **Answer users's questions** - if the user asks a question, answer it. The user is seeking further understanding to make decisions. A question is not an instruction for you to do. It's an instruction for iteration. If the question is mixed with an instruction, determine whether to ask clarification on action, or do the action, but the question **must** be answered.
+- **Do not commit/push without confirmation** - always wait for the user to say it's ready before `git commit` and `git push`. Exception: "geronimo" = one-time blanket approval.
+- **Close issues manually** - auto-close is disabled. Use `gh issue close N -c "comment"` after pushing.
+- **Release to publish** - stable releases from `main`. Use `gh release create` to deploy to GitHub Pages. See the `branching` skill (`.agents/skills/branching/SKILL.md`) for the branching strategy.
+- **Game clock is M:SS** - max time is capped by period length (not hardcoded 9:59). Right-to-left digit entry. Start/end times remain HH:MM.
+- **Modal uses responsive breakpoints** - default is full-screen (mobile), `@media (min-width: 900px) and (min-height: 700px)` switches to desktop dialog.
+- **Personal fouls are config-driven** - use `isPersonalFoul: true` on events. Don't hardcode event codes for foul counting.
+- **MAM is a dual-trigger event** - `isPersonalFoul: true` + `autoFoulOut: 2`. This pattern was explicitly designed for NFHS/NCAA.
+- **Version system** - `APP_VERSION` lives in `config.js`. Default is `"dev"`. Deploy workflow injects release tag. Dev mode auto-detects file timestamp via `HEAD` requests. Don't hardcode versions elsewhere.
+- **About is a native dialog** - not a screen/section. Uses native `<dialog>` element with `showModal()`/`close()`. All overlays (About, Confirm, Alert, Content, Download, Print, QR, Event Modal) are native `<dialog>` elements.
+- **Always use `escapeHTML()`** - when building `innerHTML` templates with user-supplied data (team names, cap numbers, Game #, location, etc.), wrap them in `escapeHTML()`. This is mandatory - see `sanitize.js`.
+- **Update sw.js ASSETS** - whenever adding a new file (HTML, CSS, JS, image) to the application, you MUST add it to the `ASSETS` array in `sw.js` to ensure the app continues to work completely offline.
 
 
 ## Project Summary
 
-**wplog** is a water polo secondary game log — a client-side-only PWA (Progressive Web App) built with **Vanilla HTML/CSS/JS** (no npm, no build tools). It lets a coach or volunteer log game events poolside and produce an official-looking game sheet.
+**wplog** is a water polo secondary game log - a client-side-only PWA (Progressive Web App) built with **Vanilla HTML/CSS/JS** (no npm, no build tools). It lets a coach or volunteer log game events poolside and produce an official-looking game sheet.
 
 - **Repo**: `github.com/icemarkom/wplog`
 - **Live**: `https://log.wpref.org/`
@@ -48,27 +48,27 @@ wplog/
 │   ├── print.css       # Print-only B&W styles for game sheet
 │   └── standalone.css  # Shared styles for standalone pages (privacy, help)
 ├── js/
-│   ├── core/               # Pure JavaScript — zero DOM, zero browser APIs, runs in JavaScriptCore
+│   ├── core/               # Pure JavaScript - zero DOM, zero browser APIs, runs in JavaScriptCore
 │   │   ├── config.js       # APP_VERSION + DEFAULTS + RULES resolver (initConfig accepts pre-parsed JSON)
 │   │   ├── game.js         # Core data model + game logic (state machine, stats aggregation)
-│   │   ├── clock.js        # ClockEngine class — hardware telemetry state container
-│   │   ├── storage.js      # validateGameData() — schema validation, legacy migration
+│   │   ├── clock.js        # ClockEngine class - hardware telemetry state container
+│   │   ├── storage.js      # validateGameData() - schema validation, legacy migration
 │   │   ├── time.js         # Time parsing utilities (formatTime, formatDeviceClock, getMaxMinutes)
-│   │   ├── export.js       # Export utilities — filename, CSV builders
+│   │   ├── export.js       # Export utilities - filename, CSV builders
 │   │   ├── roster.js       # Roster CSV parser, builder, merge logic
 │   │   └── sanitize.js     # escapeHTML() utility
-│   └── ui/                 # Platform layer — DOM, EventSource, localStorage, rAF
-│       ├── loader.js       # App shell loader — fetches screens + config.json, imports app module
+│   └── ui/                 # Platform layer - DOM, EventSource, localStorage, rAF
+│       ├── loader.js       # App shell loader - fetches screens + config.json, imports app module
 │       ├── app.js          # App init + screen navigation + version display
 │       ├── events.js       # Live log screen (main UI, owns Storage.save after mutations)
 │       ├── setup.js        # Setup screen (with active-game guards)
-│       ├── clock.js        # ClockUI — EventSource client, requestAnimationFrame render loop
+│       ├── clock.js        # ClockUI - EventSource client, requestAnimationFrame render loop
 │       ├── storage.js      # localStorage wrapper (thin CRUD over core/storage validation)
 │       ├── sheet.js        # Game sheet orchestrator + shared render helpers
 │       ├── sheet-screen.js # Game sheet screen rendering (2-page DOM layout)
 │       ├── share.js        # Share/Print functionality
 │       ├── theme.js        # Anti-FOUC theme bootstrap (synchronous, resolves system preference)
-│       ├── dialog.js       # Shared dialog utilities (initDialog — backdrop click + dismiss)
+│       ├── dialog.js       # Shared dialog utilities (initDialog - backdrop click + dismiss)
 │       ├── confirm.js      # Custom confirmation dialog (replaces native confirm())
 │       ├── wakelock.js     # Screen Wake Lock API wrapper
 │       └── year.js         # Copyright year display (standalone script, shared by all pages)
@@ -85,12 +85,12 @@ wplog/
 │   ├── medium-game.json    # NCAA Semifinal test data (52 events)
 │   └── large-game.json     # NFHS Varsity + OT test data (65 events)
 ├── tools/
-│   └── serve.go           # Dev server (Go stdlib) — correct MIME types for ES modules
+│   └── serve.go           # Dev server (Go stdlib) - correct MIME types for ES modules
 ├── PRIVACY.md          # Privacy policy (Markdown, for GitHub)
 └── privacy.html        # Privacy policy (HTML, canonical for OAuth consent)
 ```
 
-`js/core/` files are strictly headless — they contain zero references to `document`, `window`, `localStorage`, `fetch()`, `EventSource`, `requestAnimationFrame`, or any browser API. This enables iOS to run the game engine natively in `JavaScriptCore` while the web PWA continues to use the full `ui/` layer.
+`js/core/` files are strictly headless - they contain zero references to `document`, `window`, `localStorage`, `fetch()`, `EventSource`, `requestAnimationFrame`, or any browser API. This enables iOS to run the game engine natively in `JavaScriptCore` while the web PWA continues to use the full `ui/` layer.
 
 All JS files (except `year.js`) use native ES modules with `import`/`export`. The browser resolves the dependency tree automatically from the entry point (`loader.js` → `app.js` → all other modules). `year.js` is a standalone `<script defer>` for copyright year display on all pages. `core/` files only import from `core/`. `ui/` files import from both `core/` and `ui/`. No reverse dependencies.
 
@@ -100,7 +100,7 @@ All JS files (except `year.js`) use native ES modules with `import`/`export`. Th
 
 - **GitHub Pages** serves from `gh-pages` branch (not `main`)
 - **Production domain**: `https://log.wpref.org/` (via CNAME)
-- **Stable releases** are on `main` — pushes do NOT affect the live site
+- **Stable releases** are on `main` - pushes do NOT affect the live site
 - **All work** uses short-lived branches off `main`: `fix/<name>` for bugs, `feature/<name>` for enhancements
 - **Releases** trigger the deploy Action: `gh release create vX.Y.Z --title "..." --notes "..."`
 - Deploy Action injects the release tag version into `config.js` via `sed`, then uses `peaceiris/actions-gh-pages@v4` to copy files to `gh-pages`
@@ -135,7 +135,7 @@ These were explicitly discussed and agreed with the user:
 | **USAWP + NFHS + NCAA supported** | USAWP (8-min default, 7-min, 6-min variants), NFHS Varsity (7-min, OT, MAM), NFHS JV (6-min, no OT), NCAA (8-min, OT, YRC). Additional rule sets added via inheritance. |
 | **Rule set inheritance** | `inherits` key chains parent→child. `addEvents`/`removeEvents` directives for per-ruleset event list mutations. `_base` and `_academic` are internal (hidden from dropdown). `STATS_EVENTS` auto-appended to all rule sets. |
 | **Cap flags** | `allowCoach`, `allowAssistant`, `allowBench` enable HC/AC/B cap values. `allowPlayer` (default true) can be set false to block digit input. `allowNoCap` allows submitting without cap. `teamOnly` (renamed from `noPlayer`) hides cap field entirely. |
-| **`allowOfficial` flag** | Config-driven flag (valid on `teamOnly` events only). Shows a third "OFFICIAL" team toggle button in the modal. Selecting it stores `team: ""` — no new team code. TOL counting naturally excludes official timeouts. `O` keyboard shortcut. Button order: WHITE → OFFICIAL → DARK (Dark stays rightmost for muscle memory). |
+| **`allowOfficial` flag** | Config-driven flag (valid on `teamOnly` events only). Shows a third "OFFICIAL" team toggle button in the modal. Selecting it stores `team: ""` - no new team code. TOL counting naturally excludes official timeouts. `O` keyboard shortcut. Button order: WHITE → OFFICIAL → DARK (Dark stays rightmost for muscle memory). |
 | **No `#` in Cap display** | Cap numbers shown without `#` prefix everywhere (modal, live log, sheet tables). |
 | **Score on Goals only** | Score column in game log (live + sheet) only shows on Goal events. Other events leave it empty. |
 | **Responsive modal** | Compact content-sized on mobile (default), fixed centered 480px dialog on desktop (`@media min-width:900px and min-height:700px`). Numpad button height capped at 72px for landscape aspect ratio. |
@@ -152,30 +152,30 @@ These were explicitly discussed and agreed with the user:
 | **About dialog** | Native `<dialog>` popup (not a screen) accessible via footer "About" link. Shows version, license, author, source link. Privacy and License open as stacked content dialogs on top. |
 | **SW cache = version** | Service worker cache name is `"wplog-" + APP_VERSION`. Each release busts stale caches automatically. |
 | **SW dev vs prod** | Service worker uses network-first strategy in dev mode (no stale cache issues) and cache-first in production (offline reliability). |
-| **SW SSE passthrough** | `sw.js` fetch handler skips `respondWith()` for requests with `Accept: text/event-stream` or pathname `/events`. SSE streams are infinite responses — intercepting them leaves a never-resolving SW-managed fetch, which blocks iOS Safari's print dialog until the HTTP timeout fires (~60s). Passthrough lets the browser manage SSE natively, outside the service worker. |
+| **SW SSE passthrough** | `sw.js` fetch handler skips `respondWith()` for requests with `Accept: text/event-stream` or pathname `/events`. SSE streams are infinite responses - intercepting them leaves a never-resolving SW-managed fetch, which blocks iOS Safari's print dialog until the HTTP timeout fires (~60s). Passthrough lets the browser manage SSE natively, outside the service worker. |
 
 | **Interactive SW Updates** | `sw.js` safely idles downloaded updates in the `waiting` queue until the UI commands otherwise. `js/loader.js` tracks `updatefound` hooks to generate a native `popover` Toast prompting the user. Clicking 'Reload' signals `skipWaiting` via `postMessage` and instantly reboots `wplog` into the new cache layer seamlessly, avoiding aggressive auto-refreshes that clear out midway data entry. |
-| **SW fault-tolerant install** | `sw.js` install handler uses `Promise.allSettled()` over individual `fetch()` calls instead of the atomic `cache.addAll()`. A single failing asset does not abort the entire SW installation — the app still goes offline-capable and missing assets fall through to the network fetch handler on first use. |
+| **SW fault-tolerant install** | `sw.js` install handler uses `Promise.allSettled()` over individual `fetch()` calls instead of the atomic `cache.addAll()`. A single failing asset does not abort the entire SW installation - the app still goes offline-capable and missing assets fall through to the network fetch handler on first use. |
 | **QR code sharing** | Single SVG (`img/qr-wplog.svg`) with white modules on transparent background. CSS `filter: invert(1)` for high-contrast overlay. Share screen always accessible. |
 | **Share tab always active** | Share tab is always enabled. Print Game Sheet button is disabled when no game is active. |
 | **Help screen** | 5th nav tab (always enabled). Full screen section with concise quick-reference guide (~1 min read). Loaded at boot alongside all other screen fragments. |
 | **innerHTML sanitization** | All user-supplied values (team names, cap numbers, Game #, location, etc.) MUST be escaped via `escapeHTML()` from `sanitize.js` before `innerHTML` interpolation. Config-driven data (event names/codes) and internally computed values are safe but should still be escaped where mixed with user data. |
-| **CSP meta tags** | `Content-Security-Policy` and `X-Content-Type-Options` meta tags in `<head>` of `index.html` and `privacy.html`. No `'unsafe-inline'` for scripts — all scripts are external. `style-src` still allows `'unsafe-inline'` for inline styles. |
+| **CSP meta tags** | `Content-Security-Policy` and `X-Content-Type-Options` meta tags in `<head>` of `index.html` and `privacy.html`. No `'unsafe-inline'` for scripts - all scripts are external. `style-src` still allows `'unsafe-inline'` for inline styles. |
 | **No inline scripts** | All JavaScript is in external files. `index.html` uses `js/loader.js` (app shell loader) and `js/year.js` (copyright year). Standalone pages use `js/year.js`. This enables strict CSP without `'unsafe-inline'` for `script-src`. |
 | **localStorage validation** | `Storage.load()` validates parsed data shape (`rules` is string, `log` is array) before returning. Tampered/corrupt data is silently ignored. |
 | **Stats are separate from log** | Live view: stats interleaved in recent events with teal accent. Game sheet: stats filtered from Progress of Game, shown in separate Player Stats section. |
 | **Logging mode** | Collapsible section on setup screen with mode segmented control (Game Log Only / Both / Stats Only) and Stats Time Entry (Disabled / Optional / Required). Summary shown in foldable header. |
-| **Stats code = name** | Stats events omit `code` in config — auto-derived from `name`. Normalizer runs at load time for any event missing a code. Multi-word codes (e.g. "Field Block") are supported. |
+| **Stats code = name** | Stats events omit `code` in config - auto-derived from `name`. Normalizer runs at load time for any event missing a code. Multi-word codes (e.g. "Field Block") are supported. |
 | **Stats buttons teal** | All stats buttons styled with `color: "teal"` (`#2dd4bf`). Visual separator between log and stats buttons. |
 | **Player Stats on sheet** | Inverted team-centric matrix layout. Teams form sections (White / Dark), Cap numbers form rows (Y-axis), and individual Stat categories form columns (X-axis). Grouped strictly into chunks of 11 stat columns padded with `null` structurally to form identical repeating 100% width tables without distorting CSS sizing properties. All events with cap numbers aggregated. |
 | **`statsOnly` flag** | Events with `statsOnly: true` skip foul-out checks, allow blank time, and are filtered from Progress of Game on sheet. |
 | **`statsTimeMode`** | Controls time field in modal: `"off"` = hidden, `"optional"` = shown but not required, `"on"` = required. Stored in game data model. |
-| **ES modules** | All JS files use native `import`/`export` (except `year.js` which is a standalone `<script defer>`). `loader.js` is loaded as `<script type="module">` and imports `app.js`, which imports all other modules. The browser resolves the dependency tree automatically — no manual load ordering. Service worker also uses `import` for `APP_VERSION` from `config.js`. |
-| **Tab registration API** | `App.registerTab(navId, screenId, opts)` is the single integration point for all tabs — native and external. Options: `requiresGame` (disable when no game), `fallbackScreen` (redirect when requiresGame + no game), `wakeLock` (acquire on activation), `onActivate(game)` (callback; same for clicks and session restore). `_activateTab()` is the one activation path. `_updateNavDisabled()` drives from `_tabs` only. `showScreen()` and `_showScreenWithInit()` removed. Issue [#226](https://github.com/icemarkom/wplog/issues/226). |
+| **ES modules** | All JS files use native `import`/`export` (except `year.js` which is a standalone `<script defer>`). `loader.js` is loaded as `<script type="module">` and imports `app.js`, which imports all other modules. The browser resolves the dependency tree automatically - no manual load ordering. Service worker also uses `import` for `APP_VERSION` from `config.js`. |
+| **Tab registration API** | `App.registerTab(navId, screenId, opts)` is the single integration point for all tabs - native and external. Options: `requiresGame` (disable when no game), `fallbackScreen` (redirect when requiresGame + no game), `wakeLock` (acquire on activation), `onActivate(game)` (callback; same for clicks and session restore). `_activateTab()` is the one activation path. `_updateNavDisabled()` drives from `_tabs` only. `showScreen()` and `_showScreenWithInit()` removed. Issue [#226](https://github.com/icemarkom/wplog/issues/226). |
 | **Home/Away designation** | `homeTeam` is a rule-set property in `config.json` (`_base` defaults to `"W"`, `_academic` overrides to `"D"`). Setup screen shows a ⇄ flip button to override per-game. Flip is locked during active games. All display surfaces (score bar, sheet header, Score by Period, Player Stats, CSV filename) render Home team first, Away second. Event modal button order (W/D) is fixed for muscle memory. |
 | **`DEFAULTS` object** | Centralized fallback defaults in `config.js` for all rule-set properties (`periods`, `periodLength`, `foulOutLimit`, `homeTeam`, `overtime`, `shootout`, `timeouts`, `events`, `statsEvents`). Used by `_getSafeMode()` and the normalization block. Eliminates scattered magic numbers. |
-| **Setup labels** | Team input labels show `"$location Team ($color)"` format — e.g., "Home Team (White)", "Away Team (Dark)". |
-| **Edit-in-place** | Tap any event in the game log to open the modal pre-filled with existing values (time, cap, team, period). Event type is NOT changeable — delete and re-add. Period-end events are NOT editable. OK button shows "Save" in edit mode. Foul-out popup fires if editing causes a foul-out. "Event updated" toast confirms the action. |
+| **Setup labels** | Team input labels show `"$location Team ($color)"` format - e.g., "Home Team (White)", "Away Team (Dark)". |
+| **Edit-in-place** | Tap any event in the game log to open the modal pre-filled with existing values (time, cap, team, period). Event type is NOT changeable - delete and re-add. Period-end events are NOT editable. OK button shows "Save" in edit mode. Foul-out popup fires if editing causes a foul-out. "Event updated" toast confirms the action. |
 | **Period selector in modal** | Row of `.team-btn` pills above the time field. Shows all periods up to `currentPeriod`. New events default to current period; user can tap a previous period to log missed events. Edits show the event's existing period. Hidden when only one period available. |
 | **Full game log** | Live log shows ALL events (not capped at 15), grouped by period headers using `.log-title` typography. Period headers act as visual separators. Title changed from "Recent Events" to "Game Log". |
 | **CSS reuse over proliferation** | New interactive elements reuse existing CSS classes (`.team-btn` for period pills, `.log-title` for period headers, structural `:not()` selectors for tappable entries) rather than introducing new class names. Scoped overrides via `#id .existing-class`. |
@@ -188,44 +188,44 @@ These were explicitly discussed and agreed with the user:
 ## Current State (as of 2026-05-07)
 
 ### What's Done ✅
-- Headless architecture decoupling (v4): Bifurcated `js/` into `js/core/` (pure JavaScript, zero browser APIs) and `js/ui/` (DOM, EventSource, localStorage). Three files genuinely split: `clock.js` (ClockEngine class + state vs. EventSource+DOM), `storage.js` (validateGameData vs. localStorage CRUD), `config.js` (initConfig accepting pre-parsed JSON vs. fetch in loader). View controllers (`events.js`, `setup.js`, `app.js`) moved whole to `ui/` — their business logic was already in `core/game.js` and `core/config.js`. `ClockEngine` refactored from singleton object literal to ES6 class (multi-instance for iOS). All `new Date()` calls made injectable via default parameters for deterministic testing. `initConfig()` returns `{ ok, error }` instead of using `console.error`. Import graph is strictly one-directional: `core/` → `core/` only, `ui/` → both. `sw.js` ASSETS and import path updated. `index.html` script tags updated.
+- Headless architecture decoupling (v4): Bifurcated `js/` into `js/core/` (pure JavaScript, zero browser APIs) and `js/ui/` (DOM, EventSource, localStorage). Three files genuinely split: `clock.js` (ClockEngine class + state vs. EventSource+DOM), `storage.js` (validateGameData vs. localStorage CRUD), `config.js` (initConfig accepting pre-parsed JSON vs. fetch in loader). View controllers (`events.js`, `setup.js`, `app.js`) moved whole to `ui/` - their business logic was already in `core/game.js` and `core/config.js`. `ClockEngine` refactored from singleton object literal to ES6 class (multi-instance for iOS). All `new Date()` calls made injectable via default parameters for deterministic testing. `initConfig()` returns `{ ok, error }` instead of using `console.error`. Import graph is strictly one-directional: `core/` → `core/` only, `ui/` → both. `sw.js` ASSETS and import path updated. `index.html` script tags updated.
 
 ## Current State (as of 2026-05-04)
 
 ### What's Done ✅
-- `_updateNavDisabled()` no longer re-enables external-disabled tabs (#248): the function now skips tabs with `requiresGame: false` entirely — only `requiresGame: true` tabs have their `disabled` state managed by wplog. External callers that disable a registered tab will no longer have that state silently overwritten on every screen transition.
-- SW fault-tolerant install: `sw.js` `install` handler now uses `Promise.allSettled()` over individual per-asset `fetch()` calls instead of the atomic `cache.addAll()`. A single failing or slow asset no longer aborts the entire Service Worker installation — missing assets fall through to the network fetch handler on first use and are cached then. No functional change for users on reliable connections.
+- `_updateNavDisabled()` no longer re-enables external-disabled tabs (#248): the function now skips tabs with `requiresGame: false` entirely - only `requiresGame: true` tabs have their `disabled` state managed by wplog. External callers that disable a registered tab will no longer have that state silently overwritten on every screen transition.
+- SW fault-tolerant install: `sw.js` `install` handler now uses `Promise.allSettled()` over individual per-asset `fetch()` calls instead of the atomic `cache.addAll()`. A single failing or slow asset no longer aborts the entire Service Worker installation - missing assets fall through to the network fetch handler on first use and are cached then. No functional change for users on reliable connections.
 - Native screens migrated to `registerTab()` (#226 follow-up): all five native screens (Setup, Live, Sheet, Share, Help) now register via `App.registerTab()` with `onActivate` callbacks, identical to external tabs. `showScreen()` and `_showScreenWithInit()` removed. `_activateTab()` is the single activation path for all tabs. `registerTab()` gains `fallbackScreen` (redirect when `requiresGame` and no game) and `wakeLock` (acquire/release based on tab option) options. `_updateNavDisabled()` drives entirely from `_tabs`. `_activateTabByName()` and `_restoreScreen()` are new generic helpers.
-- Modal focus skips pre-filled time (#230): when the event modal opens and `window._wpbGetSeconds()` pre-fills `_timeRaw`, `_setNumpadTarget` now skips to `"cap"` for player and swap events instead of landing on the time field. `teamOnly` events (Timeout, TTO, etc.) stay on `"time"` — no cap to move to. `_openModalForEdit` and `_openModalForRoster` are untouched.
-- SW SSE passthrough (#69): `sw.js` fetch handler now returns immediately (without calling `respondWith()`) for any request with `Accept: text/event-stream` or pathname `/events`. The service worker was wrapping the persistent `EventSource` connection in a `fetch()` promise that never resolves — iOS Safari will not show the print dialog until all SW-managed fetches settle, causing print to block for ~60 seconds until the HTTP timeout fires. Passthrough guard applies in both dev (network-first) and production (cache-first) modes.
+- Modal focus skips pre-filled time (#230): when the event modal opens and `window._wpbGetSeconds()` pre-fills `_timeRaw`, `_setNumpadTarget` now skips to `"cap"` for player and swap events instead of landing on the time field. `teamOnly` events (Timeout, TTO, etc.) stay on `"time"` - no cap to move to. `_openModalForEdit` and `_openModalForRoster` are untouched.
+- SW SSE passthrough (#69): `sw.js` fetch handler now returns immediately (without calling `respondWith()`) for any request with `Accept: text/event-stream` or pathname `/events`. The service worker was wrapping the persistent `EventSource` connection in a `fetch()` promise that never resolves - iOS Safari will not show the print dialog until all SW-managed fetches settle, causing print to block for ~60 seconds until the HTTP timeout fires. Passthrough guard applies in both dev (network-first) and production (cache-first) modes.
 - Interval tracking in period display (#67): `_renderPeriod()` now maps hardware period values -1 and -2 to "BREAK" and "HALF" labels respectively, instead of silently skipping the update and leaving the display frozen at the last playing period. Period 0 / null is still treated as unset (no-op).
 - Shot clock blanking (#68): `_renderShotClock()` refactored with a single `shouldBlank` boolean covering three conditions: (1) interval frames (period <= 0), (2) hardware blank sentinel (shot >= 65535 / 0xFFFF), (3) GT <= SC - game clock at or below shot clock, making the shot clock irrelevant regardless of what hardware sends. All three conditions produce empty string (truly invisible element), not '--'.
 
 ## Current State (as of 2026-05-02)
 
 ### What's Done ✅
-- Out-of-order entries placed correctly within period (#239): New `_findInsertionSeq()` helper in `game.js` assigns a `seq` value from the midpoint gap between surrounding entries when a timed event's time places it earlier in the period than existing entries. Called by both `addEvent()` (post-confirmation) and `editEvent()` (on time or period change). Sort order unchanged — still by `seq`. `_nextSeq` always advances as the tail anchor.
+- Out-of-order entries placed correctly within period (#239): New `_findInsertionSeq()` helper in `game.js` assigns a `seq` value from the midpoint gap between surrounding entries when a timed event's time places it earlier in the period than existing entries. Called by both `addEvent()` (post-confirmation) and `editEvent()` (on time or period change). Sort order unchanged - still by `seq`. `_nextSeq` always advances as the tail anchor.
 - Minor display fix: setup multiplier now consistently shown as NxM (#235): Removed spaces around × in the period summary (`"4×8 min"`) to match the existing timeout formatter style (`"2×TO"`).
 - Game setup selections persist between games (#233): Introduced `Setup._config` as the live setup model. All event handlers write to it; `_startGame()` reads from it; `_savePrefs()` / `_restorePrefs()` are trivial one-liners. `_applyConfigToDOM()` is the single render function (formal inverse of `_startGame()`). `Storage.savePrefs()` / `Storage.loadPrefs()` persist the config under `wplog_setup_prefs`. Game-specific fields (date, time, location, game #, team names) are intentionally excluded.
-- System theme default + anti-FOUC bootstrap (#232): Default theme changed from `"dark"` to `"system"` (follows OS preference). New `js/theme.js` synchronous bootstrap script runs in `<head>` before first CSS paint, seeding `localStorage` on first visit and immediately resolving the OS preference — eliminating theme flash. `app.js` and `setup.js` read `localStorage` directly (no fallback needed). Single source of truth for default lives in `theme.js`. Branching skill updated to reflect `v4` as the long-lived integration branch.
+- System theme default + anti-FOUC bootstrap (#232): Default theme changed from `"dark"` to `"system"` (follows OS preference). New `js/theme.js` synchronous bootstrap script runs in `<head>` before first CSS paint, seeding `localStorage` on first visit and immediately resolving the OS preference - eliminating theme flash. `app.js` and `setup.js` read `localStorage` directly (no fallback needed). Single source of truth for default lives in `theme.js`. Branching skill updated to reflect `v4` as the long-lived integration branch.
 
 ## Current State (as of 2026-04-18)
 
 ### What's Done ✅
 - **Tab registration API** (`App.registerTab()`): Generic extension point for integrating nav/screen tabs with wplog's tab manager. Eliminates timing races between integrating module code and `App.init()`. Options: `requiresGame` (disable when no game), `onActivate(game)` (callback on activation). Registered tabs participate in `showScreen()` disabled-state management via `_updateNavDisabled()` and are correctly restored on session reload via `_showScreenWithInit()`. See issue [#226](https://github.com/icemarkom/wplog/issues/226).
 - Hardware Clock Unification (v4): Added `js/clock.js` to optionally consume hardware SSE telemetry (`ClockEngine.startFeed('/events')`). When activated, `wplog` automatically drives high-framerate `.game-clock`/`.shot-clock` scoreboard UI injected into `.score-center-col`. It cleanly isolates mathematical state formatting via unified `formatDeviceClock` helper in `js/time.js` and transparently auto-fills referee Numpad timestamps in `events.js` exactly as if hand-typed via `_timeToRawDigits`. App remains totally dormant and strictly standalone if not manually embedded.
-- **Hardware period sync** (`clock.js`, `events.js`, `time.js`): `ClockEngine.getPeriod()` maps raw hardware period integers (1–4 regulation, 5+=OT, ≤0 non-playing) to wplog period keys. `ClockEngine.applyPeriodToGame(game)` advances `game.currentPeriod` forward-only — safe for mid-game reconnect; SO is wplog-internal and untouched. `ClockEngine.tick()` now calls `_renderPeriod()` on every rAF frame to write `#current-period` directly from `state.period` — same pattern as game clock and shot clock render. `Events._updateScoreBar()` prefers `window._wpbGetPeriod?.()` (live hardware period from the integration shell) over `game.currentPeriod` to avoid stale-state overwrites fighting the tick renderer. `Events._openModal()` calls `window._wpbApplyPeriod?.(this.game)` to advance `game.currentPeriod` synchronously at modal-open time so `_buildPeriodPills()` includes the correct range. `Events.refreshScoreBar()` remains a public entry point for external callers. Shot clock blank sentinel fix: `formatDeviceClock` threshold lowered from 99999 to 65535 (`0xFFFF`) to correctly blank the shot clock display when the firmware sends the hardware no-signal sentinel.
+- **Hardware period sync** (`clock.js`, `events.js`, `time.js`): `ClockEngine.getPeriod()` maps raw hardware period integers (1-4 regulation, 5+=OT, ≤0 non-playing) to wplog period keys. `ClockEngine.applyPeriodToGame(game)` advances `game.currentPeriod` forward-only - safe for mid-game reconnect; SO is wplog-internal and untouched. `ClockEngine.tick()` now calls `_renderPeriod()` on every rAF frame to write `#current-period` directly from `state.period` - same pattern as game clock and shot clock render. `Events._updateScoreBar()` prefers `window._wpbGetPeriod?.()` (live hardware period from the integration shell) over `game.currentPeriod` to avoid stale-state overwrites fighting the tick renderer. `Events._openModal()` calls `window._wpbApplyPeriod?.(this.game)` to advance `game.currentPeriod` synchronously at modal-open time so `_buildPeriodPills()` includes the correct range. `Events.refreshScoreBar()` remains a public entry point for external callers. Shot clock blank sentinel fix: `formatDeviceClock` threshold lowered from 99999 to 65535 (`0xFFFF`) to correctly blank the shot clock display when the firmware sends the hardware no-signal sentinel.
 - Fixed Legacy Time Storage Validation (#224): Augmented `storage.js` backward-compatibility parsing logic via `RE_GAME_TIME` (`/^\d{1,2}:[0-5]\d(?::[0-5]\d)?$/`) to safely absorb and migrate `"00:00"` and `"HH:MM:SS"` string formats into runtime integer values during JSON hydration. Migrated standard `_logPeriodEnd()` payload execution explicitly from `time: "00:00"` string writes over to strict integer logic (`time: 0`) to prevent further export pollution.
 - Coaching staff caps in Add Name (#221): Enabled "HC" and "AC" coaching cap numbers within the Roster-only "Add Name" flow by bypassing the missing `eventDef` check, while strictly maintaining the explicit rejection of bare "B" inputs globally.
 - Added Roster Delete Button (#218): Injected a native `✕` action button gracefully aligned via `absolute` positioning into the final data cell of screen-rendered roster rows. Masked the delete click behind strict bounds interception (`e.stopPropagation()`) against the `.roster-edit-row` trigger, and validated the action using the standard `ConfirmDialog` overlay with dynamic player name referencing.
 - Fixed Cap Input Validation (#216): Prevented incomplete coaching staff caps (e.g., "H" or "A") and zero-prefixed integers ("0") from enabling the modal submission button via a rigorous `_isValidCap` validator. Fixed the numpad `Backspace` macro regression clearing single-press coaching staff inputs fully back to `""` in one stroke.
 - Fixed Game Sheet display regression (#213): Resolved an uncaught TypeError where coaching staff card events (Yellow/Red Card) broke the DOM rendering sequence. Formatted integer event times as strings upstream to guarantee sheet evaluation completes successfully.
 - Standardized UI Icons (#212): Replaced all inconsistent Unicode characters (`⬆`, `⬌`, `⌫`, `∞`) across Setup and Modal screens with dedicated, responsive SVG assets (`img/icon-*.svg`). Styled cleanly via `.btn-icon` utility with dark-mode `invert(0.85)` awareness, ensuring pixel-perfect `24x24` UI integration. Backspace natively colored with `--danger` bypass filter logic. `display: flex` centering normalized on numpad constraints.
-- Coaching staff cap overhaul (#198): Internal coach cap code changed from `C` to `HC` (Head Coach). Numpad letter buttons contextually relabel to HC/AC/B for events with coaching staff flags — single-press entry, no two-step sequence. Buttons show labels only when enabled; revert to A/B/C for goalie modifiers or when disabled. `H` keyboard shortcut. Old `C` data auto-migrates on load via `storage.js`. `.hidden` utility class fixed with `!important` to override `display:flex` on `.swap-btn`/`.modal-field`. Grey action button grid layout fixed (`grid-column:3` scoped to `#end-period-btn` only).
+- Coaching staff cap overhaul (#198): Internal coach cap code changed from `C` to `HC` (Head Coach). Numpad letter buttons contextually relabel to HC/AC/B for events with coaching staff flags - single-press entry, no two-step sequence. Buttons show labels only when enabled; revert to A/B/C for goalie modifiers or when disabled. `H` keyboard shortcut. Old `C` data auto-migrates on load via `storage.js`. `.hidden` utility class fixed with `!important` to override `display:flex` on `.swap-btn`/`.modal-field`. Grey action button grid layout fixed (`grid-column:3` scoped to `#end-period-btn` only).
 - Inline styles elimination (#203): Migrated all inline `style="..."` attributes from HTML (modal.html, setup.html, help.html) and all `element.style.*` JS manipulation (events.js, setup.js, share.js) to CSS classes. Two utility classes (`.hidden`, `.disabled`) + scoped ID rules. Zero inline styles remain in the codebase.
 - Inline roster editing: "Add Name" grey button on Live screen opens modal in roster-only mode (team + cap + name, no event logged). Roster rows on the Game Sheet are tappable to edit name/ID inline with blur/Enter save. Separator above grey action buttons row. Help docs updated.
-- Edit-in-place (#23): Tap any event in the game log to edit its time, cap, team, or period. Period selector pills in the modal allow logging missed events in previous periods. Full game log with period grouping replaces the 15-event limit. Foul-out detection on edits. Uses existing `.team-btn` and `.log-title` CSS — zero new class names.
-- Roster CSV bulk management: upload (⬆ button on Setup, inline with team name inputs) and download (Share screen with team selection dialog). CSV parser handles HC→C alias, rejects B caps, warns on duplicates (first wins). Pre-game uploads buffered and applied at game start. Roster is the single authoritative source — every logged cap auto-registers.
+- Edit-in-place (#23): Tap any event in the game log to edit its time, cap, team, or period. Period selector pills in the modal allow logging missed events in previous periods. Full game log with period grouping replaces the 15-event limit. Foul-out detection on edits. Uses existing `.team-btn` and `.log-title` CSS - zero new class names.
+- Roster CSV bulk management: upload (⬆ button on Setup, inline with team name inputs) and download (Share screen with team selection dialog). CSV parser handles HC→C alias, rejects B caps, warns on duplicates (first wins). Pre-game uploads buffered and applied at game start. Roster is the single authoritative source - every logged cap auto-registers.
 - Fixed stats format reverting bug: Refactored the native print sequence in `js/share.js` and `js/app.js` to decouple overriding logic out of fragile inline listeners and safely route them through persistent global hooks via `Share.printOptions`, handling continuous Safari orientation regeneration natively.
 - Cap Swap persistence integration: Added 'Cap swap' into internal storage validation allowlists automatically protecting structural tracking across PWA loads natively ensuring continuity over structural cache layers stably resolving event UI.
 - Time Engine Restructure: Internally transitioned time structures globally natively out into numerical integer intervals exclusively handling math mapping instead of formatted sequences implicitly bypassing edge-case comparison blocks across rules dynamically.
@@ -247,8 +247,8 @@ These were explicitly discussed and agreed with the user:
 - CSS consolidation: Eliminated obsolete CSS filter hacks, adopted explicit `--accent-blue`/`--text-on-accent` design tokens for native theme readiness, and stripped defunct `.toggle-row` selectors.
 - Unified `.dialog-card` styling architecture eliminating duplicate popup layouts.
 - Native `<dialog>` migration: all 9 overlays converted from custom `<div class="overlay">` to native `<dialog>` elements with `showModal()`/`close()`, eliminating manual z-index stacking, `.visible` class toggling, and position:fixed management.
-- Shared `initDialog()` utility in `dialog.js`: centralizes backdrop-click-to-close and dismiss-button wiring — used by 6 dialogs (About, Content, Alert, Confirm, Download, Print).
-- Privacy and License dialogs consolidated into a single reusable `content-dialog` with cached content fetching — stacks natively on top of About dialog.
+- Shared `initDialog()` utility in `dialog.js`: centralizes backdrop-click-to-close and dismiss-button wiring - used by 6 dialogs (About, Content, Alert, Confirm, Download, Print).
+- Privacy and License dialogs consolidated into a single reusable `content-dialog` with cached content fetching - stacks natively on top of About dialog.
 - Compact event modal on mobile: content-sized height (no forced 100dvh), numpad buttons capped at 72px for landscape aspect ratio.
 - Modal auto-focus fix: `tabindex="-1" autofocus` on content wrapper absorbs `showModal()` focus, preventing spurious focus rings on first button.
 - Dynamic SVG Injection: Replaced static `<img>` tags with asynchronous `DOMParser("image/svg+xml")` instantiations to bypass iOS Safari namespace bugs and support native `fill` targeting.
@@ -266,7 +266,7 @@ These were explicitly discussed and agreed with the user:
 - Foul-out detection: accumulated personal fouls + auto-foul-out (MC, BR, E-Game, FM)
 - MAM dual-trigger: counts as personal foul AND 2nd MAM = immediate ejection
 - Live log with score bar, TOL display, period tabs, time input, team toggle, cap numpad
-- All event types with event-first modal workflow (no event dropdown — title shows event)
+- All event types with event-first modal workflow (no event dropdown - title shows event)
 - 4-column numpad (digits + A/B/C), right-to-left time input with `-:--` placeholder
 - Auto-clear time/cap on refocus (user click only, not auto-advance)
 - Event alignment framework (left/right/center per event in config)
@@ -278,7 +278,7 @@ These were explicitly discussed and agreed with the user:
 - Responsive event modal: full-screen on mobile, centered dialog on desktop
 - Consistent element heights across modal (48px min-height for all interactive elements)
 - Game sheet: progress of game, period scores, personal fouls, timeouts, cards
-- Fractional SO scores (5.3–5.2 format, no floats — computed at render time)
+- Fractional SO scores (5.3-5.2 format, no floats - computed at render time)
 - SO events display without time (always 0:00, redundant)
 - Score column shows only on Goal events (live log + sheet)
 - Native print delegation: directly calls `window.print()` bypassing custom configuration (paper size/geometry is entirely system-controlled)
@@ -321,14 +321,14 @@ These were explicitly discussed and agreed with the user:
 - Events sorted by game time within each period (`_sortLog` in `game.js`), with scores recalculated after sort
 - HTML sanitization: `escapeHTML()` in `sanitize.js` applied to all user-controlled `innerHTML` interpolation in `sheet.js` and `events.js`
 - CSP meta tag (`Content-Security-Policy`) + `X-Content-Type-Options: nosniff` on all HTML pages (`index.html`, `privacy.html`, `help.html`)
-- Externalized all inline scripts: `js/loader.js` (app shell), `js/year.js` (copyright year) — CSP `script-src 'self'` only (no `'unsafe-inline'`)
+- Externalized all inline scripts: `js/loader.js` (app shell), `js/year.js` (copyright year) - CSP `script-src 'self'` only (no `'unsafe-inline'`)
 - `localStorage` schema validation in `Storage.load()`
 - `Referrer-Policy: strict-origin-when-cross-origin` meta tag on all HTML pages
 - Form label associations: all `<input>`/`<select>` use `for`/`id`; custom widgets (segment controls, steppers) use `aria-labelledby`; `.sr-only` utility class for visually-hidden labels
 - Favicon: water polo wave-splash W icon in 32px, 192px, 512px sizes (browser tab, PWA install, splash screen)
 - Apple touch icon for iOS home screen
 - Full stats tracking: 12 stat event types (Shot, Assist, Offensive, Steal, Intercept, Turnover, Field Block, Save, Drawn Exclusion, Drawn Penalty, Sprint Won, Rebound)
-- Stats events omit `code` in config — auto-derived from `name` at load time (applies to any event)
+- Stats events omit `code` in config - auto-derived from `name` at load time (applies to any event)
 - Logging Mode as collapsible section on setup with segmented control (Game Log Only / Both / Stats Only) and Stats Time Entry
 - Three logging modes: Game Log only, Stats only, Full (Game Log + Stats)
 - `statsTimeMode` handling in event modal: `"off"` = hidden, `"optional"` = shown but not required, `"on"` = required
@@ -352,7 +352,7 @@ These were explicitly discussed and agreed with the user:
 - CSV export: Download CSV button on Share screen with editable filename dialog (date + teams + time)
 - JSON export: Download Game Data button on Share screen (compact JSON, shared filename dialog with CSV)
 - Load Game: button on Setup screen (visible when no game active), file picker for JSON, 5-layer validation
-- Input validation: `validateGameData()` in `storage.js` — file size limit (128 KB), schema checks, property stripping, allowlisted fields only
+- Input validation: `validateGameData()` in `storage.js` - file size limit (128 KB), schema checks, property stripping, allowlisted fields only
 - Error dialog for invalid load files (alert-dialog pattern with specific error messages)
 - Screen persistence: active screen restored across page reloads via `sessionStorage`
 - Game Setup section uses stepper controls for period length, OT length, and timeout limits (with ∞ option)
@@ -363,21 +363,21 @@ These were explicitly discussed and agreed with the user:
 - End Period button moved from score bar to event grid: same size as event buttons, `grid-column: 3` pins it to rightmost column
 - End Game button disables after press: shows "Game Over" and prevents duplicate end-of-game events
 - Native ES modules: all JS files use `import`/`export` (except `year.js`). `loader.js` loaded as `<script type="module">`, browser resolves dependency tree automatically. Service worker uses `import` for `APP_VERSION`.
-- Sheet split: `sheet.js` (orchestrator + shared helpers), `sheet-screen.js` (screen rendering) — isolates screen layout to one file
-- Service worker registration in `loader.js` with `{ type: 'module' }` — enables offline caching, cache busting via `APP_VERSION`
-- Restart App handler awaits async cleanup (SW unregistration + cache deletion) before reload — fixes race condition
-- Help documentation kept current alongside feature delivery — geronimo and kraken workflows include help.html check steps, bazinga establishes doc-as-delivery principle
-- `Game` decoupled from `Storage`: mutation methods (`addEvent`, `deleteEvent`, `editEvent`, `advancePeriod`) no longer call `Storage.save()` — UI layer (`events.js`) owns persistence
+- Sheet split: `sheet.js` (orchestrator + shared helpers), `sheet-screen.js` (screen rendering) - isolates screen layout to one file
+- Service worker registration in `loader.js` with `{ type: 'module' }` - enables offline caching, cache busting via `APP_VERSION`
+- Restart App handler awaits async cleanup (SW unregistration + cache deletion) before reload - fixes race condition
+- Help documentation kept current alongside feature delivery - geronimo and kraken workflows include help.html check steps, bazinga establishes doc-as-delivery principle
+- `Game` decoupled from `Storage`: mutation methods (`addEvent`, `deleteEvent`, `editEvent`, `advancePeriod`) no longer call `Storage.save()` - UI layer (`events.js`) owns persistence
 - Score formatting extracted: `formatFractionalScore()` exported from `game.js` as a pure utility
-- Stateless Sheet: `Sheet.game` removed, `Sheet.init()` replaced with `Sheet.render(game)` — all render methods accept `game` as parameter. Imports `Storage` only for inline roster saves.
+- Stateless Sheet: `Sheet.game` removed, `Sheet.init()` replaced with `Sheet.render(game)` - all render methods accept `game` as parameter. Imports `Storage` only for inline roster saves.
 - Legacy JS pagination engine, data builders, and `sheet-print.js` removed entirely in favor of native CSS printing
-- Time parsing extracted: `time.js` exports pure functions (`getMaxMinutes`, `parseTime`, `formatTimeDisplay`) — `events.js` delegates via thin wrappers
-- Export module extracted: `export.js` exports pure functions (`buildCSV`, `makeFilename`) — CSV/filename builders with zero DOM dependency
+- Time parsing extracted: `time.js` exports pure functions (`getMaxMinutes`, `parseTime`, `formatTimeDisplay`) - `events.js` delegates via thin wrappers
+- Export module extracted: `export.js` exports pure functions (`buildCSV`, `makeFilename`) - CSV/filename builders with zero DOM dependency
 - Input validation fixes: cap `"0"` rejected, time `"0:60"` rejected (seconds ≥ 60)
 - Dev server: `tools/serve.go` (Go stdlib) with correct MIME types for ES modules
 - Test data: realistic game fixtures in `testdata/` (small/medium/large) for NCAA and NFHS rule sets
 - Home/Away team designation: config-driven `homeTeam` per rule set (USAWP=White, NFHS/NCAA=Dark via `_academic`), flip button override on setup, all display surfaces (score bar, sheet, CSV) render Home first/Away second
-- `DEFAULTS` object in `config.js`: centralized fallback defaults for all rule-set properties, used by safe mode and normalization — zero scattered magic numbers
+- `DEFAULTS` object in `config.js`: centralized fallback defaults for all rule-set properties, used by safe mode and normalization - zero scattered magic numbers
 - `DEFAULTS` imported as `{ RULES, DEFAULTS }` in game.js, setup.js, storage.js for consistent fallback handling
 
 ### Known Gaps / Future Work 📋
@@ -389,7 +389,7 @@ These were explicitly discussed and agreed with the user:
 ## How to Run
 
 Serve locally with any static file server. The app has no build step.
-Do NOT use Python's `http.server` — use the included dev server in the branch:
+Do NOT use Python's `http.server` - use the included dev server in the branch:
 
 ```sh
 go run tools/serve.go
